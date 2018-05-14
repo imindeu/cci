@@ -6,12 +6,12 @@ public func routes(_ router: Router) throws {
 }
 
 func commandAction(req: Request, slackCommand: SlackCommand) -> Future<SlackResponse> {
-    return token(slackCommand: slackCommand).map(
+    return appConfig(slackCommand: slackCommand).map(
         { response in return Future.map(on: req, { return response })},
-        { config in return command(slackCommand, config: config, worker: req) })
+        { config in return respond(slackCommand, config: config, worker: req) })
 }
 
-func token(slackCommand: SlackCommand) -> Either<SlackResponse, AppConfig> {
+func appConfig(slackCommand: SlackCommand) -> Either<SlackResponse, AppConfig> {
     guard let circleciToken = Environment.get("circleciToken") else {
         return .left(SlackResponse.error(text: "Error: no circleciToken found"))
     }
@@ -30,7 +30,7 @@ func token(slackCommand: SlackCommand) -> Either<SlackResponse, AppConfig> {
     return .right(AppConfig(circleciToken: circleciToken, company: company, vcs: vcs, projects: projects))
 }
 
-func command(_ slackCommand: SlackCommand, config: AppConfig, worker: Worker) -> Future<SlackResponse> {
+func respond(_ slackCommand: SlackCommand, config: AppConfig, worker: Worker) -> Future<SlackResponse> {
     do {
         let cciCommand = try Command(channel: slackCommand.channel_name, text: slackCommand.text, projects: config.projects)
         let parsed = cciCommand.parse(config: config)
