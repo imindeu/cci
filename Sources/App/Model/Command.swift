@@ -29,7 +29,7 @@ extension CommandError {
 }
 
 enum Command {
-    case deploy(project: String, job: String, branch: String, version: String?, groups: String?, emails: String?)
+    case deploy(project: String, type: String, branch: String, version: String?, groups: String?, emails: String?)
     case help
 }
 
@@ -37,9 +37,9 @@ extension Command {
     init(channel: String, text: String, projects: [String]) throws {
         if text.hasPrefix("deploy") {
             let types = [
-                "alpha": ("deploy_alpha", "dev"),
-                "beta": ("deploy_beta", "master"),
-                "appstore": ("deploy_appstore", "master")]
+                "alpha": "dev",
+                "beta": "master",
+                "app_store": "master"]
             
             guard let index = projects.index(where: { channel.hasPrefix($0) }) else {
                 throw CommandError.noChannel(channel: channel)
@@ -49,15 +49,15 @@ extension Command {
             var words = text.split(separator: " ").map(String.init)
             words.removeFirst()
             
-            var job: String? = nil
+            var type: String? = nil
             var branch: String? = nil
             var version: String? = nil
             var groups: String? = nil
             var emails: String? = nil
 
             for word in words {
-                if types.keys.contains(word), let (key, value) = types[word] {
-                    job = key
+                if let value = types[word] {
+                    type = word
                     branch = value
                 } else if word.contains("@") {
                     emails = word
@@ -68,10 +68,10 @@ extension Command {
                 }
             }
             
-            if job == nil || branch == nil {
+            if type == nil || branch == nil {
                 throw CommandError.noType(text: text)
             }
-            self = .deploy(project: project, job: job!, branch: branch!, version: version, groups: groups, emails: emails)
+            self = .deploy(project: project, type: type!, branch: branch!, version: version, groups: groups, emails: emails)
         } else if text == "help" {
             self = .help
         } else {
@@ -81,11 +81,12 @@ extension Command {
     
     func parse(config: AppConfig) -> Either<HTTPRequest, SlackResponse> {
         switch self {
-        case .deploy(let project, let job, let branch, let version, let groups, let emails):
+        case .deploy(let project, let type, let branch, let version, let groups, let emails):
             var request = HTTPRequest.init()
             request.method = .POST
             var params: [String] = [
-                "build_parameters[CIRCLE_JOB]=\(job)",
+                "build_parameters[CIRCLE_JOB]=deploy",
+                "build_paramaters[TYPE]=\(type)",
                 "circle-token=\(config.circleciToken)"
             ]
             if let version = version {
@@ -103,7 +104,7 @@ extension Command {
             return .left(request)
         case .help:
             return .right(SlackResponse(responseType: .ephemeral, text: "Send commands to Circleci", attachements: [
-                    ["text": "Commands:\n * deploy:\n/cci deploy alpha 2.0.1 qa,beta-customers"]
+                ["text": "Commands:\n * deploy:\n/cci deploy type [version] [emails] [groups]\n   * type: alpha|beta|app_store\n   * version: next version number (2.0.1)\n   * emails: coma separated spaceless list of emails to send to (xy@imind.eu,zw@test.com)\n   * groups: coma separated spaceless list of groups to send to (qa,beta-customers)\n\nIf emails and groups are both set, emails will be used"]
                 ]))
         }
     }
