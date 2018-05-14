@@ -10,5 +10,4 @@ import Vapor
 
 struct CircleciResponse: Content {
     let build_url: String
-    let reponame: String
 }

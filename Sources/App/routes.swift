@@ -13,19 +13,19 @@ func commandAction(req: Request, slackCommand: SlackCommand) -> Future<SlackResp
 
 func token(slackCommand: SlackCommand) -> Either<SlackResponse, AppConfig> {
     guard let circleciToken = Environment.get("circleciToken") else {
-        return .left(SlackResponse(responseType: .ephemeral, text: "Error: no circleciToken found", attachments: []))
+        return .left(SlackResponse.error(text: "Error: no circleciToken found"))
     }
     guard let slackToken = Environment.get("slackToken"), slackCommand.token == slackToken else {
-        return .left(SlackResponse(responseType: .ephemeral, text: "Error: slackToken mismatch found", attachments: []))
+        return .left(SlackResponse.error(text: "Error: slackToken mismatch found"))
     }
     guard let company = Environment.get("company") else {
-        return .left(SlackResponse(responseType: .ephemeral, text: "Error: company not found found", attachments: []))
+        return .left(SlackResponse.error(text: "Error: company not found found"))
     }
     guard let vcs = Environment.get("vcs") else {
-        return .left(SlackResponse(responseType: .ephemeral, text: "Error: vcs not found found", attachments: []))
+        return .left(SlackResponse.error(text: "Error: vcs not found found"))
     }
     guard let projects = Environment.get("projects")?.split(separator: ",").map(String.init) else {
-        return .left(SlackResponse(responseType: .ephemeral, text: "Error: projects not found found", attachments: []))
+        return .left(SlackResponse.error(text: "Error: projects not found found"))
     }
     return .right(AppConfig(circleciToken: circleciToken, company: company, vcs: vcs, projects: projects))
 }
@@ -45,7 +45,7 @@ func command(_ slackCommand: SlackCommand, config: AppConfig, worker: Worker) ->
             if let error = error as? CommandError {
                 return error.slackResponse
             } else {
-                return SlackResponse(responseType: .ephemeral, text: "Error", attachments: [])
+                return SlackResponse(responseType: .ephemeral, text: "Error", attachments: [], mrkdwn: true)
             }
         }
     }
@@ -63,12 +63,32 @@ func fetch(request: HTTPRequest, command: Command, worker: Worker) -> Future<Sla
                 .map({ ci -> SlackResponse in
                     if let ci = ci {
                         if case .deploy(let project, let type, let branch, let version, let groups, let emails) = command {
-                            return SlackResponse(responseType: .inChannel, text: "Deploy has started at \(ci.build_url). (project: \(project), type: \(type), branch: \(branch), version: \(version ?? ""), groups: \(groups ?? ""), emails: \(emails ?? "") ", attachments: [])
+                            let fallback = "Deploy has started at \(ci.build_url). (project: \(project), type: \(type), branch: \(branch), version: \(version ?? ""), groups: \(groups ?? ""), emails: \(emails ?? "") "
+                            var fields = [
+                                SlackResponse.Field(title: "Project", value: project, short: true),
+                                SlackResponse.Field(title: "Type", value: type, short: true),
+                                ]
+                            if let version = version {
+                                fields.append(SlackResponse.Field(title: "Version", value: version, short: true))
+                            }
+                            if let groups = groups {
+                                fields.append(SlackResponse.Field(title: "Groups", value: groups, short: false))
+                            }
+                            if let emails = emails {
+                                fields.append(SlackResponse.Field(title: "Emails", value: emails, short: false))
+                            }
+                            let attachment = SlackResponse.Attachment(
+                                fallback: fallback,
+                                text: "Deploy has started at \(ci.build_url).",
+                                color: "#764FA5",
+                                mrkdwn_in: ["text", "fields"],
+                                fields: fields)
+                            return SlackResponse(responseType: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
                         } else {
-                            return SlackResponse(responseType: .inChannel, text: "Deploy has started at \(ci.build_url).", attachments: [])
+                            return SlackResponse(responseType: .inChannel, text: "Deploy has started at \(ci.build_url).", attachments: [], mrkdwn: true)
                         }
                     } else {
-                        return SlackResponse(responseType: .ephemeral, text: "Error: something went wrong. The build wasn't started", attachments: [])
+                        return SlackResponse.error(text: "Error: something went wrong. The build wasn't started")
                     }
                 })
         })

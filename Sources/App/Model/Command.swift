@@ -18,11 +18,11 @@ extension CommandError {
     var slackResponse: SlackResponse {
         switch self {
         case .unknowCommand(let text):
-            return SlackResponse(responseType: .ephemeral, text: "Unknown command (\(text))", attachments: [])
+            return SlackResponse.error(text: "Unknown command (\(text))")
         case .noChannel(let channel):
-            return SlackResponse(responseType: .ephemeral, text: "Unknown channel (\(channel))", attachments: [])
+            return SlackResponse.error(text: "Unknown channel (\(channel))")
         case .noType(let text):
-            return SlackResponse(responseType: .ephemeral, text: "Unknown command (\(text))", attachments: [])
+            return SlackResponse.error(text: "Unknown command (\(text))")
         }
 
     }
@@ -103,9 +103,11 @@ extension Command {
             request.headers = HTTPHeaders([("Accept", "application/json")])
             return .left(request)
         case .help:
-            return .right(SlackResponse(responseType: .ephemeral, text: "Send commands to Circleci", attachments: [
-                ["text": "Commands:\n * deploy:\n/cci deploy type [version] [emails] [groups]\n   * type: alpha|beta|app_store\n   * version: next version number (2.0.1)\n   * emails: coma separated spaceless list of emails to send to (xy@imind.eu,zw@test.com)\n   * groups: coma separated spaceless list of groups to send to (qa,beta-customers)\n\nIf emails and groups are both set, emails will be used"]
-                ]))
+            let text = "Commands:\n * deploy:\n`/cci deploy type [version] [emails] [groups]`\n   * *type*: alpha|beta|app_store\n   * *version(: next version number (2.0.1)\n   * *emails*: coma separated spaceless list of emails to send to (xy@imind.eu,zw@test.com)\n   * *groups*: coma separated spaceless list of groups to send to (qa,beta-customers)\n\nIf emails and groups are both set, emails will be used"
+            let attachment = SlackResponse.Attachment(
+                fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
+            let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
+            return .right(response)
         }
     }
 
