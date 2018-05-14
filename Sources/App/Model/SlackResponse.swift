@@ -15,5 +15,5 @@ struct SlackResponse: Content {
     }
     let responseType: ResponseType
     let text: String
-    let attachements: [[String:String]]
+    let attachments: [[String:String]]
 }
