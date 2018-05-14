@@ -36,7 +36,7 @@ func command(_ slackCommand: SlackCommand, config: AppConfig, worker: Worker) ->
         let parsed = cciCommand.parse(config: config)
         switch parsed {
         case .left(let request):
-            return fetch(request: request, worker: worker)
+            return fetch(request: request, command: cciCommand, worker: worker)
         case .right(let slackResponse):
             return Future.map(on: worker) { return slackResponse }
         }
@@ -51,7 +51,7 @@ func command(_ slackCommand: SlackCommand, config: AppConfig, worker: Worker) ->
     }
 }
 
-func fetch(request: HTTPRequest, worker: Worker) -> Future<SlackResponse> {
+func fetch(request: HTTPRequest, command: Command, worker: Worker) -> Future<SlackResponse> {
     return HTTPClient
         .connect(scheme: .https, hostname: "circleci.com", port: nil, on: worker)
         .flatMap({ client -> Future<SlackResponse> in
@@ -62,7 +62,11 @@ func fetch(request: HTTPRequest, worker: Worker) -> Future<SlackResponse> {
                 })
                 .map({ ci -> SlackResponse in
                     if let ci = ci {
-                        return SlackResponse(responseType: .inChannel, text: "Deploy has started at \(ci.build_url)", attachements: [])
+                        if case .deploy(let project, let type, let branch, let version, let groups, let emails) = command {
+                            return SlackResponse(responseType: .inChannel, text: "Deploy has started at \(ci.build_url). (project: \(project), type: \(type), branch: \(branch), version: \(version ?? ""), groups: \(groups ?? ""), emails: \(emails ?? "") ", attachements: [])
+                        } else {
+                            return SlackResponse(responseType: .inChannel, text: "Deploy has started at \(ci.build_url).", attachements: [])
+                        }
                     } else {
                         return SlackResponse(responseType: .ephemeral, text: "Error: something went wrong. The build wasn't started", attachements: [])
                     }
