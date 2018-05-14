@@ -103,7 +103,12 @@ extension Command {
             request.headers = HTTPHeaders([("Accept", "application/json")])
             return .left(request)
         case .help:
-            let text = "Commands:\n * deploy:\n`/cci deploy type [version] [emails] [groups]`\n   * *type*: alpha|beta|app_store\n   * *version(: next version number (2.0.1)\n   * *emails*: coma separated spaceless list of emails to send to (xy@imind.eu,zw@test.com)\n   * *groups*: coma separated spaceless list of groups to send to (qa,beta-customers)\n\nIf emails and groups are both set, emails will be used"
+            let text = "Commands:\n- deploy:\n`/cci deploy type [version] [emails] [groups]`\n" +
+                "   - *type*: alpha|beta|app_store\n" +
+                "   - *version*: next version number (2.0.1)\n" +
+                "   - *emails*: coma separated spaceless list of emails to send to (xy@imind.eu,zw@test.com)\n" +
+                "   - *groups*: coma separated spaceless list of groups to send to (qa,beta-customers)\n\n" +
+                "   If emails and groups are both set, emails will be used"
             let attachment = SlackResponse.Attachment(
                 fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
             let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
