@@ -12,5 +12,5 @@ These need to be set on your cloud provider:
 - *circleciToken*: token for the circleci API
 - *slackToken*: verification token for the slack command
 - *company*: company's name (that's in the circleci api url)
-- *vcs*: the vcs's used by circleci (github or bitbucket)
+- *vcs*: the vcs used by circleci (github or bitbucket)
 - *projects*: the projects that can be deployed (they have to be the same or the prefix for the slack channel, where the command is invomed)
