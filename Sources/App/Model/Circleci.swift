@@ -54,7 +54,7 @@ struct CircleciDeploy: Content {
 extension CircleciDeploy: Circleci {
     
     static func response(from: CircleciDeploy, with deploy: Command.Deploy) -> SlackResponseRepresentable {
-        let fallback = "Deploy has started at <\(from.build_url)|\(from.build_num)>. " +
+        let fallback = "Deploy has started at <\(from.build_url)|#\(from.build_num)>. " +
             "(project: \(deploy.project), type: \(deploy.type), branch: \(deploy.branch), version: \(deploy.version ?? ""), groups: \(deploy.groups ?? ""), emails: \(deploy.emails ?? "") "
         var fields = [
             SlackResponse.Field(title: "Project", value: deploy.project, short: true),
@@ -71,7 +71,7 @@ extension CircleciDeploy: Circleci {
         }
         let attachment = SlackResponse.Attachment(
             fallback: fallback,
-            text: "Deploy has started at <\(from.build_url)|\(from.build_num)>.",
+            text: "Deploy has started at <\(from.build_url)|#\(from.build_num)>.",
             color: "#764FA5",
             mrkdwn_in: ["text", "fields"],
             fields: fields)
