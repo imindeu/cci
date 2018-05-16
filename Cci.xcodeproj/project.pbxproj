@@ -21,9 +21,10 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		111A207A20A9975B003333DA /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111A207920A9975B003333DA /* AppConfig.swift */; };
+		111A207C20AC1602003333DA /* Slack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111A207B20AC1602003333DA /* Slack.swift */; };
+		111A207E20AC163E003333DA /* Circleci.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111A207D20AC163E003333DA /* Circleci.swift */; };
+		111A208020AC177C003333DA /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111A207F20AC177C003333DA /* Environment.swift */; };
 		111A883820A969A9000909B1 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111A883720A969A9000909B1 /* Command.swift */; };
-		111A883A20A98C57000909B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111A883920A98C57000909B1 /* Either.swift */; };
 		OBJ_1000 /* libc.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_479 /* libc.swift */; };
 		OBJ_1007 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_1017 /* CommandOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_403 /* CommandOption.swift */; };
@@ -799,9 +800,6 @@
 		OBJ_2324 /* blf.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_317 /* blf.c */; };
 		OBJ_2331 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_365 /* Package.swift */; };
 		OBJ_2337 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_644 /* Package.swift */; };
-		OBJ_691 /* CircleciResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* CircleciResponse.swift */; };
-		OBJ_692 /* SlackCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* SlackCommand.swift */; };
-		OBJ_693 /* SlackResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* SlackResponse.swift */; };
 		OBJ_694 /* boot.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* boot.swift */; };
 		OBJ_695 /* configure.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* configure.swift */; };
 		OBJ_696 /* routes.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* routes.swift */; };
@@ -3944,9 +3942,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		111A207920A9975B003333DA /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		111A207B20AC1602003333DA /* Slack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slack.swift; sourceTree = "<group>"; };
+		111A207D20AC163E003333DA /* Circleci.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Circleci.swift; sourceTree = "<group>"; };
+		111A207F20AC177C003333DA /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
 		111A883720A969A9000909B1 /* Command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
-		111A883920A98C57000909B1 /* Either.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		"Cci::App::Product" /* App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::AppTests::Product" /* AppTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::Run::Product" /* Run */ = {isa = PBXFileReference; lastKnownFileType = text; path = Run; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3973,14 +3972,12 @@
 		OBJ_107 /* Exports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exports.swift; sourceTree = "<group>"; };
 		OBJ_108 /* FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileIO.swift; sourceTree = "<group>"; };
 		OBJ_109 /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
-		OBJ_11 /* CircleciResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleciResponse.swift; sourceTree = "<group>"; };
 		OBJ_111 /* Vapor+View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Vapor+View.swift"; sourceTree = "<group>"; };
 		OBJ_113 /* NIOWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIOWebSocketClient.swift; sourceTree = "<group>"; };
 		OBJ_114 /* NIOWebSocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIOWebSocketServer.swift; sourceTree = "<group>"; };
 		OBJ_115 /* WebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketClient.swift; sourceTree = "<group>"; };
 		OBJ_116 /* WebSocketResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketResponder.swift; sourceTree = "<group>"; };
 		OBJ_117 /* WebSocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketServer.swift; sourceTree = "<group>"; };
-		OBJ_12 /* SlackCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackCommand.swift; sourceTree = "<group>"; };
 		OBJ_120 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/szotyi/Development/projects/Cci/.build/checkouts/vapor.git-5492988889259800272/Package.swift"; sourceTree = "<group>"; };
 		OBJ_123 /* Exports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exports.swift; sourceTree = "<group>"; };
 		OBJ_124 /* WebSocket+Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WebSocket+Client.swift"; sourceTree = "<group>"; };
@@ -3988,7 +3985,6 @@
 		OBJ_126 /* WebSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
 		OBJ_127 /* WebSocketHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketHandler.swift; sourceTree = "<group>"; };
 		OBJ_128 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/szotyi/Development/projects/Cci/.build/checkouts/websocket.git-995660844808513665/Package.swift"; sourceTree = "<group>"; };
-		OBJ_13 /* SlackResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackResponse.swift; sourceTree = "<group>"; };
 		OBJ_131 /* Exports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exports.swift; sourceTree = "<group>"; };
 		OBJ_132 /* Validatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validatable.swift; sourceTree = "<group>"; };
 		OBJ_133 /* ValidationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationError.swift; sourceTree = "<group>"; };
@@ -6917,12 +6913,10 @@
 		OBJ_9 /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				111A207920A9975B003333DA /* AppConfig.swift */,
-				OBJ_11 /* CircleciResponse.swift */,
+				111A207D20AC163E003333DA /* Circleci.swift */,
 				111A883720A969A9000909B1 /* Command.swift */,
-				111A883920A98C57000909B1 /* Either.swift */,
-				OBJ_12 /* SlackCommand.swift */,
-				OBJ_13 /* SlackResponse.swift */,
+				111A207F20AC177C003333DA /* Environment.swift */,
+				111A207B20AC1602003333DA /* Slack.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -9052,11 +9046,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				111A207A20A9975B003333DA /* AppConfig.swift in Sources */,
-				111A883A20A98C57000909B1 /* Either.swift in Sources */,
-				OBJ_691 /* CircleciResponse.swift in Sources */,
-				OBJ_692 /* SlackCommand.swift in Sources */,
-				OBJ_693 /* SlackResponse.swift in Sources */,
+				111A207E20AC163E003333DA /* Circleci.swift in Sources */,
+				111A207C20AC1602003333DA /* Slack.swift in Sources */,
+				111A208020AC177C003333DA /* Environment.swift in Sources */,
 				OBJ_694 /* boot.swift in Sources */,
 				111A883820A969A9000909B1 /* Command.swift in Sources */,
 				OBJ_695 /* configure.swift in Sources */,

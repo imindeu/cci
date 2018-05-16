@@ -9,33 +9,49 @@ import Foundation
 import Vapor
 
 enum CommandError: Error {
-    case unknowCommand(text: String)
+    case unknownCommand(text: String)
     case noChannel(channel: String)
     case noType(text: String)
+    case unknownError
 }
 
 extension CommandError {
+    static func any(error: Error) -> CommandError {
+        if let error = error as? CommandError {
+            return error
+        } else {
+            return .unknownError
+        }
+    }
+}
+
+extension CommandError: SlackResponseRepresentable {
     var slackResponse: SlackResponse {
         switch self {
-        case .unknowCommand(let text):
+        case .unknownCommand(let text):
             return SlackResponse.error(text: "Unknown command (\(text))")
         case .noChannel(let channel):
             return SlackResponse.error(text: "Unknown channel (\(channel))")
         case .noType(let text):
             return SlackResponse.error(text: "Unknown command (\(text))")
+        case .unknownError:
+            return SlackResponse.error(text: "Unknown error")
         }
 
     }
 }
 
+typealias Deploy = (project: String, type: String, branch: String, version: String?, groups: String?, emails: String?)
+
 enum Command {
-    case deploy(project: String, type: String, branch: String, version: String?, groups: String?, emails: String?)
+    case deploy(Deploy)
     case help
 }
 
 extension Command {
-    init(channel: String, text: String, projects: [String]) throws {
+    init(channel: String, text: String) throws {
         if text.hasPrefix("deploy") {
+            let projects = AppEnvironment.current.projects
             let types = [
                 "alpha": "dev",
                 "beta": "master",
@@ -71,49 +87,30 @@ extension Command {
             if type == nil || branch == nil {
                 throw CommandError.noType(text: text)
             }
-            self = .deploy(project: project, type: type!, branch: branch!, version: version, groups: groups, emails: emails)
+            self = .deploy((project: project, type: type!, branch: branch!, version: version, groups: groups, emails: emails))
         } else if text == "help" {
             self = .help
         } else {
-            throw CommandError.unknowCommand(text: text)
+            throw CommandError.unknownCommand(text: text)
         }
     }
     
-    func parse(config: AppConfig) -> Either<HTTPRequest, SlackResponse> {
+    func fetch(worker: Worker) -> Future<SlackResponseRepresentable> {
         switch self {
-        case .deploy(let project, let type, let branch, let version, let groups, let emails):
-            var request = HTTPRequest.init()
-            request.method = .POST
-            var params: [String] = [
-                "build_parameters[CIRCLE_JOB]=deploy",
-                "build_paramaters[TYPE]=\(type)",
-                "circle-token=\(config.circleciToken)"
-            ]
-            if let version = version {
-                params.append("build_parameters[NEW_VERSION]=\(version)")
-            }
-            if let groups = groups {
-                params.append("build_parameters[GROUPS]=\(groups)")
-            }
-            if let emails = emails {
-                params.append("build_parameters[EMAILS]=\(emails)")
-            }
-            request.urlString = "/api/v1.1/project/\(config.vcs)/\(config.company)/\(project)/tree/\(branch)?\(params.joined(separator: "&"))"
-            print("urlString: \(request.urlString)")
-            request.headers = HTTPHeaders([("Accept", "application/json")])
-            return .left(request)
+        case .deploy(let deploy):
+            return CircleciDeployResponse.fetch(worker: worker, deploy: deploy)
         case .help:
             let text = "Commands:\n- deploy:\n`/cci deploy type [version] [emails] [groups]`\n" +
                 "   - *type*: alpha|beta|app_store\n" +
                 "   - *version*: next version number (2.0.1)\n" +
                 "   - *emails*: coma separated spaceless list of emails to send to (xy@imind.eu,zw@test.com)\n" +
                 "   - *groups*: coma separated spaceless list of groups to send to (qa,beta-customers)\n\n" +
-                "   If emails and groups are both set, emails will be used"
+            "   If emails and groups are both set, emails will be used"
             let attachment = SlackResponse.Attachment(
                 fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
             let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
-            return .right(response)
+            return Future.map(on: worker) { response }
         }
     }
-
+    
 }

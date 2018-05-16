@@ -1,12 +1,32 @@
 //
-//  SlackResponse.swift
+//  Slack.swift
 //  App
 //
-//  Created by Peter Geszten-Kovacs on 2018. 05. 10..
+//  Created by Peter Geszten-Kovacs on 2018. 05. 16..
 //
 
 import Foundation
 import Vapor
+
+struct SlackCommand: Content {
+    let token: String
+    let team_id: String
+    let team_domain: String
+    let enterprise_id: String?
+    let enterprise_name: String?
+    let channel_id: String
+    let channel_name: String
+    let user_id: String
+    let user_name: String
+    let command: String
+    let text: String
+    let response_url: String
+    let trigger_id: String
+}
+
+protocol SlackResponseRepresentable {
+    var slackResponse: SlackResponse { get }
+}
 
 struct SlackResponse: Content {
     enum ResponseType: String, Content {
@@ -33,6 +53,10 @@ struct SlackResponse: Content {
     }
 }
 
+extension SlackResponse: SlackResponseRepresentable {
+    var slackResponse: SlackResponse { return self }
+}
+
 extension SlackResponse {
     static func error(text: String) -> SlackResponse {
         let attachment = SlackResponse.Attachment(
@@ -42,6 +66,6 @@ extension SlackResponse {
             mrkdwn_in: [],
             fields: [])
         return SlackResponse(responseType: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
-
+        
     }
 }
