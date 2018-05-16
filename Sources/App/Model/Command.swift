@@ -108,7 +108,7 @@ extension Command {
             "   If emails and groups are both set, emails will be used"
             let attachment = SlackResponse.Attachment(
                 fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
-            let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
+            let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
             return Future.map(on: worker) { response }
         }
     }

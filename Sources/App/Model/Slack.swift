@@ -33,7 +33,7 @@ struct SlackResponse: Content {
         case inChannel = "in_channel"
         case ephemeral = "ephemeral"
     }
-    let responseType: ResponseType
+    let response_type: ResponseType
     let text: String?
     let attachments: [Attachment]
     let mrkdwn: Bool?
@@ -65,7 +65,7 @@ extension SlackResponse {
             color: "danger",
             mrkdwn_in: [],
             fields: [])
-        return SlackResponse(responseType: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
+        return SlackResponse(response_type: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
         
     }
 }

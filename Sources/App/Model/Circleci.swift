@@ -75,7 +75,7 @@ extension CircleciDeploy: Circleci {
             color: "#764FA5",
             mrkdwn_in: ["text", "fields"],
             fields: fields)
-        return SlackResponse(responseType: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
+        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
     }
     
     static func request(from deploy: Command.Deploy) -> HTTPRequest {
