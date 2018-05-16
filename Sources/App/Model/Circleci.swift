@@ -10,14 +10,14 @@ import Vapor
 
 protocol Circleci: Content {
     associatedtype Element
-    static func request(from: Element) -> HTTPRequest
+    static func request(from: Element) throws -> HTTPRequest
     static func response(from: Self, with: Element) -> SlackResponseRepresentable
 }
 
 extension Circleci {
     static func fetch(worker: Worker, with: Element) -> Future<SlackResponseRepresentable> {
         return HTTPClient.connect(scheme: .https, hostname: "circleci.com", port: nil, on: worker)
-            .flatMap { $0.send(request(from: with)) }
+            .flatMap { $0.send(try request(from: with)) }
             .map { response -> Self in
                 if let deployResponse = try response.body.data.map { try JSONDecoder().decode(Self.self, from: $0) } {
                     return deployResponse
@@ -78,27 +78,33 @@ extension CircleciDeploy: Circleci {
         return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
     }
     
-    static func request(from deploy: Command.Deploy) -> HTTPRequest {
+    static func request(from deploy: Command.Deploy) throws -> HTTPRequest {
+
         let environment = AppEnvironment.current
         var request = HTTPRequest.init()
         request.method = .POST
-        var params: [String] = [
-            "build_parameters[CIRCLE_JOB]=deploy",
-            "build_paramaters[TYPE]=\(deploy.type)",
-            "circle-token=\(environment.circleciToken)"
+        var buildParameters: [String:String] = [
+            "CIRCLE_JOB": "deploy",
+            "TYPE": deploy.type
         ]
         if let version = deploy.version {
-            params.append("build_parameters[NEW_VERSION]=\(version)")
+            buildParameters["NEW_VERSION"] = version
         }
         if let groups = deploy.groups {
-            params.append("build_parameters[GROUPS]=\(groups)")
+            buildParameters["GROUPS"] = groups
         }
         if let emails = deploy.emails {
-            params.append("build_parameters[EMAILS]=\(emails)")
+            buildParameters["EMAILS"] = emails
         }
-        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(deploy.project)/tree/\(deploy.branch)?\(params.joined(separator: "&"))"
-        print("urlString: \(request.urlString)")
-        request.headers = HTTPHeaders([("Accept", "application/json")])
+
+        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(deploy.project)/tree/\(deploy.branch)?circle-token=\(environment.circleciToken)"
+
+        let body = try JSONEncoder().encode(["build_parameters": buildParameters])
+        request.body = HTTPBody(data: body)
+        request.headers = HTTPHeaders([
+            ("Accept", "application/json"),
+            ("Content-Type", "application/json")
+            ])
         return request
     }
 }
