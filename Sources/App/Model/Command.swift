@@ -41,9 +41,9 @@ extension CommandError: SlackResponseRepresentable {
     }
 }
 
-typealias Deploy = (project: String, type: String, branch: String, version: String?, groups: String?, emails: String?)
-
 enum Command {
+    typealias Deploy = (project: String, type: String, branch: String, version: String?, groups: String?, emails: String?)
+    
     case deploy(Deploy)
     case help
 }
@@ -98,7 +98,7 @@ extension Command {
     func fetch(worker: Worker) -> Future<SlackResponseRepresentable> {
         switch self {
         case .deploy(let deploy):
-            return CircleciDeployResponse.fetch(worker: worker, deploy: deploy)
+            return CircleciDeploy.fetch(worker: worker, with: deploy)
         case .help:
             let text = "Commands:\n- deploy:\n`/cci deploy type [version] [emails] [groups]`\n" +
                 "   - *type*: alpha|beta|app_store\n" +
