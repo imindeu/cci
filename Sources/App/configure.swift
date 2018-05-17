@@ -12,4 +12,8 @@ public func configure(
     try routes(router)
     services.register(router, as: Router.self)
 
+    if let portString = Vapor.Environment.get("port"), let port = Int(portString) {
+        let nioServer = NIOServerConfig.default(port: port)
+        services.register(nioServer)
+    }
 }
