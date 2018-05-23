@@ -8,7 +8,11 @@
 import Foundation
 import Vapor
 
-struct SlackCommand: Content {
+protocol HelpResponse {
+    static var helpResponse: SlackResponse { get }
+}
+
+struct SlackRequest: Content {
     let token: String
     let team_id: String
     let team_domain: String
@@ -35,7 +39,7 @@ struct SlackResponse: Content {
     }
     let response_type: ResponseType
     let text: String?
-    let attachments: [Attachment]
+    var attachments: [Attachment]
     let mrkdwn: Bool?
     
     struct Attachment: Content {
@@ -58,6 +62,14 @@ extension SlackResponse: SlackResponseRepresentable {
 }
 
 extension SlackResponse {
+    static func error(helpResponse: SlackResponse, text: String) -> SlackResponse {
+        var copy = helpResponse
+        let attachments = copy.attachments
+        let attachment = SlackResponse.Attachment(fallback: text, text: text, color: "danger", mrkdwn_in: [], fields: [])
+        copy.attachments = [attachment] + attachments
+        return copy
+    }
+    
     static func error(text: String) -> SlackResponse {
         let attachment = SlackResponse.Attachment(
             fallback: nil,

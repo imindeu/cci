@@ -10,8 +10,6 @@ import Vapor
 
 enum CommandError: Error {
     case unknownCommand(text: String)
-    case noChannel(channel: String)
-    case noType(text: String)
     case unknownError
 }
 
@@ -29,67 +27,62 @@ extension CommandError: SlackResponseRepresentable {
     var slackResponse: SlackResponse {
         switch self {
         case .unknownCommand(let text):
-            return SlackResponse.error(text: "Unknown command (\(text))")
-        case .noChannel(let channel):
-            return SlackResponse.error(text: "Unknown channel (\(channel))")
-        case .noType(let text):
-            return SlackResponse.error(text: "Unknown command (\(text))")
+            return SlackResponse.error(helpResponse: Command.helpResponse, text: "Unknown command (\(text))")
         case .unknownError:
-            return SlackResponse.error(text: "Unknown error")
+            return SlackResponse.error(helpResponse: Command.helpResponse, text: "Unknown error")
         }
 
     }
 }
 
 enum Command {
-    typealias Deploy = (project: String, type: String, branch: String, version: String?, groups: String?, emails: String?)
     
-    case deploy(Deploy)
-    case help
+    case deploy(CircleciDeployJobRequest)
+    case test(CircleciTestJobRequest)
+    case help(HelpResponse.Type)
+    
+    static var helpCommands: [String: HelpResponse.Type] =
+        ["deploy": CircleciDeployJobRequest.self,
+         "test": CircleciTestJobRequest.self,
+         "help": Command.self]
+}
+
+extension Command: HelpResponse {
+    static var helpResponse: SlackResponse {
+        let text = "Help:\n- `/cci command [help]`\n" +
+            "Current command\n" +
+            "   - help: show this message\n" +
+            "   - deploy: deploy a build\n\n" +
+            "All commands have a help subcommand to show their functionality\n"
+        let attachment = SlackResponse.Attachment(
+            fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
+        let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
+        return response
+        
+    }
 }
 
 extension Command {
     init(channel: String, text: String) throws {
-        if text.hasPrefix("deploy") {
-            let projects = AppEnvironment.current.projects
-            let types = [
-                "alpha": "dev",
-                "beta": "master",
-                "app_store": "master"]
-            
-            guard let index = projects.index(where: { channel.hasPrefix($0) }) else {
-                throw CommandError.noChannel(channel: channel)
-            }
-            let project = projects[index]
+        var words = text.split(separator: " ").map(String.init)
+        guard words.count > 0 else {
+            throw CommandError.unknownCommand(text: text)
+        }
+        let command = words[0]
+        words.removeFirst()
 
-            var words = text.split(separator: " ").map(String.init)
-            words.removeFirst()
-            
-            var type: String? = nil
-            var branch: String? = nil
-            var version: String? = nil
-            var groups: String? = nil
-            var emails: String? = nil
-
-            for word in words {
-                if let value = types[word] {
-                    type = word
-                    branch = value
-                } else if word.contains("@") {
-                    emails = word
-                } else if word.range(of: "^\\d+.\\d+.\\d+$", options: .regularExpression) != nil {
-                    version = word
-                } else {
-                    groups = word
-                }
+        if command == "help" || (words.count > 0 && words[0] == "help") {
+            if let type = Command.helpCommands[command] {
+                self = .help(type)
+            } else {
+                throw CommandError.unknownCommand(text: text)
             }
-            
-            if type == nil || branch == nil {
-                throw CommandError.noType(text: text)
-            }
-            self = .deploy((project: project, type: type!, branch: branch!, version: version, groups: groups, emails: emails))
-        } else if text == "help" {
-            self = .help
+        } else if command == "deploy" {
+            let request = try CircleciDeployJobRequest.parse(channel: channel, words: words)
+            self = .deploy(request)
+        } else if command == "test" {
+            let request = try CircleciTestJobRequest.parse(channel: channel, words: words)
+            self = .test(request)
         } else {
             throw CommandError.unknownCommand(text: text)
         }
@@ -97,19 +90,12 @@ extension Command {
     
     func fetch(worker: Worker) -> Future<SlackResponseRepresentable> {
         switch self {
-        case .deploy(let deploy):
-            return CircleciDeploy.fetch(worker: worker, with: deploy)
-        case .help:
-            let text = "Commands:\n- deploy:\n`/cci deploy type [version] [emails] [groups]`\n" +
-                "   - *type*: alpha|beta|app_store\n" +
-                "   - *version*: next version number (2.0.1)\n" +
-                "   - *emails*: coma separated spaceless list of emails to send to (xy@imind.eu,zw@test.com)\n" +
-                "   - *groups*: coma separated spaceless list of groups to send to (qa,beta-customers)\n\n" +
-            "   If emails and groups are both set, emails will be used"
-            let attachment = SlackResponse.Attachment(
-                fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
-            let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
-            return Future.map(on: worker) { response }
+        case .deploy(let request):
+            return CircleciDeploy.fetch(worker: worker, request: request)
+        case .test(let request):
+            return CircleciTest.fetch(worker: worker, request: request)
+        case .help(let type):
+            return Future.map(on: worker) { type.helpResponse }
         }
     }
     
