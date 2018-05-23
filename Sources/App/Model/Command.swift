@@ -53,6 +53,7 @@ extension Command: HelpResponse {
             "Current command\n" +
             "   - help: show this message\n" +
             "   - deploy: deploy a build\n\n" +
+            "   - test: test a branch\n\n" +
             "All commands have a help subcommand to show their functionality\n"
         let attachment = SlackResponse.Attachment(
             fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
