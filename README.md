@@ -4,8 +4,9 @@ slack commands to circleci
 ## commands:
 - help
 - deploy alpha|beta|app_store [version] [groups] [emails]
+- test branch
 
-(on circleci there needs to be a deploy job, that can handle the parameters)
+(on circleci there needs to be a *deploy* and *test* job, that can handle the parameters)
 
 ## environment variables:
 These need to be set on your cloud provider or in docker container:
