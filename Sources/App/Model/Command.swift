@@ -52,7 +52,7 @@ extension Command: HelpResponse {
         let text = "Help:\n- `/cci command [help]`\n" +
             "Current command\n" +
             "   - help: show this message\n" +
-            "   - deploy: deploy a build\n\n" +
+            "   - deploy: deploy a build\n" +
             "   - test: test a branch\n\n" +
             "All commands have a help subcommand to show their functionality\n"
         let attachment = SlackResponse.Attachment(
