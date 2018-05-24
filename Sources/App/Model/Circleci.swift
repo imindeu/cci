@@ -28,8 +28,28 @@ extension CircleciError: SlackResponseRepresentable {
 }
 
 protocol CircleciRequest: HelpResponse {
-    static func parse(channel: String, words: [String]) throws -> Self
+    associatedtype Response: CircleciResponse
+    
     func request() throws -> HTTPRequest
+    func slackResponse(response: Response) -> SlackResponse
+    static func parse(channel: String, words: [String]) throws -> Self
+}
+
+extension CircleciRequest {
+    func fetch(worker: Worker) -> Future<SlackResponseRepresentable> {
+        return HTTPClient.connect(scheme: .https, hostname: "circleci.com", port: nil, on: worker)
+            .flatMap { $0.send(try self.request()) }
+            .map { response -> Response in
+                if let deployResponse = try response.body.data.map { try JSONDecoder().decode(Response.self, from: $0) } {
+                    return deployResponse
+                } else {
+                    throw CircleciError.decodeError(helpResponse: Self.helpResponse)
+                }
+            }
+            .map { self.slackResponse(response: $0) }
+            .catchMap { CircleciError.fetchError(helpResponse: Self.helpResponse, error: $0) }
+    }
+
 }
 
 protocol CircleciJobRequest: CircleciRequest {}
@@ -60,6 +80,22 @@ extension CircleciTestJobRequest: CircleciJobRequest {
         return request
     }
     
+    func slackResponse(response: CircleciBuildResponse) -> SlackResponse {
+        let fallback = "Test has started at <\(response.build_url)|#\(response.build_num)>. " +
+        "(project: \(project), branch: \(branch)"
+        let fields = [
+            SlackResponse.Field(title: "Project", value: project, short: true),
+            SlackResponse.Field(title: "Branch", value: branch, short: true),
+            ]
+        let attachment = SlackResponse.Attachment(
+            fallback: fallback,
+            text: "Test has started at <\(response.build_url)|#\(response.build_num)>.",
+            color: "#764FA5",
+            mrkdwn_in: ["text", "fields"],
+            fields: fields)
+        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
+    }
+
     static func parse(channel: String, words: [String]) throws -> CircleciTestJobRequest {
         let projects = AppEnvironment.current.projects
         
@@ -82,6 +118,7 @@ extension CircleciTestJobRequest: CircleciJobRequest {
         let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
+    
 }
 
 struct CircleciDeployJobRequest {
@@ -95,7 +132,7 @@ struct CircleciDeployJobRequest {
 }
 
 extension CircleciDeployJobRequest: CircleciJobRequest {
-    
+
     func request() throws -> HTTPRequest {
         let environment = AppEnvironment.current
         var request = HTTPRequest.init()
@@ -125,6 +162,31 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         return request
     }
     
+    func slackResponse(response: CircleciBuildResponse) -> SlackResponse {
+        let fallback = "Deploy has started at <\(response.build_url)|#\(response.build_num)>. " +
+        "(project: \(project), type: \(type), branch: \(branch), version: \(version ?? ""), groups: \(groups ?? ""), emails: \(emails ?? "") "
+        var fields = [
+            SlackResponse.Field(title: "Project", value: project, short: true),
+            SlackResponse.Field(title: "Type", value: type, short: true),
+            ]
+        if let version = version {
+            fields.append(SlackResponse.Field(title: "Version", value: version, short: true))
+        }
+        if let groups = groups {
+            fields.append(SlackResponse.Field(title: "Groups", value: groups, short: false))
+        }
+        if let emails = emails {
+            fields.append(SlackResponse.Field(title: "Emails", value: emails, short: false))
+        }
+        let attachment = SlackResponse.Attachment(
+            fallback: fallback,
+            text: "Deploy has started at <\(response.build_url)|#\(response.build_num)>.",
+            color: "#764FA5",
+            mrkdwn_in: ["text", "fields"],
+            fields: fields)
+        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
+    }
+
     static func parse(channel: String, words: [String]) throws -> CircleciDeployJobRequest {
         let projects = AppEnvironment.current.projects
         
@@ -176,6 +238,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
+    
 }
 
 protocol CircleciResponse: Content {}
@@ -183,72 +246,4 @@ protocol CircleciResponse: Content {}
 struct CircleciBuildResponse: CircleciResponse {
     let build_url: String
     let build_num: Int
-}
-
-protocol Circleci {
-    associatedtype Request: CircleciRequest
-    associatedtype Response: CircleciResponse
-
-    static func slackResponse(request: Request, response: Response) -> SlackResponse
-}
-
-extension Circleci {
-    static func fetch(worker: Worker, request: Request) -> Future<SlackResponseRepresentable> {
-        return HTTPClient.connect(scheme: .https, hostname: "circleci.com", port: nil, on: worker)
-            .flatMap { $0.send(try request.request()) }
-            .map { response -> Response in
-                if let deployResponse = try response.body.data.map { try JSONDecoder().decode(Response.self, from: $0) } {
-                    return deployResponse
-                } else {
-                    throw CircleciError.decodeError(helpResponse: Request.helpResponse)
-                }
-            }
-            .map { slackResponse(request: request, response: $0) }
-            .catchMap { CircleciError.fetchError(helpResponse: Request.helpResponse, error: $0) }
-    }
-}
-
-struct CircleciDeploy: Circleci {
-    static func slackResponse(request: CircleciDeployJobRequest, response: CircleciBuildResponse) -> SlackResponse {
-        let fallback = "Deploy has started at <\(response.build_url)|#\(response.build_num)>. " +
-        "(project: \(request.project), type: \(request.type), branch: \(request.branch), version: \(request.version ?? ""), groups: \(request.groups ?? ""), emails: \(request.emails ?? "") "
-        var fields = [
-            SlackResponse.Field(title: "Project", value: request.project, short: true),
-            SlackResponse.Field(title: "Type", value: request.type, short: true),
-            ]
-        if let version = request.version {
-            fields.append(SlackResponse.Field(title: "Version", value: version, short: true))
-        }
-        if let groups = request.groups {
-            fields.append(SlackResponse.Field(title: "Groups", value: groups, short: false))
-        }
-        if let emails = request.emails {
-            fields.append(SlackResponse.Field(title: "Emails", value: emails, short: false))
-        }
-        let attachment = SlackResponse.Attachment(
-            fallback: fallback,
-            text: "Deploy has started at <\(response.build_url)|#\(response.build_num)>.",
-            color: "#764FA5",
-            mrkdwn_in: ["text", "fields"],
-            fields: fields)
-        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
-    }
-}
-
-struct CircleciTest: Circleci {
-    static func slackResponse(request: CircleciTestJobRequest, response: CircleciBuildResponse) -> SlackResponse {
-        let fallback = "Test has started at <\(response.build_url)|#\(response.build_num)>. " +
-        "(project: \(request.project), branch: \(request.branch)"
-        let fields = [
-            SlackResponse.Field(title: "Project", value: request.project, short: true),
-            SlackResponse.Field(title: "Branch", value: request.branch, short: true),
-            ]
-        let attachment = SlackResponse.Attachment(
-            fallback: fallback,
-            text: "Test has started at <\(response.build_url)|#\(response.build_num)>.",
-            color: "#764FA5",
-            mrkdwn_in: ["text", "fields"],
-            fields: fields)
-        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
-    }
 }

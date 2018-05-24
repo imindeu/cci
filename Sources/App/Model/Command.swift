@@ -92,9 +92,9 @@ extension Command {
     func fetch(worker: Worker) -> Future<SlackResponseRepresentable> {
         switch self {
         case .deploy(let request):
-            return CircleciDeploy.fetch(worker: worker, request: request)
+            return request.fetch(worker: worker)
         case .test(let request):
-            return CircleciTest.fetch(worker: worker, request: request)
+            return request.fetch(worker: worker)
         case .help(let type):
             return Future.map(on: worker) { type.helpResponse }
         }
