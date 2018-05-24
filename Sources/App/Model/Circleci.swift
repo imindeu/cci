@@ -52,11 +52,37 @@ extension CircleciRequest {
 
 }
 
-protocol CircleciJobRequest: CircleciRequest {}
+protocol CircleciJobRequest: CircleciRequest {
+    var project: String { get }
+    var branch: String { get }
+    var name: String { get }
+    
+    var slackResponseFields: [SlackResponse.Field] { get }
+}
+
+extension CircleciJobRequest {
+    var urlEncodedBranch: String {
+        return branch.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? branch
+    }
+    
+    func slackResponse(response: CircleciBuildResponse) -> SlackResponse {
+        let fallback = "Job '\(name)' has started at <\(response.build_url)|#\(response.build_num)>. " +
+        "(project: \(project), branch: \(branch)"
+        let attachment = SlackResponse.Attachment(
+            fallback: fallback,
+            text: "Job '\(name)' has started at <\(response.build_url)|#\(response.build_num)>.",
+            color: "#764FA5",
+            mrkdwn_in: ["text", "fields"],
+            fields: slackResponseFields)
+        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
+    }
+
+}
 
 struct CircleciTestJobRequest {
     let project: String
     let branch: String
+    let name: String = "test"
 }
 
 extension CircleciTestJobRequest: CircleciJobRequest {
@@ -69,7 +95,7 @@ extension CircleciTestJobRequest: CircleciJobRequest {
             "CIRCLE_JOB": "test"
         ]
         
-        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(branch)?circle-token=\(environment.circleciToken)"
+        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(urlEncodedBranch)?circle-token=\(environment.circleciToken)"
         
         let body = try JSONEncoder().encode(["build_parameters": buildParameters])
         request.body = HTTPBody(data: body)
@@ -80,20 +106,11 @@ extension CircleciTestJobRequest: CircleciJobRequest {
         return request
     }
     
-    func slackResponse(response: CircleciBuildResponse) -> SlackResponse {
-        let fallback = "Test has started at <\(response.build_url)|#\(response.build_num)>. " +
-        "(project: \(project), branch: \(branch)"
-        let fields = [
+    var slackResponseFields: [SlackResponse.Field] {
+        return [
             SlackResponse.Field(title: "Project", value: project, short: true),
             SlackResponse.Field(title: "Branch", value: branch, short: true),
-            ]
-        let attachment = SlackResponse.Attachment(
-            fallback: fallback,
-            text: "Test has started at <\(response.build_url)|#\(response.build_num)>.",
-            color: "#764FA5",
-            mrkdwn_in: ["text", "fields"],
-            fields: fields)
-        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
+        ]
     }
 
     static func parse(channel: String, words: [String]) throws -> CircleciTestJobRequest {
@@ -123,8 +140,9 @@ extension CircleciTestJobRequest: CircleciJobRequest {
 
 struct CircleciDeployJobRequest {
     let project: String
-    let type: String
     let branch: String
+    let name: String = "deploy"
+    let type: String
     let version: String?
     let groups: String?
     let emails: String?
@@ -151,7 +169,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
             buildParameters["DEPLOY_EMAILS"] = emails
         }
         
-        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(branch)?circle-token=\(environment.circleciToken)"
+        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(urlEncodedBranch)?circle-token=\(environment.circleciToken)"
         
         let body = try JSONEncoder().encode(["build_parameters": buildParameters])
         request.body = HTTPBody(data: body)
@@ -162,9 +180,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         return request
     }
     
-    func slackResponse(response: CircleciBuildResponse) -> SlackResponse {
-        let fallback = "Deploy has started at <\(response.build_url)|#\(response.build_num)>. " +
-        "(project: \(project), type: \(type), branch: \(branch), version: \(version ?? ""), groups: \(groups ?? ""), emails: \(emails ?? "") "
+    var slackResponseFields: [SlackResponse.Field] {
         var fields = [
             SlackResponse.Field(title: "Project", value: project, short: true),
             SlackResponse.Field(title: "Type", value: type, short: true),
@@ -178,13 +194,8 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         if let emails = emails {
             fields.append(SlackResponse.Field(title: "Emails", value: emails, short: false))
         }
-        let attachment = SlackResponse.Attachment(
-            fallback: fallback,
-            text: "Deploy has started at <\(response.build_url)|#\(response.build_num)>.",
-            color: "#764FA5",
-            mrkdwn_in: ["text", "fields"],
-            fields: fields)
-        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
+
+        return fields
     }
 
     static func parse(channel: String, words: [String]) throws -> CircleciDeployJobRequest {
@@ -222,7 +233,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         if type == nil || branch == nil {
             throw CircleciError.parseError(helpResponse: CircleciDeployJobRequest.helpResponse, text: "No type: (\(words.joined(separator: " ")))")
         }
-        return CircleciDeployJobRequest(project: project, type: type!, branch: branch!, version: version, groups: groups, emails: emails)
+        return CircleciDeployJobRequest(project: project, branch: branch!, type: type!, version: version, groups: groups, emails: emails)
     }
 
     static var helpResponse: SlackResponse {
