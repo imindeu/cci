@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1157364120B7EDAD003B505F /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1157364020B7EDAC003B505F /* Either.swift */; };
 		OBJ_1000 /* libc.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_479 /* libc.swift */; };
 		OBJ_1007 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_1017 /* CommandOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_403 /* CommandOption.swift */; };
@@ -3942,6 +3943,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1157364020B7EDAC003B505F /* Either.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		"Cci::App::Product" /* App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::AppTests::Product" /* AppTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::Run::Product" /* Run */ = {isa = PBXFileReference; lastKnownFileType = text; path = Run; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -6428,7 +6430,7 @@
 			path = CodableReflection;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -6438,7 +6440,6 @@
 				OBJ_23 /* Dependencies */,
 				OBJ_645 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_523 /* swift-nio 1.6.1 */ = {
@@ -6916,6 +6917,7 @@
 			children = (
 				OBJ_10 /* Circleci.swift */,
 				OBJ_11 /* Command.swift */,
+				1157364020B7EDAC003B505F /* Either.swift */,
 				OBJ_12 /* Environment.swift */,
 				OBJ_13 /* Slack.swift */,
 			);
@@ -8243,7 +8245,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_645 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -9047,6 +9049,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				1157364120B7EDAD003B505F /* Either.swift in Sources */,
 				OBJ_690 /* Circleci.swift in Sources */,
 				OBJ_691 /* Command.swift in Sources */,
 				OBJ_692 /* Environment.swift in Sources */,

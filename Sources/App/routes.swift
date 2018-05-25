@@ -11,7 +11,7 @@ extension Router {
     func slackCommand(_ at: String, use: @escaping SlackAction) {
         self.post(SlackRequest.self, at: at) { req, slack -> Future<SlackResponse> in
             guard AppEnvironment.current.slackToken == slack.token else {
-                return Future.map(on: req) { AppEnvironmentError.wrongSlackToken.slackResponse }
+                return Future.map(on: req) { SlackResponse.error(text: "Error: wrong slackToken") }
             }
             return use(req, slack).map { $0.slackResponse }
         }

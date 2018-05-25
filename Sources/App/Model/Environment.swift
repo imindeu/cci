@@ -14,9 +14,19 @@ struct Environment {
     let company: String
     let vcs: String
     let projects: [String]
+    let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse>
     
-    static func empty() -> Environment {
-        return Environment(circleciToken: "", slackToken: "", company: "", vcs: "", projects: [])
+    static var empty: Environment {
+        return Environment(
+            circleciToken: "",
+            slackToken: "",
+            company: "",
+            vcs: "",
+            projects: [],
+            circleci: { worker, _ in
+                return Future.map(on: worker, { return HTTPResponse() })
+            }
+        )
     }
 }
 
@@ -26,26 +36,6 @@ enum AppEnvironmentError: Error {
     case noCompany
     case noVcs
     case noProjects
-    case wrongSlackToken
-}
-
-extension AppEnvironmentError: SlackResponseRepresentable {
-    var slackResponse: SlackResponse {
-        switch self {
-        case .noCircleciToken:
-            return SlackResponse.error(text: "Error: no circleciToken found")
-        case .noSlackToken:
-            return SlackResponse.error(text: "Error: no slackToken found")
-        case .noCompany:
-            return SlackResponse.error(text: "Error: no company found")
-        case .noVcs:
-            return SlackResponse.error(text: "Error: no vcs found")
-        case .noProjects:
-            return SlackResponse.error(text: "Error: no projects found")
-        case .wrongSlackToken:
-            return SlackResponse.error(text: "Error: wrong slackToken")
-        }
-    }
 }
 
 final class AppEnvironment {
@@ -53,7 +43,7 @@ final class AppEnvironment {
 
     static var current: Environment {
         if stack.isEmpty {
-            stack.append(Environment.empty())
+            stack.append(Environment.empty)
         }
         return stack.last!
     }
@@ -92,7 +82,12 @@ final class AppEnvironment {
         guard let projects = Vapor.Environment.get("projects")?.split(separator: ",").map(String.init) else {
             throw AppEnvironmentError.noProjects
         }
-        replaceCurrent(Environment(circleciToken: circleciToken, slackToken: slackToken, company: company, vcs: vcs, projects: projects))
+        let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse> = { worker, request in
+            return HTTPClient
+                .connect(scheme: .https, hostname: "circleci.com", port: nil, on: worker)
+                .flatMap { $0.send(request) }
+        }
+        replaceCurrent(Environment(circleciToken: circleciToken, slackToken: slackToken, company: company, vcs: vcs, projects: projects, circleci: circleci))
 
     }
 }

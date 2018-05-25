@@ -30,33 +30,42 @@ extension CircleciError: SlackResponseRepresentable {
 protocol CircleciRequest: HelpResponse {
     associatedtype Response: CircleciResponse
     
-    func request() throws -> HTTPRequest
+    var request: Either<SlackResponseRepresentable, HTTPRequest> { get }
     func slackResponse(response: Response) -> SlackResponse
-    static func parse(channel: String, words: [String]) throws -> Self
+    static func parse(project: String, words: [String]) throws -> Self
 }
 
 extension CircleciRequest {
     func fetch(worker: Worker) -> Future<SlackResponseRepresentable> {
-        return HTTPClient.connect(scheme: .https, hostname: "circleci.com", port: nil, on: worker)
-            .flatMap { $0.send(try self.request()) }
-            .map { response -> Response in
-                if let deployResponse = try response.body.data.map { try JSONDecoder().decode(Response.self, from: $0) } {
-                    return deployResponse
-                } else {
-                    throw CircleciError.decodeError(helpResponse: Self.helpResponse)
+        let badRequest: (SlackResponseRepresentable) -> Future<SlackResponseRepresentable> = { response in
+            return Future.map(on: worker, { return response })
+        }
+        let goodRequest: (HTTPRequest) -> Future<SlackResponseRepresentable> = { request in
+            return AppEnvironment.current.circleci(worker, request)
+                .map { response -> Response in
+                    if let deployResponse = try response.body.data.map { try JSONDecoder().decode(Response.self, from: $0) } {
+                        return deployResponse
+                    } else {
+                        throw CircleciError.decodeError(helpResponse: Self.helpResponse)
+                    }
                 }
+                .map { self.slackResponse(response: $0) }
+                .catchMap {
+                    CircleciError.fetchError(helpResponse: Self.helpResponse, error: $0)
             }
-            .map { self.slackResponse(response: $0) }
-            .catchMap { CircleciError.fetchError(helpResponse: Self.helpResponse, error: $0) }
+        }
+        return request.either(badRequest, goodRequest)
+
     }
 
 }
 
 protocol CircleciJobRequest: CircleciRequest {
+    var name: String { get }
     var project: String { get }
     var branch: String { get }
-    var name: String { get }
     
+    var buildParameters: [String: String] { get }
     var slackResponseFields: [SlackResponse.Field] { get }
 }
 
@@ -65,6 +74,30 @@ extension CircleciJobRequest {
         return branch.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? branch
     }
     
+    var request: Either<SlackResponseRepresentable, HTTPRequest> {
+        let environment = AppEnvironment.current
+        var request = HTTPRequest.init()
+        request.method = .POST
+        var copy = buildParameters
+        copy["CIRCLE_JOB"] = name
+        
+        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(urlEncodedBranch)?circle-token=\(environment.circleciToken)"
+        
+        do {
+            let body = try JSONEncoder().encode(["build_parameters": copy])
+            request.body = HTTPBody(data: body)
+            request.headers = HTTPHeaders([
+                ("Accept", "application/json"),
+                ("Content-Type", "application/json")
+                ])
+            return .right(request)
+        } catch let error {
+            return .left(CircleciError.fetchError(
+                helpResponse: Self.helpResponse,
+                error: error))
+        }
+    }
+
     func slackResponse(response: CircleciBuildResponse) -> SlackResponse {
         let fallback = "Job '\(name)' has started at <\(response.build_url)|#\(response.build_num)>. " +
         "(project: \(project), branch: \(branch)"
@@ -80,31 +113,14 @@ extension CircleciJobRequest {
 }
 
 struct CircleciTestJobRequest {
+    let name: String = "test"
     let project: String
     let branch: String
-    let name: String = "test"
 }
 
 extension CircleciTestJobRequest: CircleciJobRequest {
     
-    func request() throws -> HTTPRequest {
-        let environment = AppEnvironment.current
-        var request = HTTPRequest.init()
-        request.method = .POST
-        let buildParameters: [String:String] = [
-            "CIRCLE_JOB": "test"
-        ]
-        
-        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(urlEncodedBranch)?circle-token=\(environment.circleciToken)"
-        
-        let body = try JSONEncoder().encode(["build_parameters": buildParameters])
-        request.body = HTTPBody(data: body)
-        request.headers = HTTPHeaders([
-            ("Accept", "application/json"),
-            ("Content-Type", "application/json")
-            ])
-        return request
-    }
+    var buildParameters: [String: String] { return [:] }
     
     var slackResponseFields: [SlackResponse.Field] {
         return [
@@ -113,16 +129,11 @@ extension CircleciTestJobRequest: CircleciJobRequest {
         ]
     }
 
-    static func parse(channel: String, words: [String]) throws -> CircleciTestJobRequest {
-        let projects = AppEnvironment.current.projects
+    static func parse(project: String, words: [String]) throws -> CircleciTestJobRequest {
         
-        guard let index = projects.index(where: { channel.hasPrefix($0) }) else {
-            throw CircleciError.parseError(helpResponse: CircleciTestJobRequest.helpResponse, text: "No channel: (\(channel))")
-        }
         guard words.count > 0 else {
             throw CircleciError.parseError(helpResponse: CircleciTestJobRequest.helpResponse, text: "No branch")
         }
-        let project = projects[index]
         let branch = words[0]
         return CircleciTestJobRequest(project: project, branch: branch)
     }
@@ -139,9 +150,9 @@ extension CircleciTestJobRequest: CircleciJobRequest {
 }
 
 struct CircleciDeployJobRequest {
+    let name: String = "deploy"
     let project: String
     let branch: String
-    let name: String = "deploy"
     let type: String
     let version: String?
     let groups: String?
@@ -151,12 +162,8 @@ struct CircleciDeployJobRequest {
 
 extension CircleciDeployJobRequest: CircleciJobRequest {
 
-    func request() throws -> HTTPRequest {
-        let environment = AppEnvironment.current
-        var request = HTTPRequest.init()
-        request.method = .POST
-        var buildParameters: [String:String] = [
-            "CIRCLE_JOB": "deploy",
+    var buildParameters: [String: String] {
+        var buildParameters: [String: String] = [
             "DEPLOY_TYPE": type
         ]
         if let version = version {
@@ -168,16 +175,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         if let emails = emails {
             buildParameters["DEPLOY_EMAILS"] = emails
         }
-        
-        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(urlEncodedBranch)?circle-token=\(environment.circleciToken)"
-        
-        let body = try JSONEncoder().encode(["build_parameters": buildParameters])
-        request.body = HTTPBody(data: body)
-        request.headers = HTTPHeaders([
-            ("Accept", "application/json"),
-            ("Content-Type", "application/json")
-            ])
-        return request
+        return buildParameters
     }
     
     var slackResponseFields: [SlackResponse.Field] {
@@ -198,14 +196,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         return fields
     }
 
-    static func parse(channel: String, words: [String]) throws -> CircleciDeployJobRequest {
-        let projects = AppEnvironment.current.projects
-        
-        guard let index = projects.index(where: { channel.hasPrefix($0) }) else {
-            throw CircleciError.parseError(helpResponse: CircleciDeployJobRequest.helpResponse, text: "No channel: (\(channel))")
-        }
-        let project = projects[index]
-        
+    static func parse(project: String, words: [String]) throws -> CircleciDeployJobRequest {
         let types = [
             "alpha": "dev",
             "beta": "master",

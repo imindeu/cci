@@ -9,6 +9,7 @@ import Foundation
 import Vapor
 
 enum CommandError: Error {
+    case noChannel(channel: String)
     case unknownCommand(text: String)
     case unknownError
 }
@@ -26,6 +27,8 @@ extension CommandError {
 extension CommandError: SlackResponseRepresentable {
     var slackResponse: SlackResponse {
         switch self {
+        case .noChannel(let channel):
+            return SlackResponse.error(helpResponse: Command.helpResponse, text: "No project found (channel: \(channel))")
         case .unknownCommand(let text):
             return SlackResponse.error(helpResponse: Command.helpResponse, text: "Unknown command (\(text))")
         case .unknownError:
@@ -65,6 +68,13 @@ extension Command: HelpResponse {
 
 extension Command {
     init(channel: String, text: String) throws {
+        let projects = AppEnvironment.current.projects
+        
+        guard let index = projects.index(where: { channel.hasPrefix($0) }) else {
+            throw CommandError.noChannel(channel: channel)
+        }
+        let project = projects[index]
+
         var words = text.split(separator: " ").map(String.init)
         guard words.count > 0 else {
             throw CommandError.unknownCommand(text: text)
@@ -79,10 +89,10 @@ extension Command {
                 throw CommandError.unknownCommand(text: text)
             }
         } else if command == "deploy" {
-            let request = try CircleciDeployJobRequest.parse(channel: channel, words: words)
+            let request = try CircleciDeployJobRequest.parse(project: project, words: words)
             self = .deploy(request)
         } else if command == "test" {
-            let request = try CircleciTestJobRequest.parse(channel: channel, words: words)
+            let request = try CircleciTestJobRequest.parse(project: project, words: words)
             self = .test(request)
         } else {
             throw CommandError.unknownCommand(text: text)
