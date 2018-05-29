@@ -75,7 +75,7 @@ extension Command {
         }
         let project = projects[index]
 
-        var words = text.split(separator: " ").map(String.init)
+        var words = text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
         guard words.count > 0 else {
             throw CommandError.unknownCommand(text: text)
         }
