@@ -15,6 +15,19 @@ struct Environment {
     let vcs: String
     let projects: [String]
     let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse>
+    let slack: (Worker, URL, SlackResponseRepresentable) -> Future<HTTPResponse>
+    
+    static let emptyApi: (Worker) -> Future<HTTPResponse> = { worker in
+        return Future.map(on: worker, { return HTTPResponse() })
+    }
+
+    static let api: (String) -> (Worker, HTTPRequest) -> Future<HTTPResponse> = { hostname in
+        return { worker, request in
+            return HTTPClient
+                .connect(scheme: .https, hostname: hostname, port: nil, on: worker)
+                .flatMap { $0.send(request) }
+        }
+    }
     
     static var empty: Environment {
         return Environment(
@@ -23,9 +36,8 @@ struct Environment {
             company: "",
             vcs: "",
             projects: [],
-            circleci: { worker, _ in
-                return Future.map(on: worker, { return HTTPResponse() })
-            }
+            circleci: { worker, _ in return Environment.emptyApi(worker) },
+            slack: { worker, _, _ in return Environment.emptyApi(worker) }
         )
     }
 }
@@ -82,12 +94,35 @@ final class AppEnvironment {
         guard let projects = Vapor.Environment.get("projects")?.split(separator: ",").map(String.init) else {
             throw AppEnvironmentError.noProjects
         }
-        let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse> = { worker, request in
-            return HTTPClient
-                .connect(scheme: .https, hostname: "circleci.com", port: nil, on: worker)
-                .flatMap { $0.send(request) }
+
+        let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse> = Environment.api("circleci.com")
+
+        let slack: (Worker, URL, SlackResponseRepresentable) -> Future<HTTPResponse> = {
+            worker, url, response in
+            if let hostname = url.host,
+                let body = try? JSONEncoder().encode(response.slackResponse) {
+                
+                let api = Environment.api(hostname)
+                var request = HTTPRequest.init()
+                request.method = .POST
+                request.urlString = url.path
+                request.body = HTTPBody(data: body)
+                request.headers = HTTPHeaders([
+                    ("Content-Type", "application/json")
+                    ])
+                return api(worker, request)
+            } else {
+                return Environment.emptyApi(worker)
+            }
         }
-        replaceCurrent(Environment(circleciToken: circleciToken, slackToken: slackToken, company: company, vcs: vcs, projects: projects, circleci: circleci))
+        
+        replaceCurrent(Environment(circleciToken: circleciToken,
+                                   slackToken: slackToken,
+                                   company: company,
+                                   vcs: vcs,
+                                   projects: projects,
+                                   circleci: circleci,
+                                   slack: slack))
 
     }
 }
