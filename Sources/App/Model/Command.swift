@@ -67,17 +67,17 @@ extension Command: HelpResponse {
 }
 
 extension Command {
-    init(channel: String, text: String) throws {
+    init(slack: SlackRequest) throws {
         let projects = AppEnvironment.current.projects
         
-        guard let index = projects.index(where: { channel.hasPrefix($0) }) else {
-            throw CommandError.noChannel(channel: channel)
+        guard let index = projects.index(where: { slack.channel_name.hasPrefix($0) }) else {
+            throw CommandError.noChannel(channel: slack.channel_name)
         }
         let project = projects[index]
 
-        var words = text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
+        var words = slack.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
         guard words.count > 0 else {
-            throw CommandError.unknownCommand(text: text)
+            throw CommandError.unknownCommand(text: slack.text)
         }
         let command = words[0]
         words.removeFirst()
@@ -86,16 +86,16 @@ extension Command {
             if let type = Command.helpCommands[command] {
                 self = .help(type)
             } else {
-                throw CommandError.unknownCommand(text: text)
+                throw CommandError.unknownCommand(text: slack.text)
             }
         } else if command == "deploy" {
-            let request = try CircleciDeployJobRequest.parse(project: project, words: words)
+            let request = try CircleciDeployJobRequest.parse(project: project, words: words, username: slack.user_name)
             self = .deploy(request)
         } else if command == "test" {
-            let request = try CircleciTestJobRequest.parse(project: project, words: words)
+            let request = try CircleciTestJobRequest.parse(project: project, words: words, username: slack.user_name)
             self = .test(request)
         } else {
-            throw CommandError.unknownCommand(text: text)
+            throw CommandError.unknownCommand(text: slack.text)
         }
     }
     

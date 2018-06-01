@@ -42,7 +42,7 @@ extension Router {
 
 private func commandAction(req: Request, slack: SlackRequest) -> Future<SlackResponseRepresentable> {
     do {
-        let command = try Command(channel: slack.channel_name, text: slack.text)
+        let command = try Command(slack: slack)
         return command.fetch(worker: req)
     } catch let error {
         return Future.map(on: req) {

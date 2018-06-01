@@ -32,7 +32,7 @@ protocol CircleciRequest: HelpResponse {
     
     var request: Either<SlackResponseRepresentable, HTTPRequest> { get }
     func slackResponse(response: Response) -> SlackResponse
-    static func parse(project: String, words: [String]) throws -> Self
+    static func parse(project: String, words: [String], username: String) throws -> Self
 }
 
 extension CircleciRequest {
@@ -64,6 +64,7 @@ protocol CircleciJobRequest: CircleciRequest {
     var name: String { get }
     var project: String { get }
     var branch: String { get }
+    var username: String { get }
     
     var buildParameters: [String: String] { get }
     var slackResponseFields: [SlackResponse.Field] { get }
@@ -116,6 +117,7 @@ struct CircleciTestJobRequest {
     let name: String = "test"
     let project: String
     let branch: String
+    let username: String
 }
 
 extension CircleciTestJobRequest: CircleciJobRequest {
@@ -126,16 +128,17 @@ extension CircleciTestJobRequest: CircleciJobRequest {
         return [
             SlackResponse.Field(title: "Project", value: project, short: true),
             SlackResponse.Field(title: "Branch", value: branch, short: true),
+            SlackResponse.Field(title: "User", value: username, short: true)
         ]
     }
 
-    static func parse(project: String, words: [String]) throws -> CircleciTestJobRequest {
+    static func parse(project: String, words: [String], username: String) throws -> CircleciTestJobRequest {
         
         guard words.count > 0 else {
             throw CircleciError.parseError(helpResponse: CircleciTestJobRequest.helpResponse, text: "No branch")
         }
         let branch = words[0]
-        return CircleciTestJobRequest(project: project, branch: branch)
+        return CircleciTestJobRequest(project: project, branch: branch, username: username)
     }
     
     static var helpResponse: SlackResponse {
@@ -153,6 +156,7 @@ struct CircleciDeployJobRequest {
     let name: String = "deploy"
     let project: String
     let branch: String
+    let username: String
     let type: String
     let version: String?
     let groups: String?
@@ -182,6 +186,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         var fields = [
             SlackResponse.Field(title: "Project", value: project, short: true),
             SlackResponse.Field(title: "Type", value: type, short: true),
+            SlackResponse.Field(title: "User", value: username, short: true)
             ]
         if let version = version {
             fields.append(SlackResponse.Field(title: "Version", value: version, short: true))
@@ -196,7 +201,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         return fields
     }
 
-    static func parse(project: String, words: [String]) throws -> CircleciDeployJobRequest {
+    static func parse(project: String, words: [String], username: String) throws -> CircleciDeployJobRequest {
         let types = [
             "alpha": "dev",
             "beta": "master",
@@ -224,7 +229,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         if type == nil || branch == nil {
             throw CircleciError.parseError(helpResponse: CircleciDeployJobRequest.helpResponse, text: "No type: (\(words.joined(separator: " ")))")
         }
-        return CircleciDeployJobRequest(project: project, branch: branch!, type: type!, version: version, groups: groups, emails: emails)
+        return CircleciDeployJobRequest(project: project, branch: branch!, username: username, type: type!, version: version, groups: groups, emails: emails)
     }
 
     static var helpResponse: SlackResponse {
