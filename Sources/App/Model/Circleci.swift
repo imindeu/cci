@@ -205,7 +205,7 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         let types = [
             "alpha": "dev",
             "beta": "master",
-            "app_store": "master"]
+            "app_store": "release"]
         
         var type: String? = nil
         var branch: String? = nil
