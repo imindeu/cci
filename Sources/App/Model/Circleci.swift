@@ -110,7 +110,7 @@ extension CircleciJobRequest {
         options.forEach { option in
             let array = option.split(separator: ":").map(String.init)
             if array.count == 2 {
-                fields.append(SlackResponse.Field(title: array[0], value: array[1], short: false))
+                fields.append(SlackResponse.Field(title: array[0], value: array[1], short: true))
             }
         }
         let attachment = SlackResponse.Attachment(
@@ -191,7 +191,8 @@ extension CircleciDeployJobRequest: CircleciJobRequest {
         return [
             SlackResponse.Field(title: "Project", value: project, short: true),
             SlackResponse.Field(title: "Type", value: type, short: true),
-            SlackResponse.Field(title: "User", value: username, short: true)
+            SlackResponse.Field(title: "User", value: username, short: true),
+            SlackResponse.Field(title: "Branch", value: branch, short: true)
             ]
     }
 
