@@ -118,7 +118,7 @@ extension CircleciJobRequest {
             text: "Job '\(name)' has started at <\(response.build_url)|#\(response.build_num)>.",
             color: "#764FA5",
             mrkdwn_in: ["text", "fields"],
-            fields: slackResponseFields)
+            fields: fields)
         return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
     }
 
