@@ -43,20 +43,27 @@ enum Command {
     case deploy(CircleciDeployJobRequest)
     case test(CircleciTestJobRequest)
     case help(HelpResponse.Type)
-    
+
+    struct C {
+        static let help = "help"
+        static let deploy = "deploy"
+        static let test = "test"
+    }
+
     static var helpCommands: [String: HelpResponse.Type] =
-        ["deploy": CircleciDeployJobRequest.self,
-         "test": CircleciTestJobRequest.self,
-         "help": Command.self]
+        [C.deploy: CircleciDeployJobRequest.self,
+         C.test: CircleciTestJobRequest.self,
+         C.help: Command.self]
+    
 }
 
 extension Command: HelpResponse {
     static var helpResponse: SlackResponse {
         let text = "Help:\n- `/cci command [help]`\n" +
             "Current command\n" +
-            "   - help: show this message\n" +
-            "   - deploy: deploy a build\n" +
-            "   - test: test a branch\n\n" +
+            "  - \(C.help): show this message\n" +
+            "  - \(C.deploy): deploy a build\n" +
+            "  - \(C.test): test a branch\n\n" +
             "All commands have a help subcommand to show their functionality\n"
         let attachment = SlackResponse.Attachment(
             fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
@@ -68,31 +75,35 @@ extension Command: HelpResponse {
 
 extension Command {
     init(slack: SlackRequest) throws {
-        let projects = AppEnvironment.current.projects
+        let projects = Environment.current.projects
         
         guard let index = projects.index(where: { slack.channel_name.hasPrefix($0) }) else {
             throw CommandError.noChannel(channel: slack.channel_name)
         }
         let project = projects[index]
 
-        var words = slack.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
-        guard words.count > 0 else {
+        var parameters = slack.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
+        guard parameters.count > 0 else {
             throw CommandError.unknownCommand(text: slack.text)
         }
-        let command = words[0]
-        words.removeFirst()
+        let command = parameters[0]
+        parameters.removeFirst()
+        
+        let isOption: (String) -> Bool = { $0.contains(":") }
+        let options = parameters.filter(isOption)
+        parameters = parameters.filter { !isOption($0) }
 
-        if command == "help" || (words.count > 0 && words[0] == "help") {
+        if command == C.help || (parameters.count > 0 && parameters[0] == C.help) {
             if let type = Command.helpCommands[command] {
                 self = .help(type)
             } else {
                 throw CommandError.unknownCommand(text: slack.text)
             }
-        } else if command == "deploy" {
-            let request = try CircleciDeployJobRequest.parse(project: project, words: words, username: slack.user_name)
+        } else if command == C.deploy {
+            let request = try CircleciDeployJobRequest.parse(project: project, parameters: parameters, options: options, username: slack.user_name)
             self = .deploy(request)
-        } else if command == "test" {
-            let request = try CircleciTestJobRequest.parse(project: project, words: words, username: slack.user_name)
+        } else if command == C.test {
+            let request = try CircleciTestJobRequest.parse(project: project, parameters: parameters, options: options, username: slack.user_name)
             self = .test(request)
         } else {
             throw CommandError.unknownCommand(text: slack.text)

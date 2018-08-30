@@ -9,6 +9,7 @@ import Foundation
 import Vapor
 
 struct Environment {
+    // MARK: - Environment
     let circleciToken: String
     let slackToken: String
     let company: String
@@ -16,10 +17,6 @@ struct Environment {
     let projects: [String]
     let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse>
     let slack: (Worker, URL, SlackResponseRepresentable) -> Future<HTTPResponse>
-    
-    static let emptyApi: (Worker) -> Future<HTTPResponse> = { worker in
-        return Future.map(on: worker, { return HTTPResponse() })
-    }
 
     static let api: (String) -> (Worker, HTTPRequest) -> Future<HTTPResponse> = { hostname in
         return { worker, request in
@@ -29,6 +26,11 @@ struct Environment {
         }
     }
     
+    // MARK: - Empty
+    static let emptyApi: (Worker) -> Future<HTTPResponse> = { worker in
+        return Future.map(on: worker, { return HTTPResponse() })
+    }
+
     static var empty: Environment {
         return Environment(
             circleciToken: "",
@@ -40,17 +42,8 @@ struct Environment {
             slack: { worker, _, _ in return Environment.emptyApi(worker) }
         )
     }
-}
 
-enum AppEnvironmentError: Error {
-    case noCircleciToken
-    case noSlackToken
-    case noCompany
-    case noVcs
-    case noProjects
-}
-
-final class AppEnvironment {
+    // MARK: - Current
     private static var stack: [Environment] = []
 
     static var current: Environment {
@@ -78,21 +71,30 @@ final class AppEnvironment {
         }
     }
 
+    // MARK: - Vapor
+    enum Error: Swift.Error {
+        case noCircleciToken
+        case noSlackToken
+        case noCompany
+        case noVcs
+        case noProjects
+    }
+    
     static func fromVapor() throws {
         guard let circleciToken = Vapor.Environment.get("circleciToken") else {
-            throw AppEnvironmentError.noCircleciToken
+            throw Error.noCircleciToken
         }
         guard let slackToken = Vapor.Environment.get("slackToken") else {
-            throw AppEnvironmentError.noSlackToken
+            throw Error.noSlackToken
         }
         guard let company = Vapor.Environment.get("company") else {
-            throw AppEnvironmentError.noCompany
+            throw Error.noCompany
         }
         guard let vcs = Vapor.Environment.get("vcs") else {
-            throw AppEnvironmentError.noVcs
+            throw Error.noVcs
         }
         guard let projects = Vapor.Environment.get("projects")?.split(separator: ",").map(String.init) else {
-            throw AppEnvironmentError.noProjects
+            throw Error.noProjects
         }
 
         let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse> = Environment.api("circleci.com")

@@ -2,6 +2,10 @@ import Routing
 import Vapor
 
 public func routes(_ router: Router) throws {
+    // for local test, without the deferred answer
+//    router.post(SlackRequest.self, at: "command", use: { req, slack in
+//        return commandAction(req: req, slack: slack).map({ $0.slackResponse })
+//    })
     router.slackCommand("command", use: commandAction)
 }
 
@@ -16,7 +20,7 @@ extension Router {
                     return try SlackResponse.error(text: "Error: bad response_url")
                         .encode(for: req)
                 }
-                guard AppEnvironment.current.slackToken == content.token else {
+                guard Environment.current.slackToken == content.token else {
                     return try SlackResponse.error(text: "Error: wrong slackToken")
                         .encode(for: req)
                 }
@@ -26,8 +30,8 @@ extension Router {
                 defer {
                     let _ = use(req, content)
                         .flatMap {
-                            return AppEnvironment.current.slack(req, url, $0)
-                    }
+                            return Environment.current.slack(req, url, $0)
+                        }
                 }
                 
                 return Future.map(on: req, { return Response(http: .init(), using: req) })

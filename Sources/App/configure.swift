@@ -6,7 +6,7 @@ public func configure(
     _ services: inout Services
 ) throws {
     
-    try AppEnvironment.fromVapor()
+    try Environment.fromVapor()
 
     let router = EngineRouter.default()
     try routes(router)
