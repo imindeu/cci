@@ -1,7 +1,7 @@
 version: 2
 
 jobs:
-  build:
+  test:
     docker:
       - image: norionomura/swift:swift-4.1-branch
     steps:
@@ -11,4 +11,11 @@ workflows:
   version: 2
   tests:
     jobs:
-      - build
+      - test:
+          filters:
+            branches:
+              only:
+                - dev
+                - master
+                - release
+
