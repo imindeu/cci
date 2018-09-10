@@ -32,7 +32,7 @@ protocol SlackResponseRepresentable {
     var slackResponse: SlackResponse { get }
 }
 
-struct SlackResponse: Content {
+struct SlackResponse: Equatable, Content {
     enum ResponseType: String, Content {
         case inChannel = "in_channel"
         case ephemeral = "ephemeral"
@@ -42,7 +42,7 @@ struct SlackResponse: Content {
     var attachments: [Attachment]
     let mrkdwn: Bool?
     
-    struct Attachment: Content {
+    struct Attachment: Equatable, Content {
         let fallback: String?
         let text: String?
         let color: String?
@@ -50,7 +50,7 @@ struct SlackResponse: Content {
         let fields: [Field]
     }
     
-    struct Field: Content {
+    struct Field: Equatable, Content {
         let title: String?
         let value: String?
         let short: Bool?

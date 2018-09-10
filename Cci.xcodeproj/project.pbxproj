@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
+		11A80CD1214684BE00F93294 /* Lint */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 11A80CD2214684BE00F93294 /* Build configuration list for PBXAggregateTarget "Lint" */;
+			buildPhases = (
+				11A80CD5214684E200F93294 /* Swiftlint */,
+			);
+			dependencies = (
+			);
+			name = Lint;
+			productName = Lint;
+		};
 		"Cci::CciPackageTests::ProductTarget" /* CciPackageTests */ = {
 			isa = PBXAggregateTarget;
 			buildConfigurationList = OBJ_1022 /* Build configuration list for PBXAggregateTarget "CciPackageTests" */;
@@ -21,6 +32,9 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		11A80CCC213819E700F93294 /* CircleciTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A80CCB213819E700F93294 /* CircleciTests.swift */; };
+		11A80CCE21466BBF00F93294 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A80CCD21466BBF00F93294 /* RouterTests.swift */; };
+		11A80CD021466FE200F93294 /* CommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A80CCF21466FE200F93294 /* CommandTests.swift */; };
 		OBJ_1001 /* c_nio_sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_546 /* c_nio_sha1.c */; };
 		OBJ_1007 /* empty.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_572 /* empty.c */; };
 		OBJ_1013 /* libc.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_487 /* libc.swift */; };
@@ -852,7 +866,6 @@
 		OBJ_744 /* CNIOAtomics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOAtomics::Product" /* CNIOAtomics.framework */; };
 		OBJ_745 /* CNIODarwin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIODarwin::Product" /* CNIODarwin.framework */; };
 		OBJ_746 /* CNIOLinux.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOLinux::Product" /* CNIOLinux.framework */; };
-		OBJ_824 /* AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* AppTests.swift */; };
 		OBJ_826 /* App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Cci::App::Product" /* App.framework */; };
 		OBJ_827 /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Vapor::Vapor::Product" /* Vapor.framework */; };
 		OBJ_828 /* WebSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "WebSocket::WebSocket::Product" /* WebSocket.framework */; };
@@ -3953,6 +3966,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		11A80CCB213819E700F93294 /* CircleciTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleciTests.swift; sourceTree = "<group>"; };
+		11A80CCD21466BBF00F93294 /* RouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
+		11A80CCF21466FE200F93294 /* CommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandTests.swift; sourceTree = "<group>"; };
 		"Cci::App::Product" /* App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::AppTests::Product" /* AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::Run::Product" /* Run */ = {isa = PBXFileReference; lastKnownFileType = text; path = Run; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4074,7 +4090,6 @@
 		OBJ_217 /* Parameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parameter.swift; sourceTree = "<group>"; };
 		OBJ_218 /* ParameterValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParameterValue.swift; sourceTree = "<group>"; };
 		OBJ_219 /* Parameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parameters.swift; sourceTree = "<group>"; };
-		OBJ_22 /* AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTests.swift; sourceTree = "<group>"; };
 		OBJ_221 /* PathComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathComponent.swift; sourceTree = "<group>"; };
 		OBJ_222 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		OBJ_223 /* RouterOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterOption.swift; sourceTree = "<group>"; };
@@ -5483,7 +5498,9 @@
 		OBJ_21 /* AppTests */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_22 /* AppTests.swift */,
+				11A80CCB213819E700F93294 /* CircleciTests.swift */,
+				11A80CCD21466BBF00F93294 /* RouterTests.swift */,
+				11A80CCF21466FE200F93294 /* CommandTests.swift */,
 			);
 			name = AppTests;
 			path = Tests/AppTests;
@@ -8277,6 +8294,12 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0940;
+				TargetAttributes = {
+					11A80CD1214684BE00F93294 = {
+						CreatedOnToolsVersion = 9.4.1;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "Cci" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -8346,9 +8369,28 @@
 				"Crypto::libbcrypt" /* libbcrypt */,
 				"swift-nio-ssl::SwiftPMPackageDescription" /* swift-nio-sslPackageDescription */,
 				"swift-nio::SwiftPMPackageDescription" /* swift-nioPackageDescription */,
+				11A80CD1214684BE00F93294 /* Lint */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		11A80CD5214684E200F93294 /* Swiftlint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Swiftlint;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\ncd Sources\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint (or `brew install swiftlint`)\"\nfi";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		OBJ_1000 /* Sources */ = {
@@ -9138,7 +9180,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				OBJ_824 /* AppTests.swift in Sources */,
+				11A80CCE21466BBF00F93294 /* RouterTests.swift in Sources */,
+				11A80CCC213819E700F93294 /* CircleciTests.swift in Sources */,
+				11A80CD021466FE200F93294 /* CommandTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -11379,6 +11423,22 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		11A80CD3214684BE00F93294 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		11A80CD4214684BE00F93294 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		OBJ_1004 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -14709,6 +14769,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		11A80CD2214684BE00F93294 /* Build configuration list for PBXAggregateTarget "Lint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11A80CD3214684BE00F93294 /* Debug */,
+				11A80CD4214684BE00F93294 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		OBJ_1003 /* Build configuration list for PBXNativeTarget "CNIOZlib" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -44,12 +44,12 @@ extension Router {
     }
 }
 
-private func commandAction(req: Request, slack: SlackRequest) -> Future<SlackResponseRepresentable> {
+func commandAction(worker: Worker, slack: SlackRequest) -> Future<SlackResponseRepresentable> {
     do {
         let command = try Command(slack: slack)
-        return command.fetch(worker: req)
+        return command.fetch(worker: worker)
     } catch let error {
-        return Future.map(on: req) {
+        return Future.map(on: worker) {
             if let error = error as? SlackResponseRepresentable {
                 return error
             } else {

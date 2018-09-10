@@ -19,18 +19,18 @@ extension CircleciError: SlackResponseRepresentable {
     var slackResponse: SlackResponse {
         switch self {
         case .fetch(let helpResponse, let error):
-            return SlackResponse.error(helpResponse: helpResponse, text: "Fetch error \(error)")
+            return SlackResponse.error(helpResponse: helpResponse, text: "Fetch error (\(error))")
         case .decode(let helpResponse):
             return SlackResponse.error(helpResponse: helpResponse, text: "Decode error")
         case .parse(let helpResponse, let text):
-            return SlackResponse.error(helpResponse: helpResponse, text: "Parse error \(text)")
+            return SlackResponse.error(helpResponse: helpResponse, text: "Parse error (\(text))")
         case .encode(let helpResponse, let error):
-            return SlackResponse.error(helpResponse: helpResponse, text: "Encode error \(error)")
+            return SlackResponse.error(helpResponse: helpResponse, text: "Encode error (\(error))")
         }
     }
 }
 
-protocol CircleciRequest: HelpResponse {
+protocol CircleciRequest: HelpResponse, Equatable {
     associatedtype Response: CircleciResponse
     
     var request: Either<SlackResponseRepresentable, HTTPRequest> { get }
@@ -86,7 +86,7 @@ extension CircleciJobRequest {
         var copy = buildParameters
         copy["CIRCLE_JOB"] = name
         
-        request.urlString = "/api/v1.1/project/\(environment.vcs)/\(environment.company)/\(project)/tree/\(urlEncodedBranch)?circle-token=\(environment.circleciToken)"
+        request.urlString = environment.circleciPath(project, urlEncodedBranch)
         
         do {
             let body = try JSONEncoder().encode(["build_parameters": copy])
@@ -124,7 +124,7 @@ extension CircleciJobRequest {
 
 }
 
-struct CircleciTestJobRequest {
+struct CircleciTestJobRequest: Equatable {
     let name: String = "test"
     let project: String
     let branch: String
@@ -149,7 +149,7 @@ extension CircleciTestJobRequest: CircleciJobRequest {
     static func parse(project: String, parameters: [String], options: [String], username: String) throws -> CircleciTestJobRequest {
         
         guard parameters.count > 0 else {
-            throw CircleciError.parse(helpResponse: CircleciTestJobRequest.helpResponse, text: "No branch")
+            throw CircleciError.parse(helpResponse: CircleciTestJobRequest.helpResponse, text: "No branch found: (\(parameters.joined(separator: " ")))")
         }
         let branch = parameters[0]
         return CircleciTestJobRequest(project: project, branch: branch, options: options, username: username)
@@ -168,7 +168,7 @@ extension CircleciTestJobRequest: CircleciJobRequest {
     
 }
 
-struct CircleciDeployJobRequest {
+struct CircleciDeployJobRequest: Equatable {
     let name: String = "deploy"
     let project: String
     let branch: String

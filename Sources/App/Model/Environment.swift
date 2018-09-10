@@ -14,6 +14,7 @@ struct Environment {
     let slackToken: String
     let company: String
     let vcs: String
+    let circleciPath: (String, String) -> String
     let projects: [String]
     let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse>
     let slack: (Worker, URL, SlackResponseRepresentable) -> Future<HTTPResponse>
@@ -30,6 +31,18 @@ struct Environment {
     static let emptyApi: (Worker) -> Future<HTTPResponse> = { worker in
         return Future.map(on: worker, { return HTTPResponse() })
     }
+    
+    static let goodApi: (String) -> (Worker, HTTPRequest) -> Future<HTTPResponse> = { body in
+        return { worker, _ in
+            return Future.map(on: worker, {
+                return HTTPResponse(
+                    status: .ok,
+                    version: HTTPVersion.init(major: 1, minor: 1),
+                    headers: HTTPHeaders([]),
+                    body: body)
+            })
+        }
+    }
 
     static var empty: Environment {
         return Environment(
@@ -37,6 +50,7 @@ struct Environment {
             slackToken: "",
             company: "",
             vcs: "",
+            circleciPath: { _, _ in return "" },
             projects: [],
             circleci: { worker, _ in return Environment.emptyApi(worker) },
             slack: { worker, _, _ in return Environment.emptyApi(worker) }
@@ -97,6 +111,10 @@ struct Environment {
             throw Error.noProjects
         }
 
+        let circleciPath: (String, String) -> String = { project, branch in
+            return "/api/v1.1/project/\(vcs)/\(company)/\(project)/tree/\(branch)?circle-token=\(circleciToken)"
+        }
+        
         let circleci: (Worker, HTTPRequest) -> Future<HTTPResponse> = Environment.api("circleci.com")
 
         let slack: (Worker, URL, SlackResponseRepresentable) -> Future<HTTPResponse> = {
@@ -122,6 +140,7 @@ struct Environment {
                                    slackToken: slackToken,
                                    company: company,
                                    vcs: vcs,
+                                   circleciPath: circleciPath,
                                    projects: projects,
                                    circleci: circleci,
                                    slack: slack))

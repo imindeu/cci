@@ -57,6 +57,21 @@ enum Command {
     
 }
 
+extension Command: Equatable {
+    static func == (lhs: Command, rhs: Command) -> Bool {
+        switch (lhs, rhs) {
+        case (.deploy(let l), .deploy(let r)):
+            return l == r
+        case (.test(let l), .test(let r)):
+            return l == r
+        case (.help(let l), .help(let r)):
+            return l.helpResponse == r.helpResponse
+        default:
+            return false
+        }
+    }
+}
+
 extension Command: HelpResponse {
     static var helpResponse: SlackResponse {
         let text = "Help:\n- `/cci command [help]`\n" +

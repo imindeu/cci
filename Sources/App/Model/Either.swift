@@ -21,4 +21,20 @@ extension Either {
             return r2a(r)
         }
     }
+    
+    var left: L? {
+        return either(Optional.some, { _ in .none })
+    }
+    
+    public var right: R? {
+        return either({ _ in .none }, Optional.some)
+    }
+    
+    public var isLeft: Bool {
+        return either({ _ in true }, { _ in false })
+    }
+    
+    public var isRight: Bool {
+        return either({ _ in false }, { _ in true })
+    }
 }
