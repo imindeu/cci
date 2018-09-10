@@ -132,7 +132,7 @@ class CommandTests: XCTestCase {
                                         response_url: "",
                                         trigger_id: "")
         let command = try Command(slack: slackRequest)
-        XCTAssertEqual(command, .help(CircleciDeployJobRequest.self))
+        XCTAssertEqual(command, .help(CircleciTestJobRequest.self))
     }
     
     func testNoChannel() throws {
