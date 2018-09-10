@@ -21,7 +21,8 @@ class CircleciTests: XCTestCase {
         ("Accept", "application/json"),
         ("Content-Type", "application/json")
         ])
-    
+    let decoder = JSONDecoder()
+
     func request() throws -> Request {
         let app = try Application()
         return Request(using: app)
@@ -43,10 +44,21 @@ class CircleciTests: XCTestCase {
         Environment.pop()
         super.tearDown()
     }
-    
-    func testTestJobRequest() throws {
-        let body = "{\"build_parameters\":{\"DEPLOY_OPTIONS\":\"options1:x options2:y\",\"CIRCLE_JOB\":\"test\"}}"
 
+    private struct Build: Decodable, Equatable {
+        struct BuildParameters: Decodable, Equatable {
+            let DEPLOY_OPTIONS: String
+            let CIRCLE_JOB: String
+            let DEPLOY_TYPE: String?
+        }
+        let build_parameters: BuildParameters
+    }
+
+    func testTestJobRequest() throws {
+        guard let body = "{\"build_parameters\":{\"DEPLOY_OPTIONS\":\"options1:x options2:y\",\"CIRCLE_JOB\":\"test\"}}".data(using: .utf8) else {
+            XCTFail()
+            return
+        }
         // init
         let goodJob = CircleciTestJobRequest(project: project,
                                              branch: branch,
@@ -65,8 +77,7 @@ class CircleciTests: XCTestCase {
             XCTFail()
             return
         }
-        let goodBody = String(data: goodData, encoding: .utf8)
-        XCTAssertEqual(goodBody, body)
+        XCTAssertEqual(try decoder.decode(Build.self, from: goodData), try decoder.decode(Build.self, from: body))
         
         // parse
         let parsedJob = try CircleciTestJobRequest.parse(project: project,
@@ -118,7 +129,10 @@ class CircleciTests: XCTestCase {
     
     func testDeployJobRequest() throws {
         let type = "alpha"
-        let body = "{\"build_parameters\":{\"DEPLOY_TYPE\":\"alpha\",\"DEPLOY_OPTIONS\":\"options1:x options2:y\",\"CIRCLE_JOB\":\"deploy\"}}"
+        guard let body = "{\"build_parameters\":{\"DEPLOY_TYPE\":\"alpha\",\"DEPLOY_OPTIONS\":\"options1:x options2:y\",\"CIRCLE_JOB\":\"deploy\"}}".data(using: .utf8) else {
+            XCTFail()
+            return
+        }
         
         Environment.push(Environment.init(circleciToken: "circleciToken",
                                           slackToken: "slackToken",
@@ -144,9 +158,8 @@ class CircleciTests: XCTestCase {
             XCTFail()
             return
         }
-        let goodBody = String(data: goodData, encoding: .utf8)
-        XCTAssertEqual(goodBody, body)
-        
+        XCTAssertEqual(try decoder.decode(Build.self, from: goodData), try decoder.decode(Build.self, from: body))
+
         // parse
         let parsedJob = try CircleciDeployJobRequest.parse(project: project,
                                                          parameters: [type, branch],
