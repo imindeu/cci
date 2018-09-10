@@ -30,3 +30,9 @@ extension RouterTests {
     ("testErrorCommandAction", testErrorCommandAction)
   ]
 }
+
+XCTMain([
+  testCase(CircleciTests.allTests),
+  testCase(CommandTests.allTests),
+  testCase(RouterTests.allTests)
+])
