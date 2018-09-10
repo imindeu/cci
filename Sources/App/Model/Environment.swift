@@ -96,7 +96,7 @@ struct Environment {
     }
     
     static func fromVapor() throws {
-        guard let circleciTokens = Vapor.Environment.get("circleciToken")?.split(separator: ",").map(String.init) else {
+        guard let circleciTokens = Vapor.Environment.get("circleciTokens")?.split(separator: ",").map(String.init) else {
             throw Error.noCircleciTokens
         }
         guard let slackToken = Vapor.Environment.get("slackToken") else {
@@ -111,7 +111,7 @@ struct Environment {
         guard let projects = Vapor.Environment.get("projects")?.split(separator: ",").map(String.init) else {
             throw Error.noProjects
         }
-        if projects.count != circleciTokens.count {
+        if projects.count == 0 || projects.count != circleciTokens.count {
             throw Error.wrongCircleciTokenProjectCount
         }
 
