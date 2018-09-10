@@ -10,7 +10,7 @@ import Vapor
 @testable import App
 
 class CommandTests: XCTestCase {
-    let circleciToken = "circleciToken"
+    let circleciTokens = ["circleciToken"]
     let slackToken = "slackToken"
     let project = "projectX"
     let branch = "feature/branch-X"
@@ -28,7 +28,7 @@ class CommandTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        Environment.push(Environment.init(circleciToken: circleciToken,
+        Environment.push(Environment.init(circleciTokens: circleciTokens,
                                           slackToken: slackToken,
                                           company: "company",
                                           vcs: "vcs",

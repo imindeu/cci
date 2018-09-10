@@ -10,7 +10,7 @@ import Vapor
 
 struct Environment {
     // MARK: - Environment
-    let circleciToken: String
+    let circleciTokens: [String]
     let slackToken: String
     let company: String
     let vcs: String
@@ -46,7 +46,7 @@ struct Environment {
 
     static var empty: Environment {
         return Environment(
-            circleciToken: "",
+            circleciTokens: [],
             slackToken: "",
             company: "",
             vcs: "",
@@ -87,16 +87,17 @@ struct Environment {
 
     // MARK: - Vapor
     enum Error: Swift.Error {
-        case noCircleciToken
+        case noCircleciTokens
         case noSlackToken
         case noCompany
         case noVcs
         case noProjects
+        case wrongCircleciTokenProjectCount
     }
     
     static func fromVapor() throws {
-        guard let circleciToken = Vapor.Environment.get("circleciToken") else {
-            throw Error.noCircleciToken
+        guard let circleciTokens = Vapor.Environment.get("circleciToken")?.split(separator: ",").map(String.init) else {
+            throw Error.noCircleciTokens
         }
         guard let slackToken = Vapor.Environment.get("slackToken") else {
             throw Error.noSlackToken
@@ -110,8 +111,13 @@ struct Environment {
         guard let projects = Vapor.Environment.get("projects")?.split(separator: ",").map(String.init) else {
             throw Error.noProjects
         }
+        if projects.count != circleciTokens.count {
+            throw Error.wrongCircleciTokenProjectCount
+        }
 
         let circleciPath: (String, String) -> String = { project, branch in
+            let index = projects.index(of: project)! // TODO: catch forced unwrap
+            let circleciToken = circleciTokens[index]
             return "/api/v1.1/project/\(vcs)/\(company)/\(project)/tree/\(branch)?circle-token=\(circleciToken)"
         }
         
@@ -136,7 +142,7 @@ struct Environment {
             }
         }
         
-        replaceCurrent(Environment(circleciToken: circleciToken,
+        replaceCurrent(Environment(circleciTokens: circleciTokens,
                                    slackToken: slackToken,
                                    company: company,
                                    vcs: vcs,

@@ -30,7 +30,7 @@ class CircleciTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        Environment.push(Environment.init(circleciToken: "circleciToken",
+        Environment.push(Environment.init(circleciTokens: ["circleciToken"],
                                           slackToken: "slackToken",
                                           company: "company",
                                           vcs: "vcs",
@@ -134,7 +134,7 @@ class CircleciTests: XCTestCase {
             return
         }
         
-        Environment.push(Environment.init(circleciToken: "circleciToken",
+        Environment.push(Environment.init(circleciTokens: ["circleciToken"],
                                           slackToken: "slackToken",
                                           company: "company",
                                           vcs: "vcs",
