@@ -8,7 +8,7 @@ build-image:
 	docker build -t cci .
 
 run-app:
-	${SUDO} docker run --name cci -i -d -t -p 8081:8081 -e circleciTokens=${CIRCLECITOKENS} -e slackToken=${SLACKTOKEN} -e port=${PORT} -e vcs=${VCS} -e projects=${PROJECTS} -e company=${COMPANY}  --restart unless-stopped cci
+	${SUDO} docker run --name cci -i -d -t -p ${PORT}:${PORT} -e circleciTokens=${CIRCLECITOKENS} -e slackToken=${SLACKTOKEN} -e port=${PORT} -e vcs=${VCS} -e projects=${PROJECTS} -e company=${COMPANY}  --restart unless-stopped cci
 
 stop-app:
 	${SUDO} docker stop cci
