@@ -26,7 +26,7 @@ logs:
 	${SUDO} docker logs cci
 
 export-image:
-	${SUDO} docker save -o cci-image cci
+	docker save -o cci-image cci
 
 import-image:
 	${SUDO} docker load -i cci-image
