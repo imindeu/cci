@@ -83,17 +83,117 @@ extension IO {
     }
 }
 
-// MARK: - APIConnect Spec
+// MARK: - Models
 
 protocol RequestModel {
     associatedtype Response: ResponseModel
     var responseURL: URL? { get }
 }
+
 protocol ResponseModel {}
+
+struct SlackRequest: Decodable, RequestModel {
+    typealias Response = SlackResponse
+    
+    let token: String
+    let team_id: String
+    let team_domain: String
+    let enterprise_id: String?
+    let enterprise_name: String?
+    let channel_id: String
+    let channel_name: String
+    let user_id: String
+    let user_name: String
+    let command: String
+    let text: String
+    let response_url: String
+    let trigger_id: String
+    
+    var responseURL: URL? { return URL(string: response_url) }
+}
+
+extension SlackRequest {
+    static func check(_ request: SlackRequest, _ environment: Environment) -> SlackResponse? {
+        fatalError()
+    }
+    static func circleCiTestJobRequest(_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, CircleCiTestJobRequest> {
+        fatalError()
+    }
+    static func api(_ context: Context, _ environment: Environment) -> (SlackResponse) -> IO<Void> {
+        fatalError()
+    }
+    static func instant(_ context: Context, _ environment: Environment) -> (SlackRequest) -> IO<SlackResponse> {
+        fatalError()
+    }
+}
+
+struct SlackResponse: Equatable, Encodable, ResponseModel {
+    enum ResponseType: String, Encodable {
+        case inChannel = "in_channel"
+        case ephemeral = "ephemeral"
+    }
+    let response_type: ResponseType
+    let text: String?
+    var attachments: [Attachment]
+    let mrkdwn: Bool?
+    
+    struct Attachment: Equatable, Encodable {
+        let fallback: String?
+        let text: String?
+        let color: String?
+        let mrkdwn_in: [String]
+        let fields: [Field]
+    }
+    
+    struct Field: Equatable, Encodable {
+        let title: String?
+        let value: String?
+        let short: Bool?
+    }
+}
+
+struct CircleCiTestJobRequest: Equatable, RequestModel {
+    typealias Response = CircleCiBuildResponse
+    let name: String = "test"
+    let project: String
+    let branch: String
+    let options: [String]
+    let username: String
+    let responseURL: URL? = nil
+}
+
+extension CircleCiTestJobRequest {
+    static func apiWithSlack(_ context: Context, _ environment: Environment) -> (Either<SlackResponse, CircleCiTestJobRequest>) -> IO<Either<SlackResponse, CircleCiBuildResponse>> {
+        fatalError()
+    }
+    static func responseToSlack(_ with: CircleCiBuildResponse) -> SlackResponse {
+        fatalError()
+    }
+}
+
+struct CircleCiDeployJobRequest: Equatable, RequestModel {
+    typealias Response = CircleCiBuildResponse
+    let name: String = "deploy"
+    let project: String
+    let branch: String
+    let options: [String]
+    let username: String
+    let type: String
+    let responseURL: URL? = nil
+}
+
+struct CircleCiBuildResponse: Decodable, ResponseModel {
+    let build_url: String
+    let build_num: Int
+}
+
+// MARK: - Side effects
 
 protocol Context {}
 
 protocol Environment {}
+
+// MARK: - APIConnect
 
 struct APIConnect<From: RequestModel, To: RequestModel> {
     // check tokens
@@ -101,13 +201,13 @@ struct APIConnect<From: RequestModel, To: RequestModel> {
     // slackrequest -> either<slackresponse, circlecirequest>
     let request: (_ from: From, _ environment: Environment) -> Either<From.Response, To>
     // circlecirequest -> either<slackresponse, circleciresponse>
-    let innerAPI: (_ context: Context, _ environment: Environment) -> (Either<From.Response, To>) -> IO<Either<From.Response, To.Response>>
+    let toAPI: (_ context: Context, _ environment: Environment) -> (Either<From.Response, To>) -> IO<Either<From.Response, To.Response>>
     // circleciresponse -> slackresponse
     let response: (_ with: To.Response) -> From.Response
     // slackresponse -> void
-    let outerAPI: (_ context: Context, _ environment: Environment) -> (From.Response) -> IO<Void>
+    let fromAPI: (_ context: Context, _ environment: Environment) -> (From.Response) -> IO<Void>
     // slackrequest -> slackresponse
-    let defaultOuterAPI: (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>
+    let instant: (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>
 }
 
 extension APIConnect {
@@ -117,14 +217,26 @@ extension APIConnect {
             return pure(error)
         }
         let run = pure(request(from, environment))
-            .flatMap(innerAPI(context, environment))
+            .flatMap(toAPI(context, environment))
             .mapEither(id, response)
         guard from.responseURL != nil else {
             return run
         }
         defer {
-            let _ = run.flatMap(outerAPI(context, environment))
+            let _ = run.flatMap(fromAPI(context, environment))
         }
-        return defaultOuterAPI(context, environment)(from)
+        return instant(context, environment)(from)
     }
 }
+
+extension APIConnect where From == SlackRequest, To == CircleCiTestJobRequest {
+    static var slackToCircleCiTest: APIConnect {
+        return APIConnect<SlackRequest, CircleCiTestJobRequest>(check: SlackRequest.check,
+                                                                request: SlackRequest.circleCiTestJobRequest,
+                                                                toAPI: CircleCiTestJobRequest.apiWithSlack,
+                                                                response: CircleCiTestJobRequest.responseToSlack,
+                                                                fromAPI: SlackRequest.api,
+                                                                instant: SlackRequest.instant)
+    }
+}
+
