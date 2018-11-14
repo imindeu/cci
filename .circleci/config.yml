@@ -3,7 +3,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: norionomura/swift:swift-4.1-branch
+      - image: norionomura/swift:swift-4.2-branch
     steps:
       - checkout
       - run: swift test

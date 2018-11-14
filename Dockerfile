@@ -1,5 +1,5 @@
 # Build image
-FROM norionomura/swift:41 as builder
+FROM norionomura/swift:42 as builder
 
 #RUN apt-get -qq update && apt-get -q -y install libssl-dev pkg-config
 WORKDIR /app
