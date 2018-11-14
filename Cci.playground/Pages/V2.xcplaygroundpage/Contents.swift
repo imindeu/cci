@@ -83,7 +83,7 @@ extension IO {
     }
 }
 
-// MARK: - API Spec
+// MARK: - APIConnect Spec
 
 protocol RequestModel {
     associatedtype Response: ResponseModel
@@ -95,24 +95,24 @@ protocol Context {}
 
 protocol Environment {}
 
-struct Api<A: RequestModel, B: RequestModel> {
+struct APIConnect<From: RequestModel, To: RequestModel> {
     // check tokens
-    let check: (_ request: A, _ environment: Environment) -> A.Response?
+    let check: (_ request: From, _ environment: Environment) -> From.Response?
     // slackrequest -> either<slackresponse, circlecirequest>
-    let request: (_ from: A, _ to: B.Type, _ environment: Environment) -> Either<A.Response, B>
+    let request: (_ from: From, _ to: To.Type, _ environment: Environment) -> Either<From.Response, To>
     // circlecirequest -> either<slackresponse, circleciresponse>
-    let innerAPI: (_ context: Context, _ environment: Environment) -> (Either<A.Response, B>) -> IO<Either<A.Response, B.Response>>
+    let innerAPI: (_ context: Context, _ environment: Environment) -> (Either<From.Response, To>) -> IO<Either<From.Response, To.Response>>
     // circleciresponse -> slackresponse
-    let response: (_ with: B.Response) -> A.Response
+    let response: (_ with: To.Response) -> From.Response
     // slackresponse -> void
-    let outerAPI: (_ context: Context, _ environment: Environment) -> (A.Response) -> IO<Void>
+    let outerAPI: (_ context: Context, _ environment: Environment) -> (From.Response) -> IO<Void>
     // slackrequest -> slackresponse
-    let defaultOuterAPI: (_ context: Context, _ environment: Environment) -> (A) -> IO<A.Response>
+    let defaultOuterAPI: (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>
 }
 
-extension Api {
+extension APIConnect {
     // main entry point (like: slackrequest -> slackresponse)
-    func run(_ from: A, to: B.Type, context: Context, _ environment: Environment) -> IO<A.Response> {
+    func run(_ from: From, to: To.Type, context: Context, _ environment: Environment) -> IO<From.Response> {
         if let error = check(from, environment) {
             return pure(error)
         }
