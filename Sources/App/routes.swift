@@ -4,7 +4,7 @@ import Vapor
 public func routes(_ router: Router) throws {
     // for local test, without the deferred answer
 //    router.post(SlackRequest.self, at: "command", use: { req, slack in
-//        return commandAction(req: req, slack: slack).map({ $0.slackResponse })
+//        return commandAction(worker: req, slack: slack).map({ $0.slackResponse })
 //    })
     router.slackCommand("command", use: commandAction)
 }
