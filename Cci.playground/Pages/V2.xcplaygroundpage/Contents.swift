@@ -99,7 +99,7 @@ struct APIConnect<From: RequestModel, To: RequestModel> {
     // check tokens
     let check: (_ request: From, _ environment: Environment) -> From.Response?
     // slackrequest -> either<slackresponse, circlecirequest>
-    let request: (_ from: From, _ to: To.Type, _ environment: Environment) -> Either<From.Response, To>
+    let request: (_ from: From, _ environment: Environment) -> Either<From.Response, To>
     // circlecirequest -> either<slackresponse, circleciresponse>
     let innerAPI: (_ context: Context, _ environment: Environment) -> (Either<From.Response, To>) -> IO<Either<From.Response, To.Response>>
     // circleciresponse -> slackresponse
@@ -112,11 +112,11 @@ struct APIConnect<From: RequestModel, To: RequestModel> {
 
 extension APIConnect {
     // main entry point (like: slackrequest -> slackresponse)
-    func run(_ from: From, to: To.Type, context: Context, _ environment: Environment) -> IO<From.Response> {
+    func run(_ from: From, context: Context, _ environment: Environment) -> IO<From.Response> {
         if let error = check(from, environment) {
             return pure(error)
         }
-        let run = pure(request(from, to, environment))
+        let run = pure(request(from, environment))
             .flatMap(innerAPI(context, environment))
             .mapEither(id, response)
         guard from.responseURL != nil else {
