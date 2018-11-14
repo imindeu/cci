@@ -116,9 +116,6 @@ extension SlackRequest {
     static func check(_ request: SlackRequest, _ environment: Environment) -> SlackResponse? {
         fatalError()
     }
-    static func circleCiTestJobRequest(_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, CircleCiTestJobRequest> {
-        fatalError()
-    }
     static func api(_ context: Context, _ environment: Environment) -> (SlackResponse) -> IO<Void> {
         fatalError()
     }
@@ -163,6 +160,9 @@ struct CircleCiTestJobRequest: Equatable, RequestModel {
 }
 
 extension CircleCiTestJobRequest {
+    static func slackRequest(_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, CircleCiTestJobRequest> {
+        fatalError()
+    }
     static func apiWithSlack(_ context: Context, _ environment: Environment) -> (Either<SlackResponse, CircleCiTestJobRequest>) -> IO<Either<SlackResponse, CircleCiBuildResponse>> {
         fatalError()
     }
@@ -229,14 +229,25 @@ extension APIConnect {
     }
 }
 
+
+extension APIConnect where From == SlackRequest {
+    init(request: @escaping (_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, To>,
+         toAPI: @escaping (_ context: Context, _ environment: Environment) -> (Either<SlackResponse, To>) -> IO<Either<SlackResponse, To.Response>>,
+         response: @escaping (_ with: To.Response) -> SlackResponse) {
+        self.init(check: SlackRequest.check,
+                  request: request,
+                  toAPI: toAPI,
+                  response: response,
+                  fromAPI: SlackRequest.api,
+                  instant: SlackRequest.instant)
+    }
+}
+
 extension APIConnect where From == SlackRequest, To == CircleCiTestJobRequest {
     static var slackToCircleCiTest: APIConnect {
-        return APIConnect<SlackRequest, CircleCiTestJobRequest>(check: SlackRequest.check,
-                                                                request: SlackRequest.circleCiTestJobRequest,
+        return APIConnect<SlackRequest, CircleCiTestJobRequest>(request: CircleCiTestJobRequest.slackRequest,
                                                                 toAPI: CircleCiTestJobRequest.apiWithSlack,
-                                                                response: CircleCiTestJobRequest.responseToSlack,
-                                                                fromAPI: SlackRequest.api,
-                                                                instant: SlackRequest.instant)
+                                                                response: CircleCiTestJobRequest.responseToSlack)
     }
 }
 
