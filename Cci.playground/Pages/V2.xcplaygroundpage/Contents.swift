@@ -212,7 +212,7 @@ struct APIConnect<From: RequestModel, To: RequestModel> {
 
 extension APIConnect {
     // main entry point (like: slackrequest -> slackresponse)
-    func run(_ from: From, context: Context, _ environment: Environment) -> IO<From.Response> {
+    func run(_ from: From, _ context: Context, _ environment: Environment) -> IO<From.Response> {
         if let error = check(from, environment) {
             return pure(error)
         }
@@ -228,7 +228,6 @@ extension APIConnect {
         return instant(context, environment)(from)
     }
 }
-
 
 extension APIConnect where From == SlackRequest {
     init(request: @escaping (_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, To>,
@@ -251,3 +250,5 @@ extension APIConnect where From == SlackRequest, To == CircleCiTestJobRequest {
     }
 }
 
+// start
+//APIConnect<SlackRequest, CircleCiTestJobRequest>.slackToCircleCiTest.run(<#T##from: SlackRequest##SlackRequest#>, <#T##context: Context##Context#>, <#T##environment: Environment##Environment#>)
