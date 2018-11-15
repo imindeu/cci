@@ -1,7 +1,10 @@
 // MARK: - Vapor, NIO try
+// in case of 'error: missing required modules: ...
+// https://medium.com/@serzhit/how-to-make-vapor-3-swift-playground-in-xcode-10-c7147b0f7f18
 import Foundation
 import NIO
 import Core
+import HTTP
 
 // MARK: - Prelude
 
@@ -60,13 +63,36 @@ extension Either {
 
 protocol RequestModel {
     associatedtype Response: ResponseModel
+    associatedtype Config: RawRepresentable & CaseIterable where Config.RawValue == String
     var responseURL: URL? { get }
+}
+
+extension RequestModel {
+    static func check(_ request: Self? = nil, _ environment: Environment) -> [Config] {
+        return Config.allCases.compactMap(hasConfig(request, environment))
+    }
+    private static func hasConfig(_ request: Self?, _ environment: Environment) -> (Config) -> Config? {
+        return { config in
+            let value = environment.get(config) ?? request?.get(config)
+            return value == nil ? config : nil
+        }
+    }
+    private func get(_ config: Config) -> String? {
+        return Mirror(reflecting: self).children
+            .first(where: { $0.label == config.rawValue })
+            .flatMap { $0.value as? String }
+    }
 }
 
 protocol ResponseModel {}
 
 struct SlackRequest: Decodable, RequestModel {
     typealias Response = SlackResponse
+    typealias Config = SlackConfig
+    
+    enum SlackConfig: String, CaseIterable {
+        case slackToken
+    }
     
     let token: String
     let team_id: String
@@ -124,6 +150,12 @@ struct SlackResponse: Equatable, Encodable, ResponseModel {
 
 struct CircleCiTestJobRequest: Equatable, RequestModel {
     typealias Response = CircleCiBuildResponse
+    typealias Config = CircleCiConfig
+    
+    enum CircleCiConfig: String, CaseIterable {
+        case circleCiToken
+    }
+    
     let name: String = "test"
     let project: String
     let branch: String
@@ -154,10 +186,17 @@ struct CircleCiBuildResponse: Decodable, ResponseModel {
 
 // MARK: - Side effects
 
-protocol Environment {}
-
 typealias Context = EventLoopGroup
 typealias IO = EventLoopFuture
+
+typealias Request = HTTPRequest
+typealias Response = HTTPResponse
+
+protocol Environment {
+    static var api: (String) -> (Context, Request) -> IO<Response> { get }
+
+    func get<A>(_ a: A) -> String? where A: RawRepresentable & CaseIterable, A.RawValue == String
+}
 
 func pure<A>(_ a: A, _ context: Context) -> IO<A> {
     return IO.map(on: context, { a })
