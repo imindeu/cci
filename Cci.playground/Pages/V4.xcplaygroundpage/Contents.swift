@@ -1,4 +1,4 @@
-// MARK: - Vapor, NIO try
+// MARK: - Vapor example
 // in case of "error: missing required modules: ..."
 // https://medium.com/@serzhit/how-to-make-vapor-3-swift-playground-in-xcode-10-c7147b0f7f18
 import Foundation
@@ -6,10 +6,6 @@ import HTTP
 
 typealias Context = EventLoopGroup
 typealias IO = EventLoopFuture
-
-typealias Request = HTTPRequest
-typealias Response = HTTPResponse
-typealias Client = HTTPClient
 
 // MARK: - Prelude
 
@@ -114,15 +110,20 @@ protocol ResponseModel: Encodable {}
 protocol Environment {}
 
 extension Environment {
-    static var api: (String) -> (Context, Request) -> IO<Response> {
+    static var api: (String) -> (Context, HTTPRequest) -> IO<HTTPResponse> {
         return { hostname in
             return { context, request in
-                return Client
+                return HTTPClient
                     .connect(scheme: .https, hostname: hostname, port: nil, on: context)
                     .flatMap { $0.send(request) }
             }
         }
     }
+    
+    static var emptyApi: (Context) -> IO<HTTPResponse> {
+        return { pure(HTTPResponse(), $0) }
+    }
+
     
     func get<A>(_ key: A) -> String? where A: RawRepresentable & CaseIterable, A.RawValue == String {
         return ProcessInfo.processInfo.environment[key.rawValue]
@@ -198,10 +199,20 @@ extension SlackRequest {
         fatalError()
     }
     static func api(_ request: SlackRequest, _ context: Context, _ environment: Environment) -> (SlackResponse) -> IO<Void> {
-        fatalError()
+        return { response in
+            guard let url = request.responseURL, let hostname = url.host, let body = try? JSONEncoder().encode(response) else {
+                return type(of: environment).emptyApi(context).map { _ in () }
+            }
+            let returnAPI = type(of: environment).api(hostname)
+            let request = HTTPRequest.init(method: .POST,
+                                           url: url.path,
+                                           headers: HTTPHeaders([("Content-Type", "application/json")]),
+                                           body: HTTPBody(data: body))
+            return returnAPI(context, request).map { _ in () }
+        }
     }
     static func instant(_ context: Context, _ environment: Environment) -> (SlackRequest) -> IO<SlackResponse> {
-        fatalError()
+        return const(pure(SlackResponse(response_type: .ephemeral, text: nil, attachments: [], mrkdwn: false), context))
     }
 }
 
