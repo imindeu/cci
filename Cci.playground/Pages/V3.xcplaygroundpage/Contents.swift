@@ -1,5 +1,7 @@
-// MARK: - Protocol witness try
+// MARK: - Vapor, NIO try
 import Foundation
+import NIO
+import Core
 
 // MARK: - Prelude
 
@@ -51,36 +53,6 @@ extension Either {
     }
     func flatMap<A>(_ r2a: (R) -> Either<L, A>) -> Either<L, A> {
         return either(Either<L, A>.left, r2a)
-    }
-}
-
-struct IO<A> {
-    let perform: () -> A
-    init(perform: @escaping () -> A) {
-        self.perform = perform
-    }
-}
-
-func pure<A>(_ a: A) -> IO<A> {
-    return IO { a }
-}
-
-extension IO {
-    func map<B>(_ f: @escaping (A) -> B) -> IO<B> {
-        return IO<B> {
-            f(self.perform())
-        }
-    }
-    func flatMap<B>(_ f: @escaping (A) -> IO<B>) -> IO<B> {
-        return IO<B> {
-            f(self.perform()).perform()
-        }
-    }
-}
-
-extension IO {
-    func mapEither<B, L, R>(_ l2a: @escaping (L) -> B, _ r2a: @escaping (R) -> B) -> IO<B> where A == Either<L, R> {
-        return map { $0.either(l2a, r2a) }
     }
 }
 
@@ -182,9 +154,20 @@ struct CircleCiBuildResponse: Decodable, ResponseModel {
 
 // MARK: - Side effects
 
-protocol Context {}
-
 protocol Environment {}
+
+typealias Context = EventLoopGroup
+typealias IO = EventLoopFuture
+
+func pure<A>(_ a: A, _ context: Context) -> IO<A> {
+    return IO.map(on: context, { a })
+}
+
+extension IO {
+    func mapEither<A, L, R>(_ l2a: @escaping (L) -> A, _ r2a: @escaping (R) -> A) -> IO<A> where T == Either<L, R> {
+        return map { $0.either(l2a, r2a) }
+    }
+}
 
 // MARK: - APIConnect
 
@@ -203,13 +186,14 @@ struct APIConnect<From: RequestModel, To: RequestModel> {
     // slackrequest -> slackresponse
     let instant: (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>
 }
+
 extension APIConnect {
     // main entry point (like: slackrequest -> slackresponse)
     func run(_ from: From, _ context: Context, _ environment: Environment) -> IO<From.Response> {
         if let error = checkFrom(from, environment) ?? checkTo(environment) {
-            return pure(error)
+            return pure(error, context)
         }
-        let run = pure(request(from, environment))
+        let run = pure(request(from, environment), context)
             .flatMap(toAPI(context, environment))
             .mapEither(id, response)
         guard from.responseURL != nil else {
