@@ -80,26 +80,17 @@ extension IO {
 
 // MARK: - Models
 
+protocol Configuration: RawRepresentable & CaseIterable where RawValue == String {}
+
 protocol RequestModel: Decodable {
     associatedtype Response: ResponseModel
-    associatedtype Config: RawRepresentable & CaseIterable where Config.RawValue == String
+    associatedtype Config: Configuration
     var responseURL: URL? { get }
 }
 
 extension RequestModel {
-    static func check(_ request: Self? = nil, _ environment: Environment) -> [Config] {
-        return Config.allCases.compactMap(hasConfig(request, environment))
-    }
-    private static func hasConfig(_ request: Self?, _ environment: Environment) -> (Config) -> Config? {
-        return { config in
-            let value = environment.get(config) ?? request?.get(config)
-            return value == nil ? config : nil
-        }
-    }
-    private func get(_ config: Config) -> String? {
-        return Mirror(reflecting: self).children
-            .first(where: { $0.label == config.rawValue })
-            .flatMap { $0.value as? String }
+    static func check() -> [Config] {
+        return Config.allCases.compactMap { Environment.get($0) == nil ? $0 : nil }
     }
 }
 
@@ -107,35 +98,37 @@ protocol ResponseModel: Encodable {}
 
 // MARK: - Side effects
 
-protocol Environment {}
-
-extension Environment {
-    static var api: (String) -> (Context, HTTPRequest) -> IO<HTTPResponse> {
-        return { hostname in
+struct Environment {
+    var api: (String) -> (Context, HTTPRequest) -> IO<HTTPResponse> = { hostname in
             return { context, request in
                 return HTTPClient
                     .connect(scheme: .https, hostname: hostname, port: nil, on: context)
                     .flatMap { $0.send(request) }
             }
         }
-    }
     
-    static var emptyApi: (Context) -> IO<HTTPResponse> {
-        return { pure(HTTPResponse(), $0) }
+    var emptyApi: (Context) -> IO<HTTPResponse> = { pure(HTTPResponse(), $0) }
+    
+    static var env: [String: String] = ProcessInfo.processInfo.environment
+    
+    static func get<A: Configuration>(_ key: A) -> String? {
+        return env[key.rawValue]
     }
 
-    
-    func get<A>(_ key: A) -> String? where A: RawRepresentable & CaseIterable, A.RawValue == String {
-        return ProcessInfo.processInfo.environment[key.rawValue]
-    }
 }
 
 // MARK: - APIConnect
 
 struct APIConnect<From: RequestModel, To: RequestModel> {
+    indirect enum APIConnectError: Error {
+        case collision([From.Config])
+        case fromMissing([From.Config])
+        case toMissing([To.Config])
+        case all([APIConnectError])
+    }
+    
     // check tokens and environment variables
-    let checkFrom: (_ request: From, _ environment: Environment) -> From.Response?
-    let checkTo: (_ environment: Environment) -> From.Response?
+    let check: (_ from: From) -> From.Response?
     // slackrequest -> either<slackresponse, circlecirequest>
     let request: (_ from: From, _ environment: Environment) -> Either<From.Response, To>
     // circlecirequest -> either<slackresponse, circleciresponse>
@@ -146,13 +139,50 @@ struct APIConnect<From: RequestModel, To: RequestModel> {
     let fromAPI: (_ request: From, _ context: Context, _ environment: Environment) -> (From.Response) -> IO<Void>
     // slackrequest -> slackresponse
     let instant: (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>
+    
+    init(check: @escaping (_ from: From) -> From.Response?,
+         request: @escaping (_ from: From, _ environment: Environment) -> Either<From.Response, To>,
+         toAPI: @escaping (_ context: Context, _ environment: Environment) -> (Either<From.Response, To>) -> IO<Either<From.Response, To.Response>>,
+         response: @escaping (_ with: To.Response) -> From.Response,
+         fromAPI: @escaping (_ request: From, _ context: Context, _ environment: Environment) -> (From.Response) -> IO<Void>,
+         instant: @escaping (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>) throws {
+
+        self.check = check
+        self.request = request
+        self.toAPI = toAPI
+        self.response = response
+        self.fromAPI = fromAPI
+        self.instant = instant
+        try checkConfigs()
+        
+    }
+    
+    private func checkConfigs() throws {
+        var errors: [APIConnectError] = []
+        let configCollision = From.Config.allCases.filter { To.Config.allCases.map { $0.rawValue }.contains($0.rawValue) }
+        if !configCollision.isEmpty {
+            errors += [.collision(configCollision)]
+        }
+        let fromCheck = From.check()
+        if !fromCheck.isEmpty {
+            errors += [.fromMissing(fromCheck)]
+        }
+        let toCheck = To.check()
+        if !toCheck.isEmpty {
+            errors += [.toMissing(toCheck)]
+        }
+        guard errors.isEmpty else {
+            throw APIConnectError.all(errors)
+        }
+    }
 }
 
 extension APIConnect {
+    
     // main entry point (like: slackrequest -> slackresponse)
     func run(_ from: From, _ context: Context, _ environment: Environment) -> IO<From.Response> {
-        if let error = checkFrom(from, environment) ?? checkTo(environment) {
-            return pure(error, context)
+        if let response = check(from) {
+            return pure(response, context)
         }
         let run = pure(request(from, environment), context)
             .flatMap(toAPI(context, environment))
@@ -173,7 +203,7 @@ struct SlackRequest: RequestModel {
     typealias Response = SlackResponse
     typealias Config = SlackConfig
     
-    enum SlackConfig: String, CaseIterable {
+    enum SlackConfig: String, Configuration {
         case slackToken
     }
     
@@ -195,15 +225,15 @@ struct SlackRequest: RequestModel {
 }
 
 extension SlackRequest {
-    static func check(_ request: SlackRequest, _ environment: Environment) -> SlackResponse? {
+    static func check(_ from: SlackRequest) -> SlackResponse? {
         fatalError()
     }
     static func api(_ request: SlackRequest, _ context: Context, _ environment: Environment) -> (SlackResponse) -> IO<Void> {
         return { response in
             guard let url = request.responseURL, let hostname = url.host, let body = try? JSONEncoder().encode(response) else {
-                return type(of: environment).emptyApi(context).map { _ in () }
+                return environment.emptyApi(context).map { _ in () }
             }
-            let returnAPI = type(of: environment).api(hostname)
+            let returnAPI = environment.api(hostname)
             let request = HTTPRequest.init(method: .POST,
                                            url: url.path,
                                            headers: HTTPHeaders([("Content-Type", "application/json")]),
@@ -245,7 +275,7 @@ struct CircleCiTestJobRequest: Equatable, RequestModel {
     typealias Response = CircleCiBuildResponse
     typealias Config = CircleCiConfig
     
-    enum CircleCiConfig: String, CaseIterable {
+    enum CircleCiConfig: String, Configuration {
         case circleCiToken
     }
     
@@ -258,9 +288,6 @@ struct CircleCiTestJobRequest: Equatable, RequestModel {
 }
 
 extension CircleCiTestJobRequest {
-    static func checkForSlack(_ environment: Environment) -> SlackResponse? {
-        fatalError()
-    }
     static func slackRequest(_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, CircleCiTestJobRequest> {
         fatalError()
     }
@@ -278,28 +305,25 @@ struct CircleCiBuildResponse: ResponseModel {
 }
 
 extension APIConnect where From == SlackRequest {
-    init(checkTo: @escaping (_ environment: Environment) -> SlackResponse?,
-         request: @escaping (_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, To>,
+    init(request: @escaping (_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, To>,
          toAPI: @escaping (_ context: Context, _ environment: Environment) -> (Either<SlackResponse, To>) -> IO<Either<SlackResponse, To.Response>>,
-         response: @escaping (_ with: To.Response) -> SlackResponse) {
-        self.init(checkFrom: SlackRequest.check,
-                  checkTo: checkTo,
-                  request: request,
-                  toAPI: toAPI,
-                  response: response,
-                  fromAPI: SlackRequest.api,
-                  instant: SlackRequest.instant)
+         response: @escaping (_ with: To.Response) -> SlackResponse) throws {
+        try self.init(check: SlackRequest.check,
+                      request: request,
+                      toAPI: toAPI,
+                      response: response,
+                      fromAPI: SlackRequest.api,
+                      instant: SlackRequest.instant)
     }
 }
 
 extension APIConnect where From == SlackRequest, To == CircleCiTestJobRequest {
-    static var slackToCircleCiTest: APIConnect {
-        return APIConnect<SlackRequest, CircleCiTestJobRequest>(checkTo: CircleCiTestJobRequest.checkForSlack,
-                                                                request: CircleCiTestJobRequest.slackRequest,
+    static func slackToCircleCiTest() throws -> APIConnect {
+        return try APIConnect<SlackRequest, CircleCiTestJobRequest>(request: CircleCiTestJobRequest.slackRequest,
                                                                 toAPI: CircleCiTestJobRequest.apiWithSlack,
                                                                 response: CircleCiTestJobRequest.responseToSlack)
     }
 }
 
 // start
-//APIConnect<SlackRequest, CircleCiTestJobRequest>.slackToCircleCiTest.run(<#T##from: SlackRequest##SlackRequest#>, <#T##context: Context##Context#>, <#T##environment: Environment##Environment#>)
+//APIConnect<SlackRequest, CircleCiTestJobRequest>.slackToCircleCiTest().run(<#T##from: SlackRequest##SlackRequest#>, <#T##context: Context##Context#>, <#T##environment: Environment##Environment#>)
