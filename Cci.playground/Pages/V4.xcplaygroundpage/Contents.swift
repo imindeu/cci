@@ -82,7 +82,7 @@ extension IO {
 
 protocol Configuration: RawRepresentable & CaseIterable where RawValue == String {}
 
-protocol RequestModel: Decodable {
+protocol RequestModel {
     associatedtype Response: ResponseModel
     associatedtype Config: Configuration
     var responseURL: URL? { get }
@@ -94,7 +94,7 @@ extension RequestModel {
     }
 }
 
-protocol ResponseModel: Encodable {}
+protocol ResponseModel {}
 
 // MARK: - Side effects
 
@@ -119,7 +119,7 @@ struct Environment {
 
 // MARK: - APIConnect
 
-struct APIConnect<From: RequestModel, To: RequestModel> {
+struct APIConnect<From: RequestModel, To: RequestModel> where From.Response: Encodable, To.Response: Decodable {
     indirect enum APIConnectError: Error {
         case collision([From.Config])
         case fromMissing([From.Config])
@@ -226,7 +226,10 @@ struct SlackRequest: RequestModel {
 
 extension SlackRequest {
     static func check(_ from: SlackRequest) -> SlackResponse? {
-        fatalError()
+        guard URL(string: from.response_url) != nil else {
+            return SlackResponse.error(text: "Error: bad response_url")
+        }
+        return nil
     }
     static func api(_ request: SlackRequest, _ context: Context, _ environment: Environment) -> (SlackResponse) -> IO<Void> {
         return { response in
@@ -246,7 +249,7 @@ extension SlackRequest {
     }
 }
 
-struct SlackResponse: Equatable, ResponseModel {
+struct SlackResponse: ResponseModel, Encodable {
     enum ResponseType: String, Encodable {
         case inChannel = "in_channel"
         case ephemeral = "ephemeral"
@@ -256,7 +259,7 @@ struct SlackResponse: Equatable, ResponseModel {
     var attachments: [Attachment]
     let mrkdwn: Bool?
     
-    struct Attachment: Equatable, Encodable {
+    struct Attachment: Encodable {
         let fallback: String?
         let text: String?
         let color: String?
@@ -264,34 +267,116 @@ struct SlackResponse: Equatable, ResponseModel {
         let fields: [Field]
     }
     
-    struct Field: Equatable, Encodable {
+    struct Field: Encodable {
         let title: String?
         let value: String?
         let short: Bool?
     }
 }
 
-struct CircleCiTestJobRequest: Equatable, RequestModel {
-    typealias Response = CircleCiBuildResponse
-    typealias Config = CircleCiConfig
-    
-    enum CircleCiConfig: String, Configuration {
-        case circleCiToken
+extension SlackResponse {
+    static func error(text: String, helpResponse: SlackResponse? = nil) -> SlackResponse {
+        let attachment = SlackResponse.Attachment(fallback: text, text: text, color: "danger", mrkdwn_in: [], fields: [])
+        guard let helpResponse = helpResponse else {
+            return SlackResponse(response_type: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
+        }
+        var copy = helpResponse
+        let attachments = copy.attachments
+        copy.attachments = [attachment] + attachments
+        return copy
     }
-    
+}
+
+enum CircleCiError: Error {
+    case noChannel(String)
+    case unknownCommand(String)
+}
+
+protocol CircleCiJob {
+    var name: String { get }
+    var project: String { get }
+    var branch: String { get }
+    var options: [String] { get }
+    var username: String { get }
+}
+
+struct CircleciTestJob: CircleCiJob {
     let name: String = "test"
     let project: String
     let branch: String
     let options: [String]
     let username: String
+}
+
+struct CircleciDeployJob: CircleCiJob {
+    let name: String = "deploy"
+    let project: String
+    let branch: String
+    let options: [String]
+    let username: String
+    let type: String
+    
+}
+
+struct CircleCiJobRequest: RequestModel {
+    typealias Response = CircleCiBuildResponse
+    typealias Config = CircleCiConfig
+    
+    enum CircleCiConfig: String, Configuration {
+        case circleCiTokens
+        case company
+        case vcs
+        case projects
+    }
+    
+    let job: CircleCiJob
     let responseURL: URL? = nil
 }
 
-extension CircleCiTestJobRequest {
-    static func slackRequest(_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, CircleCiTestJobRequest> {
-        fatalError()
+extension CircleCiJobRequest {
+    static var helpResponse: SlackResponse {
+        let text = "Help:\n- `/cci command [help]`\n" +
+            "Current command\n" +
+            "  - help: show this message\n" +
+            "  - .deploy: deploy a build\n" +
+            "  - test: test a branch\n\n" +
+        "All commands have a help subcommand to show their functionality\n"
+        let attachment = SlackResponse.Attachment(
+            fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
+        let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
+        return response
     }
-    static func apiWithSlack(_ context: Context, _ environment: Environment) -> (Either<SlackResponse, CircleCiTestJobRequest>) -> IO<Either<SlackResponse, CircleCiBuildResponse>> {
+
+    static func slackRequest(_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, CircleCiJobRequest> {
+        let projects: [String] = Environment.get(CircleCiConfig.projects)?.split(separator: ",").map(String.init) ?? []
+        
+        guard let index = projects.index(where: { from.channel_name.hasPrefix($0) }) else {
+            return .left(SlackResponse.error(text: CircleCiError.noChannel(from.channel_name).localizedDescription))
+        }
+        let project = projects[index]
+        
+        var parameters = from.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
+        guard parameters.count > 0 else {
+            return .left(SlackResponse.error(text: CircleCiError.unknownCommand(from.text).localizedDescription))
+        }
+        let command = parameters[0]
+        parameters.removeFirst()
+        
+        let isOption: (String) -> Bool = { $0.contains(":") }
+        let options = parameters.filter(isOption)
+        parameters = parameters.filter { !isOption($0) }
+        
+        if command == "help" {
+            return .left(helpResponse)
+        } else if command == "test" {
+            return .right(CircleCiJobRequest(job: CircleciTestJob(project: project, branch: "", options: options, username: from.user_name)))
+        } else if command == "deploy" {
+            return .right(CircleCiJobRequest(job: CircleciDeployJob(project: project, branch: "", options: options, username: from.user_name, type: "")))
+        } else {
+            return .left(SlackResponse.error(text: CircleCiError.unknownCommand(from.text).localizedDescription))
+        }
+    }
+    static func apiWithSlack(_ context: Context, _ environment: Environment) -> (Either<SlackResponse, CircleCiJobRequest>) -> IO<Either<SlackResponse, CircleCiBuildResponse>> {
         fatalError()
     }
     static func responseToSlack(_ with: CircleCiBuildResponse) -> SlackResponse {
@@ -299,7 +384,7 @@ extension CircleCiTestJobRequest {
     }
 }
 
-struct CircleCiBuildResponse: ResponseModel {
+struct CircleCiBuildResponse: ResponseModel, Decodable {
     let build_url: String
     let build_num: Int
 }
@@ -317,13 +402,13 @@ extension APIConnect where From == SlackRequest {
     }
 }
 
-extension APIConnect where From == SlackRequest, To == CircleCiTestJobRequest {
+extension APIConnect where From == SlackRequest, To == CircleCiJobRequest {
     static func slackToCircleCiTest() throws -> APIConnect {
-        return try APIConnect<SlackRequest, CircleCiTestJobRequest>(request: CircleCiTestJobRequest.slackRequest,
-                                                                toAPI: CircleCiTestJobRequest.apiWithSlack,
-                                                                response: CircleCiTestJobRequest.responseToSlack)
+        return try APIConnect<SlackRequest, CircleCiJobRequest>(request: CircleCiJobRequest.slackRequest,
+                                                                toAPI: CircleCiJobRequest.apiWithSlack,
+                                                                response: CircleCiJobRequest.responseToSlack)
     }
 }
 
 // start
-//APIConnect<SlackRequest, CircleCiTestJobRequest>.slackToCircleCiTest().run(<#T##from: SlackRequest##SlackRequest#>, <#T##context: Context##Context#>, <#T##environment: Environment##Environment#>)
+//APIConnect<SlackRequest, CircleCiJobRequest>.slackToCircleCiTest().run(<#T##from: SlackRequest##SlackRequest#>, <#T##context: Context##Context#>, <#T##environment: Environment##Environment#>)
