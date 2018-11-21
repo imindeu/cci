@@ -300,6 +300,18 @@ enum CircleCiError: Error {
     case parse(String)
 }
 
+protocol CircleCiJob {
+    var name: String { get }
+    var project: String { get }
+    var branch: String { get }
+    var options: [String] { get }
+    var username: String { get }
+    
+    static var helpResponse: SlackResponse { get }
+    
+    static func parse(project: String, parameters: [String], options:[String], username: String) throws -> Either<SlackResponse, CircleCiJob>
+}
+
 enum CircleCiJobKind: String, CaseIterable {
     case deploy
     case test
@@ -314,18 +326,6 @@ extension CircleCiJobKind {
             return CircleCiTestJob.self
         }
     }
-}
-
-protocol CircleCiJob {
-    var name: String { get }
-    var project: String { get }
-    var branch: String { get }
-    var options: [String] { get }
-    var username: String { get }
-
-    static var helpResponse: SlackResponse { get }
-    
-    static func parse(project: String, parameters: [String], options:[String], username: String) throws -> Either<SlackResponse, Self>
 }
 
 struct CircleCiTestJob: CircleCiJob {
@@ -347,8 +347,8 @@ extension CircleCiTestJob {
         let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
-
-    static func parse(project: String, parameters: [String], options:[String], username: String) throws -> Either<SlackResponse, CircleciTestJob> {
+    
+    static func parse(project: String, parameters: [String], options:[String], username: String) throws -> Either<SlackResponse, CircleCiJob> {
         guard parameters.count > 0 else {
             throw CircleCiError.parse("No branch found: (\(parameters.joined(separator: " ")))")
         }
@@ -357,7 +357,7 @@ extension CircleCiTestJob {
         }
         let branch = parameters[0]
         return .right(CircleCiTestJob(project: project, branch: branch, options: options, username: username))
-
+        
     }
 }
 
@@ -387,9 +387,9 @@ extension CircleCiDeployJob {
         let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
-
-    static func parse(project: String, parameters: [String], options: [String], username: String) throws -> Either<SlackResponse, CircleciDeployJob> {
-        if parameters.count == 1 && parameters[0] == help {
+    
+    static func parse(project: String, parameters: [String], options: [String], username: String) throws -> Either<SlackResponse, CircleCiJob> {
+        if parameters.count == 1 && parameters[0] == "help" {
             return .left(CircleCiDeployJob.helpResponse)
         }
         let types = [
@@ -435,7 +435,7 @@ extension CircleCiJobRequest {
         let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
-
+    
     static func slackRequest(_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, CircleCiJobRequest> {
         let projects: [String] = Environment.get(CircleCiConfig.projects)?.split(separator: ",").map(String.init) ?? []
         
@@ -457,7 +457,7 @@ extension CircleCiJobRequest {
         
         if let job = CircleCiJobKind(rawValue: command) {
             do {
-                return try job.type.parse(project: project, parameters: parameters, options: options, username: from.user_name)
+                return try job.type.parse(project: project, parameters: parameters, options: options, username: from.user_name).flatMap { .right(CircleCiJobRequest(job: $0)) }
             } catch {
                 return .left(SlackResponse.error(text: error.localizedDescription, helpResponse: job.type.helpResponse))
             }

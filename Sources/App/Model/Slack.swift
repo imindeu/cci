@@ -4,15 +4,18 @@
 //
 //  Created by Peter Geszten-Kovacs on 2018. 05. 16..
 //
-
+import APIConnect
 import Foundation
-import Vapor
+import HTTP
 
-protocol HelpResponse {
-    static var helpResponse: SlackResponse { get }
-}
-
-struct SlackRequest: Content {
+struct SlackRequest: RequestModel {
+    typealias Response = SlackResponse
+    typealias Config = SlackConfig
+    
+    enum SlackConfig: String, Configuration {
+        case slackToken
+    }
+    
     let token: String
     let team_id: String
     let team_domain: String
@@ -26,14 +29,37 @@ struct SlackRequest: Content {
     let text: String
     let response_url: String
     let trigger_id: String
+    
+    var responseURL: URL? { return URL(string: response_url) }
 }
 
-protocol SlackResponseRepresentable {
-    var slackResponse: SlackResponse { get }
+extension SlackRequest {
+    static func check(_ from: SlackRequest) -> SlackResponse? {
+        guard URL(string: from.response_url) != nil else {
+            return SlackResponse.error(text: "Error: bad response_url")
+        }
+        return nil
+    }
+    static func api(_ request: SlackRequest, _ context: Context, _ environment: Environment) -> (SlackResponse) -> IO<Void> {
+        return { response in
+            guard let url = request.responseURL, let hostname = url.host, let body = try? JSONEncoder().encode(response) else {
+                return environment.emptyApi(context).map { _ in () }
+            }
+            let returnAPI = environment.api(hostname)
+            let request = HTTPRequest.init(method: .POST,
+                                           url: url.path,
+                                           headers: HTTPHeaders([("Content-Type", "application/json")]),
+                                           body: HTTPBody(data: body))
+            return returnAPI(context, request).map { _ in () }
+        }
+    }
+    static func instant(_ context: Context, _ environment: Environment) -> (SlackRequest) -> IO<SlackResponse> {
+        return const(pure(SlackResponse(response_type: .ephemeral, text: nil, attachments: [], mrkdwn: false), context))
+    }
 }
 
-struct SlackResponse: Equatable, Content {
-    enum ResponseType: String, Content {
+struct SlackResponse: ResponseModel, Encodable {
+    enum ResponseType: String, Encodable {
         case inChannel = "in_channel"
         case ephemeral = "ephemeral"
     }
@@ -42,7 +68,7 @@ struct SlackResponse: Equatable, Content {
     var attachments: [Attachment]
     let mrkdwn: Bool?
     
-    struct Attachment: Equatable, Content {
+    struct Attachment: Encodable {
         let fallback: String?
         let text: String?
         let color: String?
@@ -50,34 +76,22 @@ struct SlackResponse: Equatable, Content {
         let fields: [Field]
     }
     
-    struct Field: Equatable, Content {
+    struct Field: Encodable {
         let title: String?
         let value: String?
         let short: Bool?
     }
 }
 
-extension SlackResponse: SlackResponseRepresentable {
-    var slackResponse: SlackResponse { return self }
-}
-
 extension SlackResponse {
-    static func error(helpResponse: SlackResponse, text: String) -> SlackResponse {
+    static func error(text: String, helpResponse: SlackResponse? = nil) -> SlackResponse {
+        let attachment = SlackResponse.Attachment(fallback: text, text: text, color: "danger", mrkdwn_in: [], fields: [])
+        guard let helpResponse = helpResponse else {
+            return SlackResponse(response_type: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
+        }
         var copy = helpResponse
         let attachments = copy.attachments
-        let attachment = SlackResponse.Attachment(fallback: text, text: text, color: "danger", mrkdwn_in: [], fields: [])
         copy.attachments = [attachment] + attachments
         return copy
-    }
-    
-    static func error(text: String) -> SlackResponse {
-        let attachment = SlackResponse.Attachment(
-            fallback: nil,
-            text: text,
-            color: "danger",
-            mrkdwn_in: [],
-            fields: [])
-        return SlackResponse(response_type: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
-        
     }
 }
