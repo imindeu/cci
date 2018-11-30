@@ -9,16 +9,18 @@ import Foundation
 
 public protocol Configuration: RawRepresentable & CaseIterable where RawValue == String {}
 
+public protocol APIConnectEnvironment {
+    static func get<A: Configuration>(_ key: A) -> String?
+}
+
 public protocol RequestModel {
-    associatedtype Response: ResponseModel
+    associatedtype ResponseModel
     associatedtype Config: Configuration
     var responseURL: URL? { get }
 }
 
 public extension RequestModel {
-    public static func check() -> [Config] {
-        return Config.allCases.compactMap { Environment.get($0) == nil ? $0 : nil }
+    public static func check<A: APIConnectEnvironment>(_ type: A.Type) -> [Config] {
+        return Config.allCases.compactMap { A.get($0) == nil ? $0 : nil }
     }
 }
-
-public protocol ResponseModel {}

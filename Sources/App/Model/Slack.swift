@@ -8,8 +8,8 @@ import APIConnect
 import Foundation
 import HTTP
 
-struct SlackRequest: RequestModel {
-    typealias Response = SlackResponse
+struct SlackRequest: RequestModel, Decodable {
+    typealias ResponseModel = SlackResponse
     typealias Config = SlackConfig
     
     enum SlackConfig: String, Configuration {
@@ -40,12 +40,13 @@ extension SlackRequest {
         }
         return nil
     }
-    static func api(_ request: SlackRequest, _ context: Context, _ environment: Environment) -> (SlackResponse) -> IO<Void> {
+    static func api(_ request: SlackRequest, _ context: Context) -> (SlackResponse) -> IO<Void> {
         return { response in
             guard let url = request.responseURL, let hostname = url.host, let body = try? JSONEncoder().encode(response) else {
-                return environment.emptyApi(context).map { _ in () }
+                return Environment.emptyApi(context).map { _ in () }
             }
-            let returnAPI = environment.api(hostname)
+            let returnAPI = Environment
+                .api(hostname, url.port)
             let request = HTTPRequest.init(method: .POST,
                                            url: url.path,
                                            headers: HTTPHeaders([("Content-Type", "application/json")]),
@@ -53,12 +54,12 @@ extension SlackRequest {
             return returnAPI(context, request).map { _ in () }
         }
     }
-    static func instant(_ context: Context, _ environment: Environment) -> (SlackRequest) -> IO<SlackResponse> {
+    static func instant(_ context: Context) -> (SlackRequest) -> IO<SlackResponse> {
         return const(pure(SlackResponse(response_type: .ephemeral, text: nil, attachments: [], mrkdwn: false), context))
     }
 }
 
-struct SlackResponse: ResponseModel, Encodable {
+struct SlackResponse: Encodable {
     enum ResponseType: String, Encodable {
         case inChannel = "in_channel"
         case ephemeral = "ephemeral"
@@ -82,6 +83,11 @@ struct SlackResponse: ResponseModel, Encodable {
         let short: Bool?
     }
 }
+
+extension SlackResponse.Field: Decodable {}
+extension SlackResponse.Attachment: Decodable {}
+extension SlackResponse.ResponseType: Decodable {}
+extension SlackResponse: Decodable {}
 
 extension SlackResponse {
     static func error(text: String, helpResponse: SlackResponse? = nil) -> SlackResponse {

@@ -5,7 +5,8 @@
 //  Created by Peter Geszten-Kovacs on 2018. 11. 21..
 //
 
-public struct APIConnect<From: RequestModel, To: RequestModel> where From.Response: Encodable, To.Response: Decodable {
+public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvironment> where From.ResponseModel: Encodable {
+
     public indirect enum APIConnectError: Error {
         case collision([From.Config])
         case fromMissing([From.Config])
@@ -14,24 +15,24 @@ public struct APIConnect<From: RequestModel, To: RequestModel> where From.Respon
     }
     
     // check tokens and environment variables
-    public let check: (_ from: From) -> From.Response?
+    public let check: (_ from: From) -> From.ResponseModel?
     // slackrequest -> either<slackresponse, circlecirequest>
-    public let request: (_ from: From, _ environment: Environment) -> Either<From.Response, To>
+    public let request: (_ from: From) -> Either<From.ResponseModel, To>
     // circlecirequest -> either<slackresponse, circleciresponse>
-    public let toAPI: (_ context: Context, _ environment: Environment) -> (Either<From.Response, To>) -> IO<Either<From.Response, To.Response>>
+    public let toAPI: (_ context: Context) -> (Either<From.ResponseModel, To>) -> IO<Either<From.ResponseModel, To.ResponseModel>>
     // circleciresponse -> slackresponse
-    public let response: (_ with: To.Response) -> From.Response
+    public let response: (_ from: To.ResponseModel) -> From.ResponseModel
     // slackresponse -> void
-    public let fromAPI: (_ request: From, _ context: Context, _ environment: Environment) -> (From.Response) -> IO<Void>
+    public let fromAPI: (_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>
     // slackrequest -> slackresponse
-    public let instant: (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>
+    public let instant: (_ context: Context) -> (From) -> IO<From.ResponseModel>
     
-    public init(check: @escaping (_ from: From) -> From.Response?,
-         request: @escaping (_ from: From, _ environment: Environment) -> Either<From.Response, To>,
-         toAPI: @escaping (_ context: Context, _ environment: Environment) -> (Either<From.Response, To>) -> IO<Either<From.Response, To.Response>>,
-         response: @escaping (_ with: To.Response) -> From.Response,
-         fromAPI: @escaping (_ request: From, _ context: Context, _ environment: Environment) -> (From.Response) -> IO<Void>,
-         instant: @escaping (_ context: Context, _ environment: Environment) -> (From) -> IO<From.Response>) throws {
+    public init(check: @escaping (_ from: From) -> From.ResponseModel?,
+         request: @escaping (_ from: From) -> Either<From.ResponseModel, To>,
+         toAPI: @escaping (_ context: Context) -> (Either<From.ResponseModel, To>) -> IO<Either<From.ResponseModel, To.ResponseModel>>,
+         response: @escaping (_ with: To.ResponseModel) -> From.ResponseModel,
+         fromAPI: @escaping (_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>,
+         instant: @escaping (_ context: Context) -> (From) -> IO<From.ResponseModel>) {
         
         self.check = check
         self.request = request
@@ -39,21 +40,23 @@ public struct APIConnect<From: RequestModel, To: RequestModel> where From.Respon
         self.response = response
         self.fromAPI = fromAPI
         self.instant = instant
-        try checkConfigs()
         
     }
+}
+
+public extension APIConnect {
     
-    private func checkConfigs() throws {
+    public static func checkConfigs() throws {
         var errors: [APIConnectError] = []
         let configCollision = From.Config.allCases.filter { To.Config.allCases.map { $0.rawValue }.contains($0.rawValue) }
         if !configCollision.isEmpty {
             errors += [.collision(configCollision)]
         }
-        let fromCheck = From.check()
+        let fromCheck = From.check(E.self)
         if !fromCheck.isEmpty {
             errors += [.fromMissing(fromCheck)]
         }
-        let toCheck = To.check()
+        let toCheck = To.check(E.self)
         if !toCheck.isEmpty {
             errors += [.toMissing(toCheck)]
         }
@@ -61,24 +64,24 @@ public struct APIConnect<From: RequestModel, To: RequestModel> where From.Respon
             throw APIConnectError.all(errors)
         }
     }
-}
 
-public extension APIConnect {
-    
     // main entry point (like: slackrequest -> slackresponse)
-    public func run(_ from: From, _ context: Context, _ environment: Environment) -> IO<From.Response> {
+    public func run(_ from: From, _ context: Context) -> IO<From.ResponseModel> {
         if let response = check(from) {
             return pure(response, context)
         }
-        let run = pure(request(from, environment), context)
-            .flatMap(toAPI(context, environment))
-            .mapEither(id, response)
         guard from.responseURL != nil else {
+            let run = pure(request(from), context)
+                .flatMap(toAPI(context))
+                .mapEither(id, response)
             return run
         }
         defer {
-            let _ = run.flatMap(fromAPI(from, context, environment))
+            let run = pure(request(from), context)
+                .flatMap(toAPI(context))
+                .mapEither(id, response)
+            let _ = run.flatMap(fromAPI(from, context))
         }
-        return instant(context, environment)(from)
+        return instant(context)(from)
     }
 }

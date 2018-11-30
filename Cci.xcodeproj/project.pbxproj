@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		11D1F2EE21B162610061977C /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* Environment.swift */; };
 		OBJ_1000 /* Async+NIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_542 /* Async+NIO.swift */; };
 		OBJ_1001 /* AsyncError.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_543 /* AsyncError.swift */; };
 		OBJ_1002 /* Collection+Future.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_544 /* Collection+Future.swift */; };
@@ -892,7 +893,6 @@
 		OBJ_2511 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_398 /* Package.swift */; };
 		OBJ_2517 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_684 /* Package.swift */; };
 		OBJ_733 /* APIConnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* APIConnect.swift */; };
-		OBJ_734 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* Environment.swift */; };
 		OBJ_735 /* IO.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* IO.swift */; };
 		OBJ_736 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* Model.swift */; };
 		OBJ_737 /* Prelude.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* Prelude.swift */; };
@@ -5801,6 +5801,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_18 /* Circleci.swift */,
+				OBJ_10 /* Environment.swift */,
 				OBJ_19 /* Slack.swift */,
 				OBJ_20 /* SlackToCircleCi.swift */,
 			);
@@ -6870,7 +6871,7 @@
 			path = CodableReflection;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				11F9B80921A5899B0058053A /* Cci.playground */,
@@ -6881,7 +6882,6 @@
 				OBJ_30 /* Dependencies */,
 				OBJ_685 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_522 /* COperatingSystem */ = {
@@ -7415,7 +7415,6 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_9 /* APIConnect.swift */,
-				OBJ_10 /* Environment.swift */,
 				OBJ_11 /* IO.swift */,
 				OBJ_12 /* Model.swift */,
 				OBJ_13 /* Prelude.swift */,
@@ -8892,6 +8891,92 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 9999;
+				TargetAttributes = {
+					"Console::Command" = {
+						LastSwiftMigration = 1000;
+					};
+					"Console::Console" = {
+						LastSwiftMigration = 1000;
+					};
+					"Console::Logging" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Async" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Bits" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::COperatingSystem" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Core" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Debugging" = {
+						LastSwiftMigration = 1000;
+					};
+					"Crypto::Crypto" = {
+						LastSwiftMigration = 1000;
+					};
+					"Crypto::Random" = {
+						LastSwiftMigration = 1000;
+					};
+					"DatabaseKit::DatabaseKit" = {
+						LastSwiftMigration = 1000;
+					};
+					"HTTP::HTTP" = {
+						LastSwiftMigration = 1000;
+					};
+					"Multipart::Multipart" = {
+						LastSwiftMigration = 1000;
+					};
+					"Routing::Routing" = {
+						LastSwiftMigration = 1000;
+					};
+					"Service::Service" = {
+						LastSwiftMigration = 1000;
+					};
+					"TemplateKit::TemplateKit" = {
+						LastSwiftMigration = 1000;
+					};
+					"URLEncodedForm::URLEncodedForm" = {
+						LastSwiftMigration = 1000;
+					};
+					"Validation::Validation" = {
+						LastSwiftMigration = 1000;
+					};
+					"Vapor::Vapor" = {
+						LastSwiftMigration = 1000;
+					};
+					"WebSocket::WebSocket" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio-ssl::NIOOpenSSL" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIO" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOConcurrencyHelpers" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOFoundationCompat" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOHTTP1" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOPriorityQueue" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOTLS" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOWebSocket" = {
+						LastSwiftMigration = 1000;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "Cci" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -8900,7 +8985,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_685 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -9833,7 +9918,6 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_733 /* APIConnect.swift in Sources */,
-				OBJ_734 /* Environment.swift in Sources */,
 				OBJ_735 /* IO.swift in Sources */,
 				OBJ_736 /* Model.swift in Sources */,
 				OBJ_737 /* Prelude.swift in Sources */,
@@ -9847,6 +9931,7 @@
 				OBJ_804 /* Circleci.swift in Sources */,
 				OBJ_805 /* Slack.swift in Sources */,
 				OBJ_806 /* SlackToCircleCi.swift in Sources */,
+				11D1F2EE21B162610061977C /* Environment.swift in Sources */,
 				OBJ_807 /* boot.swift in Sources */,
 				OBJ_808 /* configure.swift in Sources */,
 				OBJ_809 /* routes.swift in Sources */,

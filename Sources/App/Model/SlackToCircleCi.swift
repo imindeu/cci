@@ -6,11 +6,13 @@
 //
 import APIConnect
 
+typealias SlackToCircleCi = APIConnect<SlackRequest, CircleCiJobRequest, Environment>
+
 extension APIConnect where From == SlackRequest {
-    init(request: @escaping (_ from: SlackRequest, _ environment: Environment) -> Either<SlackResponse, To>,
-         toAPI: @escaping (_ context: Context, _ environment: Environment) -> (Either<SlackResponse, To>) -> IO<Either<SlackResponse, To.Response>>,
-         response: @escaping (_ with: To.Response) -> SlackResponse) throws {
-        try self.init(check: SlackRequest.check,
+    init(request: @escaping (_ from: SlackRequest) -> Either<SlackResponse, To>,
+         toAPI: @escaping (_ context: Context) -> (Either<SlackResponse, To>) -> IO<Either<SlackResponse, To.ResponseModel>>,
+         response: @escaping (_ with: To.ResponseModel) -> SlackResponse) {
+        self.init(check: SlackRequest.check,
                       request: request,
                       toAPI: toAPI,
                       response: response,
@@ -20,9 +22,11 @@ extension APIConnect where From == SlackRequest {
 }
 
 extension APIConnect where From == SlackRequest, To == CircleCiJobRequest {
-    static func slackToCircleCiTest() throws -> APIConnect {
-        return try APIConnect<SlackRequest, CircleCiJobRequest>(request: CircleCiJobRequest.slackRequest,
-                                                                toAPI: CircleCiJobRequest.apiWithSlack,
-                                                                response: CircleCiJobRequest.responseToSlack)
+    static func run(_ from: SlackRequest, _ context: Context) -> IO<SlackResponse> {
+        return APIConnect<SlackRequest, CircleCiJobRequest, E>(
+            request: CircleCiJobRequest.slackRequest,
+            toAPI: CircleCiJobRequest.apiWithSlack,
+            response: CircleCiJobRequest.responseToSlack)
+            .run(from, context)
     }
 }
