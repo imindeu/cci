@@ -59,7 +59,7 @@ extension SlackRequest {
     }
 }
 
-struct SlackResponse: Encodable {
+struct SlackResponse: Equatable, Encodable {
     enum ResponseType: String, Encodable {
         case inChannel = "in_channel"
         case ephemeral = "ephemeral"
@@ -69,7 +69,7 @@ struct SlackResponse: Encodable {
     var attachments: [Attachment]
     let mrkdwn: Bool?
     
-    struct Attachment: Encodable {
+    struct Attachment: Equatable, Encodable {
         let fallback: String?
         let text: String?
         let color: String?
@@ -77,7 +77,7 @@ struct SlackResponse: Encodable {
         let fields: [Field]
     }
     
-    struct Field: Encodable {
+    struct Field: Equatable, Encodable {
         let title: String?
         let value: String?
         let short: Bool?

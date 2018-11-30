@@ -77,7 +77,7 @@ extension CircleCiJobKind {
     }
 }
 
-struct CircleCiTestJob: CircleCiJob {
+struct CircleCiTestJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.test.rawValue
     let project: String
     let branch: String
@@ -118,7 +118,7 @@ extension CircleCiTestJob {
     }
 }
 
-struct CircleCiDeployJob: CircleCiJob {
+struct CircleCiDeployJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.deploy.rawValue
     let project: String
     let branch: String

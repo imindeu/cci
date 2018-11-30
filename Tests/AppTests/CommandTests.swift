@@ -20,7 +20,7 @@ class CommandTests: XCTestCase {
         ("Accept", "application/json"),
         ("Content-Type", "application/json")
         ])
-
+/*
     func request() throws -> Request {
         let app = try Application()
         return Request(using: app)
@@ -223,5 +223,5 @@ class CommandTests: XCTestCase {
                                               response_url: "",
                                               trigger_id: ""))
     }
-
+*/
 }
