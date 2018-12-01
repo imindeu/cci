@@ -6,6 +6,8 @@
 //
 
 import APIConnect
+import APIModels
+
 import XCTest
 import Vapor
 
@@ -204,14 +206,14 @@ class CircleciTests: XCTestCase {
                                                                   username: username))
         let testSlackResponse = CircleCiJobRequest.responseToSlack(testResponse)
         let expectedTestSlackResponse = SlackResponse(
-            response_type: .inChannel,
+            responseType: .inChannel,
             text: nil,
             attachments: [
                 SlackResponse.Attachment(
                     fallback: "Job \'test\' has started at <buildURL|#10>. (project: projectX, branch: feature/branch-X",
                     text: "Job \'test\' has started at <buildURL|#10>.",
                     color: "#764FA5",
-                    mrkdwn_in: ["text", "fields"],
+                    mrkdwnIn: ["text", "fields"],
                     fields: [
                         SlackResponse.Field(title: "Project", value: project, short: true),
                         SlackResponse.Field(title: "Branch", value: branch, short: true),
@@ -231,14 +233,14 @@ class CircleciTests: XCTestCase {
                                                                           type: type))
         let deploySlackResponse = CircleCiJobRequest.responseToSlack(deployResponse)
         let expectedDeploySlackResponse = SlackResponse(
-            response_type: .inChannel,
+            responseType: .inChannel,
             text: nil,
             attachments: [
                 SlackResponse.Attachment(
                     fallback: "Job \'deploy\' has started at <buildURL|#10>. (project: projectX, branch: feature/branch-X",
                     text: "Job \'deploy\' has started at <buildURL|#10>.",
                     color: "#764FA5",
-                    mrkdwn_in: ["text", "fields"],
+                    mrkdwnIn: ["text", "fields"],
                     fields: [
                         SlackResponse.Field(title: "Project", value: project, short: true),
                         SlackResponse.Field(title: "Type", value: type, short: true),

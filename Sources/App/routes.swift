@@ -1,5 +1,6 @@
 import Routing
 import Vapor
+import APIModels
 
 protocol DecodableContent: Decodable, RequestDecodable {}
 extension DecodableContent {

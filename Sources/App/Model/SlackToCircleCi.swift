@@ -5,6 +5,7 @@
 //  Created by Peter Geszten-Kovacs on 2018. 11. 21..
 //
 import APIConnect
+import APIModels
 
 typealias SlackToCircleCi = APIConnect<SlackRequest, CircleCiJobRequest, Environment>
 

@@ -6,7 +6,10 @@
 //
 
 import APIConnect
+import APIModels
+
 import Vapor
+
 @testable import App
 
 func context() throws -> Context {

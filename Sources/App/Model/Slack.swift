@@ -5,58 +5,33 @@
 //  Created by Peter Geszten-Kovacs on 2018. 05. 16..
 //
 import APIConnect
+import APIModels
 import Foundation
 import HTTP
 
-struct SlackRequest: Codable {
-    let token: String
-    let teamId: String
-    let teamDomain: String
-    let enterpriseId: String?
-    let enterpriseName: String?
-    let channelId: String
-    let channelName: String
-    let userId: String
-    let userName: String
-    let command: String
-    let text: String
-    let responseUrlString: String
-    let triggerId: String
-    
-    enum CodingKeys: String, CodingKey {
-        case token
-        case teamId = "team_id"
-        case teamDomain = "team_domain"
-        case enterpriseId = "enterprise_id"
-        case enterpriseName = "enterprise_name"
-        case channelId = "channel_id"
-        case channelName = "channel_name"
-        case userId = "user_id"
-        case userName = "user_name"
-        case command
-        case text
-        case responseUrlString = "response_url"
-        case triggerId = "trigger_id"
-    }
-}
-
 extension SlackRequest: RequestModel {
-    typealias ResponseModel = SlackResponse
-    typealias Config = SlackConfig
+    public typealias ResponseModel = SlackResponse
+    public typealias Config = SlackConfig
     
-    enum SlackConfig: String, Configuration {
+    public enum SlackConfig: String, Configuration {
         case slackToken
     }
     
-    var responseURL: URL? { return URL(string: responseUrlString) }
+    public var responseURL: URL? { return URL(string: responseUrlString) }
 }
 
 extension SlackRequest {
     static func check(_ from: SlackRequest) -> SlackResponse? {
-        guard from.responseURL != nil else {
-            return SlackResponse.error(text: "Error: bad response_url")
+        var texts: [String] = []
+        let token = Environment.get(Config.slackToken)
+        if token == nil || from.token != token! {
+            texts.append("token")
         }
-        return nil
+        if from.responseURL == nil {
+            texts.append("response_url")
+        }
+        guard texts.count > 0 else { return nil }
+        return SlackResponse.error(text: "Error: bad \(texts.joined(separator: ", "))")
     }
     static func api(_ request: SlackRequest, _ context: Context) -> (SlackResponse) -> IO<Void> {
         return { response in
@@ -73,40 +48,24 @@ extension SlackRequest {
         }
     }
     static func instant(_ context: Context) -> (SlackRequest) -> IO<SlackResponse> {
-        return const(pure(SlackResponse(response_type: .ephemeral, text: nil, attachments: [], mrkdwn: false), context))
+        return const(pure(SlackResponse.instant, context))
     }
 }
 
-struct SlackResponse: Equatable, Codable {
-    enum ResponseType: String, Codable {
-        case inChannel = "in_channel"
-        case ephemeral = "ephemeral"
-    }
-    let response_type: ResponseType
-    let text: String?
-    var attachments: [Attachment]
-    let mrkdwn: Bool?
-    
-    struct Attachment: Equatable, Codable {
-        let fallback: String?
-        let text: String?
-        let color: String?
-        let mrkdwn_in: [String]
-        let fields: [Field]
-    }
-    
-    struct Field: Equatable, Codable {
-        let title: String?
-        let value: String?
-        let short: Bool?
+extension SlackResponse {
+    static var instant: SlackResponse {
+        return SlackResponse(responseType: .ephemeral,
+                             text: nil,
+                             attachments: [],
+                             mrkdwn: false)
     }
 }
 
 extension SlackResponse {
     static func error(text: String, helpResponse: SlackResponse? = nil) -> SlackResponse {
-        let attachment = SlackResponse.Attachment(fallback: text, text: text, color: "danger", mrkdwn_in: [], fields: [])
+        let attachment = SlackResponse.Attachment(fallback: text, text: text, color: "danger", mrkdwnIn: [], fields: [])
         guard let helpResponse = helpResponse else {
-            return SlackResponse(response_type: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
+            return SlackResponse(responseType: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
         }
         var copy = helpResponse
         let attachments = copy.attachments
