@@ -26,10 +26,13 @@ extension CircleCiError {
             return "Unknown command (\(text))"
         case .parse(let string):
             return "Parse error (\(string))"
-        case .underlying(let error):
-            return "Unknown error (\(error))"
         case .decode:
             return "Decode error"
+        case .underlying(let error):
+            if let circleCiError = error as? CircleCiError {
+                return circleCiError.text
+            }
+            return "Unknown error (\(error))"
         }
     }
 }
@@ -258,6 +261,7 @@ extension CircleCiJobRequest {
     }
     
     static func apiWithSlack(_ context: Context) -> (Either<SlackResponse, CircleCiJobRequest>) -> IO<Either<SlackResponse, CircleCiBuildResponse>> {
+        
         let instantResponse: (SlackResponse) -> IO<Either<SlackResponse, CircleCiBuildResponse>> = { pure(.left($0), context) }
         return {
             return $0.either(instantResponse) { jobRequest -> IO<Either<SlackResponse, CircleCiBuildResponse>> in
@@ -318,7 +322,7 @@ struct CircleCiBuildResponse {
     let job: CircleCiJob
 }
 
-struct CircleCiBuild: Decodable {
+struct CircleCiBuild: Decodable, Equatable {
     let build_url: String
     let build_num: Int
 }

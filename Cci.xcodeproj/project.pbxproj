@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1118EF8E21B26F70009BD9EB /* Templates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118EF8C21B26F1D009BD9EB /* Templates.swift */; };
 		11D1F2EE21B162610061977C /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* Environment.swift */; };
 		OBJ_1000 /* Async+NIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_542 /* Async+NIO.swift */; };
 		OBJ_1001 /* AsyncError.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_543 /* AsyncError.swift */; };
@@ -4265,6 +4266,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1118EF8C21B26F1D009BD9EB /* Templates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Templates.swift; sourceTree = "<group>"; };
 		11F9B80921A5899B0058053A /* Cci.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = Cci.playground; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::App::Product" /* App.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -6006,6 +6008,7 @@
 				OBJ_26 /* CircleciTests.swift */,
 				OBJ_27 /* CommandTests.swift */,
 				OBJ_28 /* RouterTests.swift */,
+				1118EF8C21B26F1D009BD9EB /* Templates.swift */,
 			);
 			name = AppTests;
 			path = Tests/AppTests;
@@ -9943,6 +9946,7 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_912 /* CircleciTests.swift in Sources */,
+				1118EF8E21B26F70009BD9EB /* Templates.swift in Sources */,
 				OBJ_913 /* CommandTests.swift in Sources */,
 				OBJ_914 /* RouterTests.swift in Sources */,
 			);
