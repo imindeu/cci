@@ -5,7 +5,14 @@
 //  Created by Peter Geszten-Kovacs on 2018. 12. 01..
 //
 
+import APIConnect
+import Vapor
 @testable import App
+
+func context() throws -> Context {
+    let app = try Application()
+    return Request(using: app)
+}
 
 extension SlackRequest {
     static func template(token: String = "",

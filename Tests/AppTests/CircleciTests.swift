@@ -20,25 +20,15 @@ class CircleciTests: XCTestCase {
     let username = "tester"
     let options = ["options1:x", "options2:y"]
     let type = "alpha"
-    let headers = HTTPHeaders([
-        ("Accept", "application/json"),
-        ("Content-Type", "application/json")
-        ])
-    let decoder = JSONDecoder()
-
-    func context() throws -> Context {
-        let app = try Application()
-        return Request(using: app)
-    }
 
     override func setUp() {
         super.setUp()
         Environment.env = [
             "circleCiTokens": "circleCiTokens",
             "slackToken": "slackToken",
-            "company": "company",
-            "vcs": "vcs",
-            "projects": "projectX"
+            "circleCiCompany": "company",
+            "circleCiVcs": "vcs",
+            "circleCiProjects": "projectX"
         ]
         Environment.api = { hostname, _ in
             return { context, _ in
@@ -259,5 +249,5 @@ class CircleciTests: XCTestCase {
             mrkdwn: true)
         XCTAssertEqual(deploySlackResponse, expectedDeploySlackResponse)
 
-    }    
+    }
 }

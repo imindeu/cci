@@ -189,10 +189,10 @@ struct CircleCiJobRequest: RequestModel {
     typealias Config = CircleCiConfig
     
     enum CircleCiConfig: String, Configuration {
-        case circleCiTokens
-        case company
-        case vcs
-        case projects
+        case tokens = "circleCiTokens"
+        case company = "circleCiCompany"
+        case vcs = "circleCiVcs"
+        case projects = "circleCiProjects"
     }
     
     let job: CircleCiJob
@@ -202,7 +202,7 @@ struct CircleCiJobRequest: RequestModel {
 extension CircleCiJobRequest {
     static var path: (String, String) -> String = { project, branch in
         let projects: [String] = Environment.getArray(CircleCiConfig.projects)
-        let circleCiTokens = Environment.getArray(CircleCiConfig.circleCiTokens)
+        let circleCiTokens = Environment.getArray(CircleCiConfig.tokens)
         let vcs = Environment.get(CircleCiConfig.vcs)!
         let company = Environment.get(CircleCiConfig.company)!
         let index = projects.index(of: project)! // TODO: catch forced unwrap
