@@ -6,6 +6,7 @@
 //
 
 import APIConnect
+import APIModels
 import Foundation
 import HTTP
 
@@ -103,8 +104,8 @@ extension CircleCiTestJob {
             "  - *branch*: branch name to test\n" +
         "  - *options*: optional fastlane options in the xyz:qwo format\n"
         let attachment = SlackResponse.Attachment(
-            fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
-        let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
+            fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
+        let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
     
@@ -160,8 +161,8 @@ extension CircleCiDeployJob {
             "  (currently available options, maybe not up to date: " +
         "    emails, groups, use_git, version, skip_xcode_version_check)"
         let attachment = SlackResponse.Attachment(
-            fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
-        let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
+            fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
+        let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
     
@@ -218,8 +219,8 @@ extension CircleCiJobRequest {
             "  - test: test a branch\n\n" +
         "All commands have a help subcommand to show their functionality\n"
         let attachment = SlackResponse.Attachment(
-            fallback: text, text: text, color: "good", mrkdwn_in: ["text"], fields: [])
-        let response = SlackResponse(response_type: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
+            fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
+        let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
         return response
     }
     
@@ -311,25 +312,15 @@ extension CircleCiJobRequest {
             fallback: fallback,
             text: "Job '\(job.name)' has started at <\(response.buildURL)|#\(response.buildNum)>.",
             color: "#764FA5",
-            mrkdwn_in: ["text", "fields"],
+            mrkdwnIn: ["text", "fields"],
             fields: fields)
-        return SlackResponse(response_type: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
+        return SlackResponse(responseType: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
     }
 }
 
 struct CircleCiBuildResponse {
     let response: CircleCiBuild
     let job: CircleCiJob
-}
-
-struct CircleCiBuild: Codable, Equatable {
-    let buildURL: String
-    let buildNum: Int
-    
-    enum CodingKeys: String, CodingKey {
-        case buildURL = "build_url"
-        case buildNum = "build_num"
-    }
 }
 
 private extension Collection {
