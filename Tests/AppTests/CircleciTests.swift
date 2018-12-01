@@ -9,7 +9,7 @@ import APIConnect
 import APIModels
 
 import XCTest
-import Vapor
+import HTTP
 
 @testable import App
 
@@ -189,7 +189,7 @@ class CircleciTests: XCTestCase {
                                   options: options,
                                   username: username)
         let request: Either<SlackResponse, CircleCiJobRequest> = .right(CircleCiJobRequest(job: job))
-        let expected = CircleCiBuild(buildURL: "buildURL",
+        let expected = CircleCiResponse(buildURL: "buildURL",
                                      buildNum: 10)
         let response = try api(request).wait().right
         XCTAssertEqual(response?.job as? CircleCiTestJob, job)
@@ -198,7 +198,7 @@ class CircleciTests: XCTestCase {
         
     func testResponseToSlack() {
         // test
-        let testResponse = CircleCiBuildResponse(response: CircleCiBuild(buildURL: "buildURL",
+        let testResponse = CircleCiBuildResponse(response: CircleCiResponse(buildURL: "buildURL",
                                                                      buildNum: 10),
                                              job: CircleCiTestJob(project: project,
                                                                   branch: branch,
@@ -224,7 +224,7 @@ class CircleciTests: XCTestCase {
         XCTAssertEqual(testSlackResponse, expectedTestSlackResponse)
 
         // deploy
-        let deployResponse = CircleCiBuildResponse(response: CircleCiBuild(buildURL: "buildURL",
+        let deployResponse = CircleCiBuildResponse(response: CircleCiResponse(buildURL: "buildURL",
                                                                            buildNum: 10),
                                                    job: CircleCiDeployJob(project: project,
                                                                           branch: branch,

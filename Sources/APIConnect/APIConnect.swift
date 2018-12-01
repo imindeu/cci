@@ -70,16 +70,13 @@ public extension APIConnect {
         if let response = check(from) {
             return pure(response, context)
         }
+        let run = pure(request(from), context)
+            .flatMap(toAPI(context))
+            .mapEither(id, response)
         guard from.responseURL != nil else {
-            let run = pure(request(from), context)
-                .flatMap(toAPI(context))
-                .mapEither(id, response)
             return run
         }
         defer {
-            let run = pure(request(from), context)
-                .flatMap(toAPI(context))
-                .mapEither(id, response)
             let _ = run.flatMap(fromAPI(from, context))
         }
         return instant(context)(from)

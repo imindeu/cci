@@ -5,7 +5,7 @@
 //  Created by Peter Geszten-Kovacs on 2018. 12. 01..
 //
 
-public struct CircleCiBuild: Equatable, Codable {
+public struct CircleCiResponse: Equatable, Codable {
     public let buildURL: String
     public let buildNum: Int
     

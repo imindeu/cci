@@ -21,12 +21,4 @@ public struct Environment: APIConnectEnvironment {
     
     public static var env: [String: String] = ProcessInfo.processInfo.environment
     
-    public static func get<A: Configuration>(_ key: A) -> String? {
-        return env[key.rawValue]
-    }
-    
-    public static func getArray<A: Configuration>(_ key: A, separator: Character = ",") -> [String] {
-        return get(key)?.split(separator: separator).map(String.init) ?? []
-    }
-    
 }

@@ -9,7 +9,7 @@ import APIConnect
 import APIModels
 
 import XCTest
-import Vapor
+import HTTP
 
 @testable import App
 
@@ -59,10 +59,9 @@ class SlackTests: XCTestCase {
         XCTAssertFalse(usedApi)
     }
     
-    // TODO: it is commented out, because somehow wait doesn't finish
-//    func testInstant() throws {
-//        let instant = try SlackRequest.instant(context())
-//        let response = try instant(SlackRequest.template()).wait()
-//        XCTAssertEqual(response, SlackResponse.instant)
-//    }
+    func testInstant() throws {
+        let instant = try SlackRequest.instant(context())
+        let response = try instant(SlackRequest.template()).wait()
+        XCTAssertEqual(response, SlackResponse.instant)
+    }
 }

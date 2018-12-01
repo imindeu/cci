@@ -10,7 +10,18 @@ import Foundation
 public protocol Configuration: RawRepresentable & CaseIterable where RawValue == String {}
 
 public protocol APIConnectEnvironment {
+    static var env: [String: String] { get }
     static func get<A: Configuration>(_ key: A) -> String?
+}
+
+extension APIConnectEnvironment {
+    public static func get<A: Configuration>(_ key: A) -> String? {
+        return env[key.rawValue]
+    }
+    
+    public static func getArray<A: Configuration>(_ key: A, separator: Character = ",") -> [String] {
+        return get(key)?.split(separator: separator).map(String.init) ?? []
+    }
 }
 
 public protocol RequestModel {

@@ -8,13 +8,12 @@
 import APIConnect
 import APIModels
 
-import Vapor
+import NIO
 
 @testable import App
 
 func context() throws -> Context {
-    let app = try Application()
-    return Request(using: app)
+    return MultiThreadedEventLoopGroup(numberOfThreads: 1)
 }
 
 extension SlackRequest {

@@ -16,6 +16,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "APIConnect", dependencies: ["HTTP"]),
+        .testTarget(name: "APIConnectTests", dependencies: ["APIConnect"]),
         .target(name: "APIModels", dependencies: []),
         .target(name: "App", dependencies: ["APIConnect", "APIModels", "Vapor"]),
         .testTarget(name: "AppTests", dependencies: ["App"]),

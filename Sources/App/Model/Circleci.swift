@@ -281,7 +281,7 @@ extension CircleCiJobRequest {
                         ])
                     return Environment.api("circleci.com", nil)(context, request)
                         .map { response -> Either<SlackResponse, CircleCiBuildResponse> in
-                            if let deployResponse = try response.body.data.map { try JSONDecoder().decode(CircleCiBuild.self, from: $0) } {
+                            if let deployResponse = try response.body.data.map { try JSONDecoder().decode(CircleCiResponse.self, from: $0) } {
                                 return .right(CircleCiBuildResponse(response: deployResponse, job: job))
                             } else {
                                 throw CircleCiError.decode
@@ -319,7 +319,7 @@ extension CircleCiJobRequest {
 }
 
 struct CircleCiBuildResponse {
-    let response: CircleCiBuild
+    let response: CircleCiResponse
     let job: CircleCiJob
 }
 
