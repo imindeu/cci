@@ -226,8 +226,8 @@ extension CircleCiJobRequest {
     static func slackRequest(_ from: SlackRequest) -> Either<SlackResponse, CircleCiJobRequest> {
         let projects: [String] = Environment.get(CircleCiConfig.projects)?.split(separator: ",").map(String.init) ?? []
         
-        guard let index = projects.index(where: { from.channel_name.hasPrefix($0) }) else {
-            return .left(SlackResponse.error(text: CircleCiError.noChannel(from.channel_name).text))
+        guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
+            return .left(SlackResponse.error(text: CircleCiError.noChannel(from.channelName).text))
         }
         let project = projects[index]
         
@@ -248,7 +248,7 @@ extension CircleCiJobRequest {
                     .parse(project: project,
                            parameters: parameters,
                            options: options,
-                           username: from.user_name)
+                           username: from.userName)
                     .map { CircleCiJobRequest(job: $0) }
             } catch {
                 return .left(SlackResponse.error(text: CircleCiError.underlying(error).text, helpResponse: job.type.helpResponse))
@@ -298,7 +298,7 @@ extension CircleCiJobRequest {
     static func responseToSlack(_ from: CircleCiBuildResponse) -> SlackResponse {
         let job = from.job
         let response = from.response
-        let fallback = "Job '\(job.name)' has started at <\(response.build_url)|#\(response.build_num)>. " +
+        let fallback = "Job '\(job.name)' has started at <\(response.buildURL)|#\(response.buildNum)>. " +
             "(project: \(from.job.project), branch: \(job.branch)"
         var fields = job.slackResponseFields
         job.options.forEach { option in
@@ -309,7 +309,7 @@ extension CircleCiJobRequest {
         }
         let attachment = SlackResponse.Attachment(
             fallback: fallback,
-            text: "Job '\(job.name)' has started at <\(response.build_url)|#\(response.build_num)>.",
+            text: "Job '\(job.name)' has started at <\(response.buildURL)|#\(response.buildNum)>.",
             color: "#764FA5",
             mrkdwn_in: ["text", "fields"],
             fields: fields)
@@ -322,9 +322,14 @@ struct CircleCiBuildResponse {
     let job: CircleCiJob
 }
 
-struct CircleCiBuild: Decodable, Equatable {
-    let build_url: String
-    let build_num: Int
+struct CircleCiBuild: Codable, Equatable {
+    let buildURL: String
+    let buildNum: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case buildURL = "build_url"
+        case buildNum = "build_num"
+    }
 }
 
 private extension Collection {

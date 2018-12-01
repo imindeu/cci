@@ -963,7 +963,6 @@
 		OBJ_848 /* CNIODarwin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIODarwin::Product" /* CNIODarwin.framework */; };
 		OBJ_849 /* CNIOLinux.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOLinux::Product" /* CNIOLinux.framework */; };
 		OBJ_912 /* CircleciTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* CircleciTests.swift */; };
-		OBJ_913 /* CommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* CommandTests.swift */; };
 		OBJ_914 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* RouterTests.swift */; };
 		OBJ_916 /* App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Cci::App::Product" /* App.framework */; };
 		OBJ_917 /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Vapor::Vapor::Product" /* Vapor.framework */; };
@@ -4433,7 +4432,6 @@
 		OBJ_267 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
 		OBJ_268 /* HTTPMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPMessage.swift; sourceTree = "<group>"; };
 		OBJ_269 /* HTTPRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPRequest.swift; sourceTree = "<group>"; };
-		OBJ_27 /* CommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandTests.swift; sourceTree = "<group>"; };
 		OBJ_270 /* HTTPResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPResponse.swift; sourceTree = "<group>"; };
 		OBJ_271 /* MediaTypePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaTypePreference.swift; sourceTree = "<group>"; };
 		OBJ_272 /* URL+HTTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+HTTP.swift"; sourceTree = "<group>"; };
@@ -6006,7 +6004,6 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_26 /* CircleciTests.swift */,
-				OBJ_27 /* CommandTests.swift */,
 				OBJ_28 /* RouterTests.swift */,
 				1118EF8C21B26F1D009BD9EB /* Templates.swift */,
 			);
@@ -9947,7 +9944,6 @@
 			files = (
 				OBJ_912 /* CircleciTests.swift in Sources */,
 				1118EF8E21B26F70009BD9EB /* Templates.swift in Sources */,
-				OBJ_913 /* CommandTests.swift in Sources */,
 				OBJ_914 /* RouterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

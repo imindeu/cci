@@ -136,23 +136,23 @@ class CircleciTests: XCTestCase {
 
     func testSlackRequest() {
         // no channel
-        let noChannelRequest = SlackRequest.template(channel_name: "nochannel")
+        let noChannelRequest = SlackRequest.template(channelName: "nochannel")
         let noChannelResult = CircleCiJobRequest.slackRequest(noChannelRequest)
         XCTAssertEqual(noChannelResult.left, SlackResponse.error(text: CircleCiError.noChannel("nochannel").text))
         
         // unknown command
-        let unknownCommandRequest = SlackRequest.template(channel_name: project, text: "command branch")
+        let unknownCommandRequest = SlackRequest.template(channelName: project, text: "command branch")
         let unknownCommandResult = CircleCiJobRequest.slackRequest(unknownCommandRequest)
         XCTAssertEqual(unknownCommandResult.left, SlackResponse.error(text: CircleCiError.unknownCommand("command branch").text))
         
         // help command
-        let helpRequest = SlackRequest.template(channel_name: project, text: "help")
+        let helpRequest = SlackRequest.template(channelName: project, text: "help")
         let helpResult = CircleCiJobRequest.slackRequest(helpRequest)
         XCTAssertEqual(helpResult.left, CircleCiJobRequest.helpResponse)
         
         // test job
-        let testRequest = SlackRequest.template(channel_name: project,
-                                                user_name: username,
+        let testRequest = SlackRequest.template(channelName: project,
+                                                userName: username,
                                                 text: "test \(branch) \(options.joined(separator: " "))")
         let testResponse = CircleCiJobRequest.slackRequest(testRequest)
         XCTAssertEqual(testResponse.right?.job as? CircleCiTestJob,
@@ -162,8 +162,8 @@ class CircleciTests: XCTestCase {
                                        username: username))
         
         // deploy job
-        let deployRequest = SlackRequest.template(channel_name: project,
-                                                  user_name: username,
+        let deployRequest = SlackRequest.template(channelName: project,
+                                                  userName: username,
                                                   text: "deploy \(type) \(options.joined(separator: " ")) \(branch)")
         let deployResponse = CircleCiJobRequest.slackRequest(deployRequest)
         XCTAssertEqual(deployResponse.right?.job as? CircleCiDeployJob,
@@ -187,8 +187,8 @@ class CircleciTests: XCTestCase {
                                   options: options,
                                   username: username)
         let request: Either<SlackResponse, CircleCiJobRequest> = .right(CircleCiJobRequest(job: job))
-        let expected = CircleCiBuild(build_url: "buildURL",
-                                     build_num: 10)
+        let expected = CircleCiBuild(buildURL: "buildURL",
+                                     buildNum: 10)
         let response = try api(request).wait().right
         XCTAssertEqual(response?.job as? CircleCiTestJob, job)
         XCTAssertEqual(response?.response, expected)
@@ -196,8 +196,8 @@ class CircleciTests: XCTestCase {
         
     func testResponseToSlack() {
         // test
-        let testResponse = CircleCiBuildResponse(response: CircleCiBuild(build_url: "buildURL",
-                                                                     build_num: 10),
+        let testResponse = CircleCiBuildResponse(response: CircleCiBuild(buildURL: "buildURL",
+                                                                     buildNum: 10),
                                              job: CircleCiTestJob(project: project,
                                                                   branch: branch,
                                                                   options: options,
@@ -222,8 +222,8 @@ class CircleciTests: XCTestCase {
         XCTAssertEqual(testSlackResponse, expectedTestSlackResponse)
 
         // deploy
-        let deployResponse = CircleCiBuildResponse(response: CircleCiBuild(build_url: "buildURL",
-                                                                           build_num: 10),
+        let deployResponse = CircleCiBuildResponse(response: CircleCiBuild(buildURL: "buildURL",
+                                                                           buildNum: 10),
                                                    job: CircleCiDeployJob(project: project,
                                                                           branch: branch,
                                                                           options: options,

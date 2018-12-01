@@ -8,7 +8,39 @@ import APIConnect
 import Foundation
 import HTTP
 
-struct SlackRequest: RequestModel, Decodable {
+struct SlackRequest: Codable {
+    let token: String
+    let teamId: String
+    let teamDomain: String
+    let enterpriseId: String?
+    let enterpriseName: String?
+    let channelId: String
+    let channelName: String
+    let userId: String
+    let userName: String
+    let command: String
+    let text: String
+    let responseUrlString: String
+    let triggerId: String
+    
+    enum CodingKeys: String, CodingKey {
+        case token
+        case teamId = "team_id"
+        case teamDomain = "team_domain"
+        case enterpriseId = "enterprise_id"
+        case enterpriseName = "enterprise_name"
+        case channelId = "channel_id"
+        case channelName = "channel_name"
+        case userId = "user_id"
+        case userName = "user_name"
+        case command
+        case text
+        case responseUrlString = "response_url"
+        case triggerId = "trigger_id"
+    }
+}
+
+extension SlackRequest: RequestModel {
     typealias ResponseModel = SlackResponse
     typealias Config = SlackConfig
     
@@ -16,26 +48,12 @@ struct SlackRequest: RequestModel, Decodable {
         case slackToken
     }
     
-    let token: String
-    let team_id: String
-    let team_domain: String
-    let enterprise_id: String?
-    let enterprise_name: String?
-    let channel_id: String
-    let channel_name: String
-    let user_id: String
-    let user_name: String
-    let command: String
-    let text: String
-    let response_url: String
-    let trigger_id: String
-    
-    var responseURL: URL? { return URL(string: response_url) }
+    var responseURL: URL? { return URL(string: responseUrlString) }
 }
 
 extension SlackRequest {
     static func check(_ from: SlackRequest) -> SlackResponse? {
-        guard URL(string: from.response_url) != nil else {
+        guard from.responseURL != nil else {
             return SlackResponse.error(text: "Error: bad response_url")
         }
         return nil
@@ -59,8 +77,8 @@ extension SlackRequest {
     }
 }
 
-struct SlackResponse: Equatable, Encodable {
-    enum ResponseType: String, Encodable {
+struct SlackResponse: Equatable, Codable {
+    enum ResponseType: String, Codable {
         case inChannel = "in_channel"
         case ephemeral = "ephemeral"
     }
@@ -69,7 +87,7 @@ struct SlackResponse: Equatable, Encodable {
     var attachments: [Attachment]
     let mrkdwn: Bool?
     
-    struct Attachment: Equatable, Encodable {
+    struct Attachment: Equatable, Codable {
         let fallback: String?
         let text: String?
         let color: String?
@@ -77,17 +95,12 @@ struct SlackResponse: Equatable, Encodable {
         let fields: [Field]
     }
     
-    struct Field: Equatable, Encodable {
+    struct Field: Equatable, Codable {
         let title: String?
         let value: String?
         let short: Bool?
     }
 }
-
-extension SlackResponse.Field: Decodable {}
-extension SlackResponse.Attachment: Decodable {}
-extension SlackResponse.ResponseType: Decodable {}
-extension SlackResponse: Decodable {}
 
 extension SlackResponse {
     static func error(text: String, helpResponse: SlackResponse? = nil) -> SlackResponse {
