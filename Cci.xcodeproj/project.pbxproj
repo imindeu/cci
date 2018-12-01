@@ -23,6 +23,7 @@
 
 /* Begin PBXBuildFile section */
 		1118F52921B29EE5009BD9EB /* APIConnectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52821B29EE5009BD9EB /* APIConnectTests.swift */; };
+		1118F52B21B2C3F2009BD9EB /* IOTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52A21B2C3F2009BD9EB /* IOTests.swift */; };
 		OBJ_1000 /* Console.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Console::Product" /* Console.framework */; };
 		OBJ_1001 /* Service.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Service::Service::Product" /* Service.framework */; };
 		OBJ_1002 /* Logging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Logging::Product" /* Logging.framework */; };
@@ -4471,6 +4472,7 @@
 
 /* Begin PBXFileReference section */
 		1118F52821B29EE5009BD9EB /* APIConnectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConnectTests.swift; sourceTree = "<group>"; };
+		1118F52A21B2C3F2009BD9EB /* IOTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOTests.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIModels::Product" /* APIModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIModels.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -6476,8 +6478,9 @@
 		OBJ_33 /* APIConnectTests */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_34 /* PreludeTests.swift */,
 				1118F52821B29EE5009BD9EB /* APIConnectTests.swift */,
+				OBJ_34 /* PreludeTests.swift */,
+				1118F52A21B2C3F2009BD9EB /* IOTests.swift */,
 			);
 			name = APIConnectTests;
 			path = Tests/APIConnectTests;
@@ -10196,6 +10199,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				1118F52B21B2C3F2009BD9EB /* IOTests.swift in Sources */,
 				OBJ_811 /* PreludeTests.swift in Sources */,
 				1118F52921B29EE5009BD9EB /* APIConnectTests.swift in Sources */,
 			);
