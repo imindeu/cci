@@ -5,7 +5,7 @@ import XCTest
 // MARK: - APIConnectTests
 extension APIConnectTests {
   static var allTests: [(String, (APIConnectTests) -> () throws -> Void)] = [
-    ("testCheckFail", testTestCheckFail),
+    ("testCheckFail", testCheckFail),
     ("testRunWithResponseURL", testRunWithResponseURL),
     ("testRunWithoutResponseURL", testRunWithoutResponseURL),
     ("testCheckConfigs", testCheckConfigs)
@@ -32,8 +32,8 @@ extension PreludeTests {
 }
 
 // MARK: - APPTests
-extension CircleciTests {
-  static var allTests: [(String, (CircleciTests) -> () throws -> Void)] = [
+extension CircleCiTests {
+  static var allTests: [(String, (CircleCiTests) -> () throws -> Void)] = [
     ("testTestJob", testTestJob),
     ("testDeployJob", testDeployJob),
     ("testSlackRequest", testSlackRequest),
@@ -59,7 +59,10 @@ extension SlackTests {
 }
 
 XCTMain([
-  testCase(CircleciTests.allTests),
-  testCase(CommandTests.allTests),
-  testCase(RouterTests.allTests)
+  testCase(APIConnectTests.allTests),
+  testCase(IOTests.allTests),
+  testCase(PreludeTests.allTests),
+  testCase(CircleCiTests.allTests),
+  testCase(RouterTests.allTests),
+  testCase(SlackTests.allTests)
 ])

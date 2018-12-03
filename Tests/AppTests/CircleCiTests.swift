@@ -13,7 +13,7 @@ import HTTP
 
 @testable import App
 
-class CircleciTests: XCTestCase {
+class CircleCiTests: XCTestCase {
     let project = "projectX"
     let branch = "feature/branch-X"
     var urlEncodedBranch: String {

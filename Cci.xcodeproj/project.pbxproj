@@ -1015,7 +1015,7 @@
 		OBJ_913 /* CNIOAtomics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOAtomics::Product" /* CNIOAtomics.framework */; };
 		OBJ_914 /* CNIODarwin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIODarwin::Product" /* CNIODarwin.framework */; };
 		OBJ_915 /* CNIOLinux.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOLinux::Product" /* CNIOLinux.framework */; };
-		OBJ_979 /* CircleciTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* CircleciTests.swift */; };
+		OBJ_979 /* CircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* CircleCiTests.swift */; };
 		OBJ_980 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* RouterTests.swift */; };
 		OBJ_981 /* SlackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* SlackTests.swift */; };
 		OBJ_982 /* Templates.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* Templates.swift */; };
@@ -4659,7 +4659,7 @@
 		OBJ_287 /* HTTPHeaders+Basic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HTTPHeaders+Basic.swift"; sourceTree = "<group>"; };
 		OBJ_288 /* HTTPHeaders+Bearer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HTTPHeaders+Bearer.swift"; sourceTree = "<group>"; };
 		OBJ_289 /* RFC1123.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFC1123.swift; sourceTree = "<group>"; };
-		OBJ_29 /* CircleciTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleciTests.swift; sourceTree = "<group>"; };
+		OBJ_29 /* CircleCiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleCiTests.swift; sourceTree = "<group>"; };
 		OBJ_291 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/szotyi/Development/projects/Cci/.build/checkouts/http.git-9159899851620770205/Package.swift"; sourceTree = "<group>"; };
 		OBJ_295 /* Container+CachedConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Container+CachedConnection.swift"; sourceTree = "<group>"; };
 		OBJ_296 /* Container+NewConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Container+NewConnection.swift"; sourceTree = "<group>"; };
@@ -6344,7 +6344,7 @@
 		OBJ_28 /* AppTests */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_29 /* CircleciTests.swift */,
+				OBJ_29 /* CircleCiTests.swift */,
 				OBJ_30 /* RouterTests.swift */,
 				OBJ_31 /* SlackTests.swift */,
 				OBJ_32 /* Templates.swift */,
@@ -10318,7 +10318,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				OBJ_979 /* CircleciTests.swift in Sources */,
+				OBJ_979 /* CircleCiTests.swift in Sources */,
 				OBJ_980 /* RouterTests.swift in Sources */,
 				OBJ_981 /* SlackTests.swift in Sources */,
 				OBJ_982 /* Templates.swift in Sources */,
