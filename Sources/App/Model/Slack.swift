@@ -55,7 +55,7 @@ extension SlackRequest {
 extension SlackResponse {
     static var instant: SlackResponse {
         return SlackResponse(responseType: .ephemeral,
-                             text: nil,
+                             text: "",
                              attachments: [],
                              mrkdwn: false)
     }
