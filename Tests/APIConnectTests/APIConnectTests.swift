@@ -91,7 +91,7 @@ class APIConnectTests: XCTestCase {
         XCTAssertEqual(response, FromResponse(data: "", error: true))
     }
     
-    func testFullRun() throws {
+    func testRunWithResponseURL() throws {
         Environment.env["fromAPI"] = nil
         let response = try MockAPIConnect
             .run(FromRequest(data: "x", responseURL: URL(string: "https://test.com")),
@@ -101,12 +101,23 @@ class APIConnectTests: XCTestCase {
         XCTAssertEqual(Environment.env["fromAPI"], "x")
     }
     
+    func testRunWithoutResponseURL() throws {
+        Environment.env["fromAPI"] = nil
+        FromRequest.check = { _ in nil }
+        let response = try MockAPIConnect
+            .run(FromRequest(data: "x", responseURL: nil),
+                 MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            .wait()
+        XCTAssertEqual(response, FromResponse(data: "x", error: false))
+        XCTAssertNil(Environment.env["fromAPI"])
+    }
+
     func testCheckConfigs() {
         do {
             try MockAPIConnect.checkConfigs()
             XCTFail("Should fail")
         } catch {
-            if case let MockAPIConnect.APIConnectError.all(errors) = error {
+            if case let MockAPIConnect.APIConnectError.combined(errors) = error {
                 XCTAssertEqual(errors.count, 3, "We haven't found all the errors")
             } else {
                 XCTFail("Wrong error \(error)")

@@ -6479,8 +6479,8 @@
 			isa = PBXGroup;
 			children = (
 				1118F52821B29EE5009BD9EB /* APIConnectTests.swift */,
-				OBJ_34 /* PreludeTests.swift */,
 				1118F52A21B2C3F2009BD9EB /* IOTests.swift */,
+				OBJ_34 /* PreludeTests.swift */,
 			);
 			name = APIConnectTests;
 			path = Tests/APIConnectTests;
@@ -9224,6 +9224,92 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 9999;
+				TargetAttributes = {
+					"Console::Command" = {
+						LastSwiftMigration = 1000;
+					};
+					"Console::Console" = {
+						LastSwiftMigration = 1000;
+					};
+					"Console::Logging" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Async" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Bits" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::COperatingSystem" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Core" = {
+						LastSwiftMigration = 1000;
+					};
+					"Core::Debugging" = {
+						LastSwiftMigration = 1000;
+					};
+					"Crypto::Crypto" = {
+						LastSwiftMigration = 1000;
+					};
+					"Crypto::Random" = {
+						LastSwiftMigration = 1000;
+					};
+					"DatabaseKit::DatabaseKit" = {
+						LastSwiftMigration = 1000;
+					};
+					"HTTP::HTTP" = {
+						LastSwiftMigration = 1000;
+					};
+					"Multipart::Multipart" = {
+						LastSwiftMigration = 1000;
+					};
+					"Routing::Routing" = {
+						LastSwiftMigration = 1000;
+					};
+					"Service::Service" = {
+						LastSwiftMigration = 1000;
+					};
+					"TemplateKit::TemplateKit" = {
+						LastSwiftMigration = 1000;
+					};
+					"URLEncodedForm::URLEncodedForm" = {
+						LastSwiftMigration = 1000;
+					};
+					"Validation::Validation" = {
+						LastSwiftMigration = 1000;
+					};
+					"Vapor::Vapor" = {
+						LastSwiftMigration = 1000;
+					};
+					"WebSocket::WebSocket" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio-ssl::NIOOpenSSL" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIO" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOConcurrencyHelpers" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOFoundationCompat" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOHTTP1" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOPriorityQueue" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOTLS" = {
+						LastSwiftMigration = 1000;
+					};
+					"swift-nio::NIOWebSocket" = {
+						LastSwiftMigration = 1000;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "Cci" */;
 			compatibilityVersion = "Xcode 3.2";

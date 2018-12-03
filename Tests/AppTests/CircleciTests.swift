@@ -35,32 +35,17 @@ class CircleciTests: XCTestCase {
         Environment.api = { hostname, _ in
             return { context, _ in
                 if hostname == "circleci.com" {
-                    return Future.map(on: context, {
-                        return HTTPResponse(
-                            status: .ok,
-                            version: HTTPVersion.init(major: 1, minor: 1),
-                            headers: HTTPHeaders([]),
-                            body: "{\"build_url\":\"buildURL\",\"build_num\":10}")
-                    })
-
+                    let response = HTTPResponse(
+                        status: .ok,
+                        version: HTTPVersion.init(major: 1, minor: 1),
+                        headers: HTTPHeaders([]),
+                        body: "{\"build_url\":\"buildURL\",\"build_num\":10}")
+                    return pure(response, context)
                 } else {
                     return Environment.emptyApi(context)
                 }
             }
         }
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-    }
-
-    private struct Build: Decodable, Equatable {
-        struct BuildParameters: Decodable, Equatable {
-            let DEPLOY_OPTIONS: String
-            let CIRCLE_JOB: String
-            let DEPLOY_TYPE: String?
-        }
-        let build_parameters: BuildParameters
     }
     
     func testTestJob() throws {

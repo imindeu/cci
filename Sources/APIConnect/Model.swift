@@ -11,7 +11,6 @@ public protocol Configuration: RawRepresentable & CaseIterable where RawValue ==
 
 public protocol APIConnectEnvironment {
     static var env: [String: String] { get }
-    static func get<A: Configuration>(_ key: A) -> String?
 }
 
 extension APIConnectEnvironment {

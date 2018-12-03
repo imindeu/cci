@@ -11,7 +11,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
         case collision([From.Config])
         case fromMissing([From.Config])
         case toMissing([To.Config])
-        case all([APIConnectError])
+        case combined([APIConnectError])
     }
     
     // check tokens and environment variables
@@ -61,7 +61,7 @@ public extension APIConnect {
             errors += [.toMissing(toCheck)]
         }
         guard errors.isEmpty else {
-            throw APIConnectError.all(errors)
+            throw APIConnectError.combined(errors)
         }
     }
 
