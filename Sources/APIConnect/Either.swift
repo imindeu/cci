@@ -1,21 +1,9 @@
 //
-//  Prelude.swift
-//  App
+//  Either.swift
+//  APIConnect
 //
-//  Created by Peter Geszten-Kovacs on 2018. 11. 21..
+//  Created by Peter Geszten-Kovacs on 2018. 12. 03..
 //
-
-public func id<A>(_ a: A) -> A {
-    return a
-}
-
-public func const<A, B>(_ a: A) -> (B) -> A {
-    return { _ in a }
-}
-
-public func const<A>(_ a: A) -> () -> A {
-    return { a }
-}
 
 public enum Either<L, R> {
     case left(L)
@@ -61,6 +49,19 @@ public extension Either {
     }
     public func flatMap<A>(_ r2a: (R) -> Either<L, A>) -> Either<L, A> {
         return either(Either<L, A>.left, r2a)
+    }
+}
+
+extension Either: Equatable where L: Equatable, R: Equatable {
+    public static func == (lhs: Either, rhs: Either) -> Bool {
+        switch (lhs, rhs) {
+        case let (.left(lhs), .left(rhs)):
+            return lhs == rhs
+        case let (.right(lhs), .right(rhs)):
+            return lhs == rhs
+        default:
+            return false
+        }
     }
 }
 

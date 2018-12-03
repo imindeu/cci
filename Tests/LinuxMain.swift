@@ -19,8 +19,8 @@ extension IOTests {
   ]
 }
 
-extension PreludeTests {
-  static var allTests: [(String, (PreludeTests) -> () throws -> Void)] = [
+extension EitherTests {
+  static var allTests: [(String, (EitherTests) -> () throws -> Void)] = [
     ("testEither", testEither),
     ("testLeft", testLeft),
     ("testIsLeft", testIsLeft),
@@ -61,7 +61,7 @@ extension SlackTests {
 XCTMain([
   testCase(APIConnectTests.allTests),
   testCase(IOTests.allTests),
-  testCase(PreludeTests.allTests),
+  testCase(EitherTests.allTests),
   testCase(CircleCiTests.allTests),
   testCase(RouterTests.allTests),
   testCase(SlackTests.allTests)

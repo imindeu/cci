@@ -1,5 +1,5 @@
 //
-//  PreludeTests.swift
+//  EitherTests.swift
 //  APIModels
 //
 //  Created by Peter Geszten-Kovacs on 2018. 12. 01..
@@ -8,7 +8,7 @@
 import APIConnect
 import XCTest
 
-class PreludeTests: XCTestCase {
+class EitherTests: XCTestCase {
     
     func testEither() {
         XCTAssertEqual(Either<Int, String>.left(1).either(String.init, id), "1")
@@ -43,6 +43,18 @@ class PreludeTests: XCTestCase {
     func testFlatMap() {
         XCTAssertEqual(Either<Int, String>.left(1).flatMap(const(Either<Int, Int>.right(2))).left, 1)
         XCTAssertEqual(Either<Int, String>.right("x").flatMap { Either<Int, Int>.right($0.count) }.right, 1)
+    }
+    
+    func testCodable() throws {
+        let left = Either<[Int], [String]>.left([1])
+        let leftEncoded = try JSONEncoder().encode(left)
+        let leftDecoded = try JSONDecoder().decode(Either<[Int], [String]>.self, from: leftEncoded)
+        XCTAssertEqual(left, leftDecoded)
+
+        let right = Either<[Int], [String]>.right(["x"])
+        let rightEncoded = try JSONEncoder().encode(right)
+        let rightDecoded = try JSONDecoder().decode(Either<[Int], [String]>.self, from: rightEncoded)
+        XCTAssertEqual(right, rightDecoded)
     }
 
 }

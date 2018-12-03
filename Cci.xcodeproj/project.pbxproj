@@ -24,6 +24,8 @@
 /* Begin PBXBuildFile section */
 		1118F52921B29EE5009BD9EB /* APIConnectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52821B29EE5009BD9EB /* APIConnectTests.swift */; };
 		1118F52B21B2C3F2009BD9EB /* IOTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52A21B2C3F2009BD9EB /* IOTests.swift */; };
+		1118F53221B55F29009BD9EB /* VaporContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F53021B55EEF009BD9EB /* VaporContent.swift */; };
+		1118F53421B561DD009BD9EB /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F53321B561DD009BD9EB /* Either.swift */; };
 		OBJ_1000 /* Console.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Console::Product" /* Console.framework */; };
 		OBJ_1001 /* Service.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Service::Service::Product" /* Service.framework */; };
 		OBJ_1002 /* Logging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Logging::Product" /* Logging.framework */; };
@@ -923,7 +925,7 @@
 		OBJ_741 /* APIConnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_23 /* APIConnect.swift */; };
 		OBJ_742 /* IO.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* IO.swift */; };
 		OBJ_743 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* Model.swift */; };
-		OBJ_744 /* Prelude.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* Prelude.swift */; };
+		OBJ_744 /* Function.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* Function.swift */; };
 		OBJ_746 /* HTTP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "HTTP::HTTP::Product" /* HTTP.framework */; };
 		OBJ_747 /* NIOHTTP1.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::NIOHTTP1::Product" /* NIOHTTP1.framework */; };
 		OBJ_748 /* CNIOZlib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOZlib::Product" /* CNIOZlib.framework */; };
@@ -944,7 +946,7 @@
 		OBJ_763 /* CNIOAtomics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOAtomics::Product" /* CNIOAtomics.framework */; };
 		OBJ_764 /* CNIODarwin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIODarwin::Product" /* CNIODarwin.framework */; };
 		OBJ_765 /* CNIOLinux.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOLinux::Product" /* CNIOLinux.framework */; };
-		OBJ_811 /* PreludeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* PreludeTests.swift */; };
+		OBJ_811 /* EitherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* EitherTests.swift */; };
 		OBJ_813 /* APIConnect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Cci::APIConnect::Product" /* APIConnect.framework */; };
 		OBJ_814 /* HTTP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "HTTP::HTTP::Product" /* HTTP.framework */; };
 		OBJ_815 /* NIOHTTP1.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::NIOHTTP1::Product" /* NIOHTTP1.framework */; };
@@ -4473,6 +4475,8 @@
 /* Begin PBXFileReference section */
 		1118F52821B29EE5009BD9EB /* APIConnectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConnectTests.swift; sourceTree = "<group>"; };
 		1118F52A21B2C3F2009BD9EB /* IOTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOTests.swift; sourceTree = "<group>"; };
+		1118F53021B55EEF009BD9EB /* VaporContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaporContent.swift; sourceTree = "<group>"; };
+		1118F53321B561DD009BD9EB /* Either.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIModels::Product" /* APIModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIModels.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4633,7 +4637,7 @@
 		OBJ_254 /* MultipartPartConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartPartConvertible.swift; sourceTree = "<group>"; };
 		OBJ_255 /* MultipartSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartSerializer.swift; sourceTree = "<group>"; };
 		OBJ_256 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/szotyi/Development/projects/Cci/.build/checkouts/multipart.git-4210556629793786970/Package.swift"; sourceTree = "<group>"; };
-		OBJ_26 /* Prelude.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude.swift; sourceTree = "<group>"; };
+		OBJ_26 /* Function.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Function.swift; sourceTree = "<group>"; };
 		OBJ_260 /* HTTPBody.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPBody.swift; sourceTree = "<group>"; };
 		OBJ_261 /* HTTPBodyRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPBodyRepresentable.swift; sourceTree = "<group>"; };
 		OBJ_262 /* HTTPBodyStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPBodyStorage.swift; sourceTree = "<group>"; };
@@ -4699,7 +4703,7 @@
 		OBJ_337 /* AuthenticatedCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticatedCipher.swift; sourceTree = "<group>"; };
 		OBJ_338 /* AuthenticatedCipherAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticatedCipherAlgorithm.swift; sourceTree = "<group>"; };
 		OBJ_339 /* Cipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cipher.swift; sourceTree = "<group>"; };
-		OBJ_34 /* PreludeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreludeTests.swift; sourceTree = "<group>"; };
+		OBJ_34 /* EitherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EitherTests.swift; sourceTree = "<group>"; };
 		OBJ_340 /* CipherAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CipherAlgorithm.swift; sourceTree = "<group>"; };
 		OBJ_341 /* OpenSSLCipherAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSSLCipherAlgorithm.swift; sourceTree = "<group>"; };
 		OBJ_342 /* OpenSSLStreamCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSSLStreamCipher.swift; sourceTree = "<group>"; };
@@ -6148,9 +6152,10 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_23 /* APIConnect.swift */,
+				1118F53321B561DD009BD9EB /* Either.swift */,
+				OBJ_26 /* Function.swift */,
 				OBJ_24 /* IO.swift */,
 				OBJ_25 /* Model.swift */,
-				OBJ_26 /* Prelude.swift */,
 			);
 			name = APIConnect;
 			path = Sources/APIConnect;
@@ -6479,8 +6484,8 @@
 			isa = PBXGroup;
 			children = (
 				1118F52821B29EE5009BD9EB /* APIConnectTests.swift */,
+				OBJ_34 /* EitherTests.swift */,
 				1118F52A21B2C3F2009BD9EB /* IOTests.swift */,
-				OBJ_34 /* PreludeTests.swift */,
 			);
 			name = APIConnectTests;
 			path = Tests/APIConnectTests;
@@ -7723,6 +7728,7 @@
 				OBJ_11 /* Environment.swift */,
 				OBJ_12 /* Slack.swift */,
 				OBJ_13 /* SlackToCircleCi.swift */,
+				1118F53021B55EEF009BD9EB /* VaporContent.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -10277,7 +10283,8 @@
 				OBJ_741 /* APIConnect.swift in Sources */,
 				OBJ_742 /* IO.swift in Sources */,
 				OBJ_743 /* Model.swift in Sources */,
-				OBJ_744 /* Prelude.swift in Sources */,
+				OBJ_744 /* Function.swift in Sources */,
+				1118F53421B561DD009BD9EB /* Either.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -10286,7 +10293,7 @@
 			buildActionMask = 0;
 			files = (
 				1118F52B21B2C3F2009BD9EB /* IOTests.swift in Sources */,
-				OBJ_811 /* PreludeTests.swift in Sources */,
+				OBJ_811 /* EitherTests.swift in Sources */,
 				1118F52921B29EE5009BD9EB /* APIConnectTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10307,6 +10314,7 @@
 				OBJ_868 /* CircleCi.swift in Sources */,
 				OBJ_869 /* Environment.swift in Sources */,
 				OBJ_870 /* Slack.swift in Sources */,
+				1118F53221B55F29009BD9EB /* VaporContent.swift in Sources */,
 				OBJ_871 /* SlackToCircleCi.swift in Sources */,
 				OBJ_872 /* boot.swift in Sources */,
 				OBJ_873 /* configure.swift in Sources */,

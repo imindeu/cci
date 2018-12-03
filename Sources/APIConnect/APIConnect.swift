@@ -19,20 +19,20 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
     // slackrequest -> either<slackresponse, circlecirequest>
     public let request: (_ from: From) -> Either<From.ResponseModel, To>
     // circlecirequest -> either<slackresponse, circleciresponse>
-    public let toAPI: (_ context: Context) -> (Either<From.ResponseModel, To>) -> IO<Either<From.ResponseModel, To.ResponseModel>>
+    public let toAPI: (_ context: Context) -> (Either<From.ResponseModel, To>) -> EitherIO<From.ResponseModel, To.ResponseModel>
     // circleciresponse -> slackresponse
     public let response: (_ from: To.ResponseModel) -> From.ResponseModel
     // slackresponse -> void
     public let fromAPI: (_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>
     // slackrequest -> slackresponse
-    public let instant: (_ context: Context) -> (From) -> IO<From.ResponseModel>
+    public let instant: (_ context: Context) -> (From) -> EitherIO<Empty, From.ResponseModel>
     
     public init(check: @escaping (_ from: From) -> From.ResponseModel?,
          request: @escaping (_ from: From) -> Either<From.ResponseModel, To>,
-         toAPI: @escaping (_ context: Context) -> (Either<From.ResponseModel, To>) -> IO<Either<From.ResponseModel, To.ResponseModel>>,
+         toAPI: @escaping (_ context: Context) -> (Either<From.ResponseModel, To>) -> EitherIO<From.ResponseModel, To.ResponseModel>,
          response: @escaping (_ with: To.ResponseModel) -> From.ResponseModel,
          fromAPI: @escaping (_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>,
-         instant: @escaping (_ context: Context) -> (From) -> IO<From.ResponseModel>) {
+         instant: @escaping (_ context: Context) -> (From) -> EitherIO<Empty, From.ResponseModel>) {
         
         self.check = check
         self.request = request
@@ -66,15 +66,15 @@ public extension APIConnect {
     }
 
     // main entry point (like: slackrequest -> slackresponse)
-    public func run(_ from: From, _ context: Context) -> IO<From.ResponseModel> {
+    public func run(_ from: From, _ context: Context) -> EitherIO<Empty, From.ResponseModel> {
         if let response = check(from) {
-            return pure(response, context)
+            return pure(.right(response), context)
         }
         let run = pure(request(from), context)
             .flatMap(toAPI(context))
             .mapEither(id, response)
         guard from.responseURL != nil else {
-            return run
+            return run.map(Either.right)
         }
         defer {
             let _ = run.flatMap(fromAPI(from, context))

@@ -25,7 +25,7 @@ extension FromRequest {
     static var request: (FromRequest) -> Either<FromResponse, ToRequest> = {
         return .right(ToRequest(data: $0.data, responseURL: nil))
     }
-    static var instant: (Context) -> (FromRequest) -> IO<FromResponse> = { context in return { _ in pure(FromResponse(data: "instant", error: false), context) } }
+    static var instant: (Context) -> (FromRequest) -> EitherIO<Empty, FromResponse> = { context in return { _ in pure(.left(Empty()), context) } }
     static var fromAPI: (FromRequest, Context) -> (FromResponse) -> IO<Void> = { _, context in
         return {
             Environment.env["fromAPI"] = $0.data
@@ -49,7 +49,7 @@ struct ToRequest: RequestModel {
 }
 extension ToRequest {
     static var response: (ToResponse) -> FromResponse = { FromResponse(data: $0.data, error: false) }
-    static var toAPI: (Context) -> (Either<FromResponse, ToRequest>) -> IO<Either<FromResponse, ToResponse>> = { context in
+    static var toAPI: (Context) -> (Either<FromResponse, ToRequest>) -> EitherIO<FromResponse, ToResponse> = { context in
         return {
             pure(Either<FromResponse, ToResponse>
                 .right(ToResponse(data: $0.either({ $0.data }, { $0.data }))), context)
@@ -68,7 +68,7 @@ struct Environment: APIConnectEnvironment {
 typealias MockAPIConnect = APIConnect<FromRequest, ToRequest, Environment>
 
 extension APIConnect where From == FromRequest, To == ToRequest {
-    static func run(_ from: FromRequest, _ context: Context) -> IO<FromResponse> {
+    static func run(_ from: FromRequest, _ context: Context) -> EitherIO<Empty, FromResponse> {
         return APIConnect<FromRequest, ToRequest, E>(
             check: FromRequest.check,
             request: FromRequest.request,
@@ -88,7 +88,7 @@ class APIConnectTests: XCTestCase {
             .run(FromRequest(data: "x", responseURL: nil),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
-        XCTAssertEqual(response, FromResponse(data: "", error: true))
+        XCTAssertEqual(response.right, FromResponse(data: "", error: true))
     }
     
     func testRunWithResponseURL() throws {
@@ -97,7 +97,7 @@ class APIConnectTests: XCTestCase {
             .run(FromRequest(data: "x", responseURL: URL(string: "https://test.com")),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
-        XCTAssertEqual(response, FromResponse(data: "instant", error: false))
+        XCTAssertEqual(response.left, Empty())
         XCTAssertEqual(Environment.env["fromAPI"], "x")
     }
     
@@ -108,7 +108,7 @@ class APIConnectTests: XCTestCase {
             .run(FromRequest(data: "x", responseURL: nil),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
-        XCTAssertEqual(response, FromResponse(data: "x", error: false))
+        XCTAssertEqual(response.right, FromResponse(data: "x", error: false))
         XCTAssertNil(Environment.env["fromAPI"])
     }
 
