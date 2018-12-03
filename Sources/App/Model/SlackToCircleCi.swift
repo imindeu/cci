@@ -11,14 +11,16 @@ typealias SlackToCircleCi = APIConnect<SlackRequest, CircleCiJobRequest, Environ
 
 extension APIConnect where From == SlackRequest {
     init(request: @escaping (_ from: SlackRequest) -> Either<SlackResponse, To>,
-         toAPI: @escaping (_ context: Context) -> (Either<SlackResponse, To>) -> EitherIO<SlackResponse, To.ResponseModel>,
+         toAPI: @escaping (_ context: Context)
+            -> (Either<SlackResponse, To>)
+            -> EitherIO<SlackResponse, To.ResponseModel>,
          response: @escaping (_ with: To.ResponseModel) -> SlackResponse) {
         self.init(check: SlackRequest.check,
-                      request: request,
-                      toAPI: toAPI,
-                      response: response,
-                      fromAPI: SlackRequest.api,
-                      instant: SlackRequest.instant)
+                  request: request,
+                  toAPI: toAPI,
+                  response: response,
+                  fromAPI: SlackRequest.api,
+                  instant: SlackRequest.instant)
     }
 }
 

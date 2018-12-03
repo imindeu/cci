@@ -22,7 +22,7 @@ class EitherTests: XCTestCase {
     
     func testRight() {
         XCTAssertNil(Either<Int, String>.left(1).right)
-        XCTAssertEqual(Either<Int, String>.right("x").right ,"x")
+        XCTAssertEqual(Either<Int, String>.right("x").right, "x")
     }
 
     func testIsLeft() {

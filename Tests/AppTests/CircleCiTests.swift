@@ -37,7 +37,7 @@ class CircleCiTests: XCTestCase {
                 if hostname == "circleci.com" {
                     let response = HTTPResponse(
                         status: .ok,
-                        version: HTTPVersion.init(major: 1, minor: 1),
+                        version: HTTPVersion(major: 1, minor: 1),
                         headers: HTTPHeaders([]),
                         body: "{\"build_url\":\"buildURL\",\"build_num\":10}")
                     return pure(response, context)
@@ -61,34 +61,43 @@ class CircleCiTests: XCTestCase {
                         "CIRCLE_JOB": CircleCiJobKind.test.rawValue])
 
         // parse
-        let parsedJob = try CircleCiTestJob.parse(project: project, parameters: [branch], options: options, username: username).right as? CircleCiTestJob
+        let parsedJob = try CircleCiTestJob.parse(project: project,
+                                                  parameters: [branch],
+                                                  options: options,
+                                                  username: username).right as? CircleCiTestJob
         XCTAssertEqual(goodJob, parsedJob)
         
-        let helpResponse = try CircleCiTestJob.parse(project: project, parameters: ["help"], options: options, username: username).left
+        let helpResponse = try CircleCiTestJob.parse(project: project,
+                                                     parameters: ["help"],
+                                                     options: options,
+                                                     username: username).left
         XCTAssertEqual(helpResponse, CircleCiTestJob.helpResponse)
 
         // parse error
         do {
             _ = try CircleCiTestJob.parse(project: project, parameters: [], options: [], username: username)
-            XCTFail()
+            XCTFail("We should have an exception)
         } catch {
             guard let error = error as? CircleCiError else {
-                XCTFail()
+                XCTFail("We should have a CircleCiError")
                 return
             }
             if case CircleCiError.parse = error {
                 XCTAssertEqual(error.text, "Parse error (No branch found: ())")
             } else {
-                XCTFail()
+                XCTFail("We should have a parse error")
             }
         }
-
         
     }
     
     func testDeployJob() throws {
         // init
-        let goodJob = CircleCiDeployJob(project: project, branch: branch, options: options, username: username, type: type)
+        let goodJob = CircleCiDeployJob(project: project,
+                                        branch: branch,
+                                        options: options,
+                                        username: username,
+                                        type: type)
         XCTAssertEqual(goodJob.name, CircleCiJobKind.deploy.rawValue)
         XCTAssertEqual(goodJob.urlEncodedBranch, urlEncodedBranch)
         XCTAssertEqual(goodJob.buildParameters,
@@ -97,25 +106,31 @@ class CircleCiTests: XCTestCase {
                         "CIRCLE_JOB": CircleCiJobKind.deploy.rawValue])
         
         // parse
-        let parsedJob = try CircleCiDeployJob.parse(project: project, parameters: [type, branch], options: options, username: username).right as? CircleCiDeployJob
+        let parsedJob = try CircleCiDeployJob.parse(project: project,
+                                                    parameters: [type, branch],
+                                                    options: options,
+                                                    username: username).right as? CircleCiDeployJob
         XCTAssertEqual(goodJob, parsedJob)
         
-        let helpResponse = try CircleCiDeployJob.parse(project: project, parameters: ["help"], options: options, username: username).left
+        let helpResponse = try CircleCiDeployJob.parse(project: project,
+                                                       parameters: ["help"],
+                                                       options: options,
+                                                       username: username).left
         XCTAssertEqual(helpResponse, CircleCiDeployJob.helpResponse)
         
         // parse error
         do {
             _ = try CircleCiDeployJob.parse(project: project, parameters: ["unknown"], options: [], username: username)
-            XCTFail()
+            XCTFail("We should have an exception")
         } catch {
             guard let error = error as? CircleCiError else {
-                XCTFail()
+                XCTFail("We should have a CircleCiError")
                 return
             }
             if case CircleCiError.parse = error {
                 XCTAssertEqual(error.text, "Parse error (Unknown type: (unknown))")
             } else {
-                XCTFail()
+                XCTFail("We should have a parse error")
             }
         }
 
@@ -130,7 +145,8 @@ class CircleCiTests: XCTestCase {
         // unknown command
         let unknownCommandRequest = SlackRequest.template(channelName: project, text: "command branch")
         let unknownCommandResult = CircleCiJobRequest.slackRequest(unknownCommandRequest)
-        XCTAssertEqual(unknownCommandResult.left, SlackResponse.error(text: CircleCiError.unknownCommand("command branch").text))
+        XCTAssertEqual(unknownCommandResult.left,
+                       SlackResponse.error(text: CircleCiError.unknownCommand("command branch").text))
         
         // help command
         let helpRequest = SlackRequest.template(channelName: project, text: "help")
@@ -175,7 +191,7 @@ class CircleCiTests: XCTestCase {
                                   username: username)
         let request: Either<SlackResponse, CircleCiJobRequest> = .right(CircleCiJobRequest(job: job))
         let expected = CircleCiResponse(buildURL: "buildURL",
-                                     buildNum: 10)
+                                        buildNum: 10)
         let response = try api(request).wait().right
         XCTAssertEqual(response?.job as? CircleCiTestJob, job)
         XCTAssertEqual(response?.response, expected)
@@ -184,7 +200,7 @@ class CircleCiTests: XCTestCase {
     func testResponseToSlack() {
         // test
         let testResponse = CircleCiBuildResponse(response: CircleCiResponse(buildURL: "buildURL",
-                                                                     buildNum: 10),
+                                                                            buildNum: 10),
                                              job: CircleCiTestJob(project: project,
                                                                   branch: branch,
                                                                   options: options,
@@ -195,7 +211,8 @@ class CircleCiTests: XCTestCase {
             text: nil,
             attachments: [
                 SlackResponse.Attachment(
-                    fallback: "Job \'test\' has started at <buildURL|#10>. (project: projectX, branch: feature/branch-X",
+                    fallback: "Job \'test\' has started at <buildURL|#10>. "
+                        + "(project: projectX, branch: feature/branch-X)",
                     text: "Job \'test\' has started at <buildURL|#10>.",
                     color: "#764FA5",
                     mrkdwnIn: ["text", "fields"],
@@ -204,13 +221,14 @@ class CircleCiTests: XCTestCase {
                         SlackResponse.Field(title: "Branch", value: branch, short: true),
                         SlackResponse.Field(title: "User", value: username, short: true),
                         SlackResponse.Field(title: "options1", value: "x", short: true),
-                        SlackResponse.Field(title: "options2", value: "y", short: true)])],
+                        SlackResponse.Field(title: "options2", value: "y", short: true)])
+            ],
             mrkdwn: true)
         XCTAssertEqual(testSlackResponse, expectedTestSlackResponse)
 
         // deploy
         let deployResponse = CircleCiBuildResponse(response: CircleCiResponse(buildURL: "buildURL",
-                                                                           buildNum: 10),
+                                                                              buildNum: 10),
                                                    job: CircleCiDeployJob(project: project,
                                                                           branch: branch,
                                                                           options: options,
@@ -222,7 +240,8 @@ class CircleCiTests: XCTestCase {
             text: nil,
             attachments: [
                 SlackResponse.Attachment(
-                    fallback: "Job \'deploy\' has started at <buildURL|#10>. (project: projectX, branch: feature/branch-X",
+                    fallback: "Job \'deploy\' has started at <buildURL|#10>. "
+                        + "(project: projectX, branch: feature/branch-X)",
                     text: "Job \'deploy\' has started at <buildURL|#10>.",
                     color: "#764FA5",
                     mrkdwnIn: ["text", "fields"],
@@ -232,7 +251,8 @@ class CircleCiTests: XCTestCase {
                         SlackResponse.Field(title: "User", value: username, short: true),
                         SlackResponse.Field(title: "Branch", value: branch, short: true),
                         SlackResponse.Field(title: "options1", value: "x", short: true),
-                        SlackResponse.Field(title: "options2", value: "y", short: true)])],
+                        SlackResponse.Field(title: "options2", value: "y", short: true)])
+            ],
             mrkdwn: true)
         XCTAssertEqual(deploySlackResponse, expectedDeploySlackResponse)
 

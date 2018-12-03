@@ -86,5 +86,4 @@ extension Either: Decodable where L: Decodable, R: Decodable {
         }
     }
     
-    
 }

@@ -15,6 +15,7 @@ struct FromRequest: RequestModel {
     enum FromConfig: String, Configuration {
         case config
     }
+    
     var data: String
     var responseURL: URL?
 }
@@ -25,7 +26,9 @@ extension FromRequest {
     static var request: (FromRequest) -> Either<FromResponse, ToRequest> = {
         return .right(ToRequest(data: $0.data, responseURL: nil))
     }
-    static var instant: (Context) -> (FromRequest) -> IO<FromResponse?> = { context in return { _ in pure(nil, context) } }
+    static var instant: (Context) -> (FromRequest) -> IO<FromResponse?> = { context in
+        return { _ in pure(nil, context) }
+    }
     static var fromAPI: (FromRequest, Context) -> (FromResponse) -> IO<Void> = { _, context in
         return {
             Environment.env["fromAPI"] = $0.data
@@ -44,16 +47,18 @@ struct ToRequest: RequestModel {
     enum ToConfig: String, Configuration {
         case config
     }
+    
     var data: String
-    var responseURL: URL? = nil
+    var responseURL: URL?
 }
 extension ToRequest {
     static var response: (ToResponse) -> FromResponse = { FromResponse(data: $0.data, error: false) }
-    static var toAPI: (Context) -> (Either<FromResponse, ToRequest>) -> EitherIO<FromResponse, ToResponse> = { context in
+    static var toAPI: (Context) -> (Either<FromResponse, ToRequest>)
+        -> EitherIO<FromResponse, ToResponse> = { context in
+            
         return {
             pure(Either<FromResponse, ToResponse>
                 .right(ToResponse(data: $0.either({ $0.data }, { $0.data }))), context)
-            
         }
     }
 }

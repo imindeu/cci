@@ -30,20 +30,23 @@ extension SlackRequest {
         if from.responseURL == nil {
             texts.append("response_url")
         }
-        guard texts.count > 0 else { return nil }
+        guard !texts.isEmpty else { return nil }
         return SlackResponse.error(text: "Error: bad \(texts.joined(separator: ", "))")
     }
     static func api(_ request: SlackRequest, _ context: Context) -> (SlackResponse) -> IO<Void> {
         return { response in
-            guard let url = request.responseURL, let hostname = url.host, let body = try? JSONEncoder().encode(response) else {
+            guard let url = request.responseURL,
+                let hostname = url.host,
+                let body = try? JSONEncoder().encode(response) else {
+                    
                 return Environment.emptyApi(context).map { _ in () }
             }
             let returnAPI = Environment
                 .api(hostname, url.port)
-            let request = HTTPRequest.init(method: .POST,
-                                           url: url.path,
-                                           headers: HTTPHeaders([("Content-Type", "application/json")]),
-                                           body: HTTPBody(data: body))
+            let request = HTTPRequest(method: .POST,
+                                      url: url.path,
+                                      headers: HTTPHeaders([("Content-Type", "application/json")]),
+                                      body: HTTPBody(data: body))
             return returnAPI(context, request).map { _ in () }
         }
     }

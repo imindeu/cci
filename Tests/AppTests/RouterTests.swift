@@ -53,7 +53,7 @@ class RouterTests: XCTestCase {
                 if hostname == "circleci.com" {
                     let response = HTTPResponse(
                         status: .ok,
-                        version: HTTPVersion.init(major: 1, minor: 1),
+                        version: HTTPVersion(major: 1, minor: 1),
                         headers: HTTPHeaders([]),
                         body: "{\"build_url\":\"buildURL\",\"build_num\":10}")
                     return pure(response, context)

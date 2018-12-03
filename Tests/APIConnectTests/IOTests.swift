@@ -18,7 +18,7 @@ class IOTests: XCTestCase {
     func testMapEither() throws {
         XCTAssertEqual(
             try pure(Either<Int, String>.left(1),
-                 MultiThreadedEventLoopGroup(numberOfThreads: 1))
+                     MultiThreadedEventLoopGroup(numberOfThreads: 1))
                 .mapEither(String.init, id).wait(),
             "1")
         XCTAssertEqual(

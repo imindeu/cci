@@ -26,6 +26,7 @@ extension APIConnectEnvironment {
 public protocol RequestModel {
     associatedtype ResponseModel
     associatedtype Config: Configuration
+    
     var responseURL: URL? { get }
 }
 

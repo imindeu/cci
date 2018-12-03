@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
+		1118F53521B57766009BD9EB /* Lint */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 1118F53821B57768009BD9EB /* Build configuration list for PBXAggregateTarget "Lint" */;
+			buildPhases = (
+				1118F53921B5776E009BD9EB /* Swiftlint */,
+			);
+			dependencies = (
+			);
+			name = Lint;
+			productName = Lint;
+		};
 		"Cci::CciPackageTests::ProductTarget" /* CciPackageTests */ = {
 			isa = PBXAggregateTarget;
 			buildConfigurationList = OBJ_1224 /* Build configuration list for PBXAggregateTarget "CciPackageTests" */;
@@ -7093,7 +7104,7 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -7103,7 +7114,6 @@
 				OBJ_36 /* Dependencies */,
 				OBJ_691 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_500 /* Core 3.4.4 */ = {
@@ -9228,6 +9238,10 @@
 			attributes = {
 				LastUpgradeCheck = 9999;
 				TargetAttributes = {
+					1118F53521B57766009BD9EB = {
+						CreatedOnToolsVersion = 10.0;
+						ProvisioningStyle = Automatic;
+					};
 					"Console::Command" = {
 						LastSwiftMigration = 1000;
 					};
@@ -9321,7 +9335,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_691 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -9387,9 +9401,31 @@
 				"WebSocket::SwiftPMPackageDescription" /* WebSocketPackageDescription */,
 				"swift-nio-ssl::SwiftPMPackageDescription" /* swift-nio-sslPackageDescription */,
 				"swift-nio::SwiftPMPackageDescription" /* swift-nioPackageDescription */,
+				1118F53521B57766009BD9EB /* Lint */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1118F53921B5776E009BD9EB /* Swiftlint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = Swiftlint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\n    swiftlint\nelse\n    echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint (or `brew install swiftlint`)\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		OBJ_1069 /* Sources */ = {
@@ -12785,6 +12821,22 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		1118F53621B57768009BD9EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		1118F53721B57768009BD9EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		OBJ_1067 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -16368,6 +16420,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1118F53821B57768009BD9EB /* Build configuration list for PBXAggregateTarget "Lint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1118F53621B57768009BD9EB /* Debug */,
+				1118F53721B57768009BD9EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		OBJ_1066 /* Build configuration list for PBXNativeTarget "Async" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
