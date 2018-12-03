@@ -263,11 +263,11 @@ extension CircleCiJobRequest {
         }
     }
     
-    static func apiWithSlack(_ context: Context) -> (Either<SlackResponse, CircleCiJobRequest>) -> IO<Either<SlackResponse, CircleCiBuildResponse>> {
+    static func apiWithSlack(_ context: Context) -> (Either<SlackResponse, CircleCiJobRequest>) -> EitherIO<SlackResponse, CircleCiBuildResponse> {
         
-        let instantResponse: (SlackResponse) -> IO<Either<SlackResponse, CircleCiBuildResponse>> = { pure(.left($0), context) }
+        let instantResponse: (SlackResponse) -> EitherIO<SlackResponse, CircleCiBuildResponse> = { pure(.left($0), context) }
         return {
-            return $0.either(instantResponse) { jobRequest -> IO<Either<SlackResponse, CircleCiBuildResponse>> in
+            return $0.either(instantResponse) { jobRequest -> EitherIO<SlackResponse, CircleCiBuildResponse> in
                 let job = jobRequest.job
                 var request = HTTPRequest.init()
                 request.method = .POST
