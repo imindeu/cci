@@ -25,7 +25,7 @@ extension FromRequest {
     static var request: (FromRequest) -> Either<FromResponse, ToRequest> = {
         return .right(ToRequest(data: $0.data, responseURL: nil))
     }
-    static var instant: (Context) -> (FromRequest) -> EitherIO<Empty, FromResponse> = { context in return { _ in pure(.left(Empty()), context) } }
+    static var instant: (Context) -> (FromRequest) -> IO<FromResponse?> = { context in return { _ in pure(nil, context) } }
     static var fromAPI: (FromRequest, Context) -> (FromResponse) -> IO<Void> = { _, context in
         return {
             Environment.env["fromAPI"] = $0.data
@@ -68,7 +68,7 @@ struct Environment: APIConnectEnvironment {
 typealias MockAPIConnect = APIConnect<FromRequest, ToRequest, Environment>
 
 extension APIConnect where From == FromRequest, To == ToRequest {
-    static func run(_ from: FromRequest, _ context: Context) -> EitherIO<Empty, FromResponse> {
+    static func run(_ from: FromRequest, _ context: Context) -> IO<FromResponse?> {
         return APIConnect<FromRequest, ToRequest, E>(
             check: FromRequest.check,
             request: FromRequest.request,
@@ -88,7 +88,7 @@ class APIConnectTests: XCTestCase {
             .run(FromRequest(data: "x", responseURL: nil),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
-        XCTAssertEqual(response.right, FromResponse(data: "", error: true))
+        XCTAssertEqual(response, FromResponse(data: "", error: true))
     }
     
     func testRunWithResponseURL() throws {
@@ -97,7 +97,7 @@ class APIConnectTests: XCTestCase {
             .run(FromRequest(data: "x", responseURL: URL(string: "https://test.com")),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
-        XCTAssertEqual(response.left, Empty())
+        XCTAssertNil(response)
         XCTAssertEqual(Environment.env["fromAPI"], "x")
     }
     
@@ -108,7 +108,7 @@ class APIConnectTests: XCTestCase {
             .run(FromRequest(data: "x", responseURL: nil),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
-        XCTAssertEqual(response.right, FromResponse(data: "x", error: false))
+        XCTAssertEqual(response, FromResponse(data: "x", error: false))
         XCTAssertNil(Environment.env["fromAPI"])
     }
 

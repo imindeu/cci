@@ -47,14 +47,14 @@ extension SlackRequest {
             return returnAPI(context, request).map { _ in () }
         }
     }
-    static func instant(_ context: Context) -> (SlackRequest) -> EitherIO<Empty, SlackResponse> {
+    static func instant(_ context: Context) -> (SlackRequest) -> IO<SlackResponse?> {
         return const(pure(SlackResponse.instant, context))
     }
 }
 
 extension SlackResponse {
-    static var instant: Either<Empty, SlackResponse> {
-        return .left(Empty())
+    static var instant: SlackResponse? {
+        return nil
     }
 }
 

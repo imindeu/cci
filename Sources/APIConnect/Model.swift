@@ -34,5 +34,3 @@ public extension RequestModel {
         return Config.allCases.compactMap { A.get($0) == nil ? $0 : nil }
     }
 }
-
-public struct Empty: Equatable, Codable { public init() {} }
