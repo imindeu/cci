@@ -76,7 +76,7 @@ class CircleCiTests: XCTestCase {
         // parse error
         do {
             _ = try CircleCiTestJob.parse(project: project, parameters: [], options: [], username: username)
-            XCTFail("We should have an exception)
+            XCTFail("We should have an exception")
         } catch {
             guard let error = error as? CircleCiError else {
                 XCTFail("We should have a CircleCiError")
