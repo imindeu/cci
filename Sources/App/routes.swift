@@ -9,3 +9,17 @@ public func routes(_ router: Router) throws {
     })
 }
 
+extension SlackRequest: Content {}
+extension SlackResponse: Content {}
+
+extension Optional: ResponseEncodable where Wrapped: ResponseEncodable {
+    public func encode(for req: Request) throws -> EventLoopFuture<Response> {
+        switch self {
+        case let .some(some):
+            return try some.encode(for: req)
+        case .none:
+            return req.future(Response(http: .init(), using: req))
+        }
+    }
+    
+}

@@ -24,7 +24,6 @@
 /* Begin PBXBuildFile section */
 		1118F52921B29EE5009BD9EB /* APIConnectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52821B29EE5009BD9EB /* APIConnectTests.swift */; };
 		1118F52B21B2C3F2009BD9EB /* IOTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52A21B2C3F2009BD9EB /* IOTests.swift */; };
-		1118F53221B55F29009BD9EB /* VaporContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F53021B55EEF009BD9EB /* VaporContent.swift */; };
 		1118F53421B561DD009BD9EB /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F53321B561DD009BD9EB /* Either.swift */; };
 		OBJ_1000 /* Console.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Console::Product" /* Console.framework */; };
 		OBJ_1001 /* Service.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Service::Service::Product" /* Service.framework */; };
@@ -4475,7 +4474,6 @@
 /* Begin PBXFileReference section */
 		1118F52821B29EE5009BD9EB /* APIConnectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConnectTests.swift; sourceTree = "<group>"; };
 		1118F52A21B2C3F2009BD9EB /* IOTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOTests.swift; sourceTree = "<group>"; };
-		1118F53021B55EEF009BD9EB /* VaporContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaporContent.swift; sourceTree = "<group>"; };
 		1118F53321B561DD009BD9EB /* Either.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -7728,7 +7726,6 @@
 				OBJ_11 /* Environment.swift */,
 				OBJ_12 /* Slack.swift */,
 				OBJ_13 /* SlackToCircleCi.swift */,
-				1118F53021B55EEF009BD9EB /* VaporContent.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -10314,7 +10311,6 @@
 				OBJ_868 /* CircleCi.swift in Sources */,
 				OBJ_869 /* Environment.swift in Sources */,
 				OBJ_870 /* Slack.swift in Sources */,
-				1118F53221B55F29009BD9EB /* VaporContent.swift in Sources */,
 				OBJ_871 /* SlackToCircleCi.swift in Sources */,
 				OBJ_872 /* boot.swift in Sources */,
 				OBJ_873 /* configure.swift in Sources */,
