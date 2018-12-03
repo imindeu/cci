@@ -14,17 +14,11 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
         case combined([APIConnectError])
     }
     
-    // check tokens and environment variables
     public let check: (_ from: From) -> From.ResponseModel?
-    // slackrequest -> either<slackresponse, circlecirequest>
     public let request: (_ from: From) -> Either<From.ResponseModel, To>
-    // circlecirequest -> either<slackresponse, circleciresponse>
     public let toAPI: (_ context: Context) -> (Either<From.ResponseModel, To>) -> EitherIO<From.ResponseModel, To.ResponseModel>
-    // circleciresponse -> slackresponse
     public let response: (_ from: To.ResponseModel) -> From.ResponseModel
-    // slackresponse -> void
     public let fromAPI: (_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>
-    // slackrequest -> slackresponse
     public let instant: (_ context: Context) -> (From) -> EitherIO<Empty, From.ResponseModel>
     
     public init(check: @escaping (_ from: From) -> From.ResponseModel?,
@@ -65,7 +59,6 @@ public extension APIConnect {
         }
     }
 
-    // main entry point (like: slackrequest -> slackresponse)
     public func run(_ from: From, _ context: Context) -> EitherIO<Empty, From.ResponseModel> {
         if let response = check(from) {
             return pure(.right(response), context)
