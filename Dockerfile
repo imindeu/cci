@@ -10,7 +10,6 @@ COPY Sources ./Sources
 COPY Tests ./Tests
 
 RUN swift package update
-RUN swift test
 RUN swift build --product Run --configuration release && mv `swift build --product Run --configuration release --show-bin-path` /build/bin
 
 # Production image
