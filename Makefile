@@ -75,6 +75,7 @@ build-export-scp-deploy: build-image export-image scp deploy
 	connect \
 	logs \
 	delete-image \
+	clean-deploy \
 	restart \
 	scp \
 	deploy \
