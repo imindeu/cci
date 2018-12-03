@@ -4,7 +4,7 @@ build-swift:
 	swift build --product Run --configuration release
 
 run-swift:
-	@circleciTokens=${CIRCLECITOKENS}; slackToken=${SLACKTOKEN}; port=${PORT};vcs=${VCS};projects=${PROJECTS}; company=${COMPANY}; export circleciToken slackToken port vcs projects company; .build/release/Run
+	@port=${PORT};slackToken=${SLACKTOKEN};circleCiTokens=${CIRCLECITOKENS};circleCiVcs=${CIRCLECIVCS};circleCiProjects=${CIRCLECIPROJECTS}; circleCiCompany=${CIRCLECICOMPANY}; export port slackToken circleCiToken circleCiVcs circleCiProjects circleCiCompany; .build/release/Run
 
 
 # docker image
@@ -26,7 +26,7 @@ import-image:
 
 run-app:
 	@echo "Container starting..."
-	@${SUDO} docker run --name cci -i -d -t -p ${PORT}:${PORT} -e circleciTokens=${CIRCLECITOKENS} -e slackToken=${SLACKTOKEN} -e port=${PORT} -e vcs=${VCS} -e projects=${PROJECTS} -e company=${COMPANY}  --restart unless-stopped cci
+	@${SUDO} docker run --name cci -i -d -t -p ${PORT}:${PORT} -e port=${PORT} -e slackToken=${SLACKTOKEN} -e circleCiTokens=${CIRCLECITOKENS} -e circleCiVcs=${CIRCLECIVCS} -e circleCiProjects=${CIRCLECIPROJECTS} -e circleCiCompany=${CIRCLECICOMPANY}  --restart unless-stopped cci
 	@echo "Started."
 
 stop-app:
@@ -58,7 +58,7 @@ scp:
 
 deploy:
 	@echo "Starting remote deploy..."
-	@ssh ${SSH_USER}@${SSH_HOST} "cd ${SSH_PATH} && make restart CIRCLECITOKENS=${CIRCLECITOKENS} SLACKTOKEN=${SLACKTOKEN} PORT=${PORT} VCS=${VCS} PROJECTS=${PROJECTS} COMPANY=${COMPANY} SUDO=${SUDO}"
+	@ssh ${SSH_USER}@${SSH_HOST} "cd ${SSH_PATH} && make restart PORT=${PORT} SLACKTOKEN=${SLACKTOKEN} CIRCLECITOKENS=${CIRCLECITOKENS} CIRCLECIVCS=${CIRCLECIVCS} CIRCLECIPROJECTS=${CIRCLECIPROJECTS} CIRCLECICOMPANY=${CIRCLECICOMPANY} SUDO=${SUDO}"
 	@echo "Deployed."
 
 build-export-scp-deploy: build-image export-image scp deploy
