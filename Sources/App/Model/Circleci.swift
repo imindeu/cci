@@ -102,7 +102,9 @@ extension CircleCiTestJob {
         let text = "`test`: test a branch\n" +
             "Usage:\n`/cci test branch [options]`\n" +
             "  - *branch*: branch name to test\n" +
-        "  - *options*: optional fastlane options in the xyz:qwo format\n"
+            "  - *options*: optional fastlane options in the xyz:qwo format\n" +
+            "  (currently available options, maybe not up to date: " +
+            "    restrict_fixme_comments)"
         let attachment = SlackResponse.Attachment(
             fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
         let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
@@ -159,7 +161,7 @@ extension CircleCiDeployJob {
             "  - *branch*: an optional branch name to deploy from\n" +
             "  If emails and groups are both set, emails will be used\n" +
             "  (currently available options, maybe not up to date: " +
-        "    emails, groups, use_git, version, skip_xcode_version_check)"
+            "    emails, groups, use_git, version, skip_xcode_version_check)"
         let attachment = SlackResponse.Attachment(
             fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
         let response = SlackResponse(responseType: .ephemeral, text: "Send commands to <https://circleci.com|CircleCI>", attachments: [attachment], mrkdwn: true)
