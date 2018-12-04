@@ -9,7 +9,25 @@ import APIConnect
 import HTTP
 import XCTest
 
+// MARK: - Mocks
 struct FromRequest: RequestModel {
+    typealias ResponseModel = FromResponse
+    typealias Config = FromConfig
+    enum FromConfig: String, Configuration {
+        case config
+    }
+    
+    var data: String
+}
+
+extension FromRequest {
+    static var check: (FromRequest, String?, Headers?) -> FromResponse? = { _,_,_ in nil }
+    static var request: (FromRequest) -> Either<FromResponse, [ToRequest]> = {
+        return .right([ToRequest(data: $0.data)])
+    }
+}
+
+struct DelayedFromRequest: DelayedRequestModel {
     typealias ResponseModel = FromResponse
     typealias Config = FromConfig
     enum FromConfig: String, Configuration {
@@ -19,17 +37,17 @@ struct FromRequest: RequestModel {
     var data: String
     var responseURL: URL?
 }
-extension FromRequest {
-    static var check: (FromRequest) -> FromResponse? = {
-        return $0.responseURL == nil ? FromResponse(data: "", error: true) : nil
+extension DelayedFromRequest {
+    static var request: (DelayedFromRequest) -> Either<FromResponse, [ToRequest]> = {
+        return .right([ToRequest(data: $0.data)])
     }
-    static var request: (FromRequest) -> Either<FromResponse, ToRequest> = {
-        return .right(ToRequest(data: $0.data, responseURL: nil))
+    static var check: (DelayedFromRequest, String?, Headers?) -> FromResponse? = { from, payload, headers in
+        return from.responseURL == nil ? FromResponse(data: "", error: true) : nil
     }
-    static var instant: (Context) -> (FromRequest) -> IO<FromResponse?> = { context in
+    static var instant: (Context) -> (DelayedFromRequest) -> IO<FromResponse?> = { context in
         return { _ in pure(nil, context) }
     }
-    static var fromAPI: (FromRequest, Context) -> (FromResponse) -> IO<Void> = { _, context in
+    static var fromAPI: (DelayedFromRequest, Context) -> (FromResponse) -> IO<Void> = { _, context in
         return {
             Environment.env["fromAPI"] = $0.data
             return pure((), context)
@@ -49,18 +67,17 @@ struct ToRequest: RequestModel {
     }
     
     var data: String
-    var responseURL: URL?
 }
 extension ToRequest {
-    static var response: (ToResponse) -> FromResponse = { FromResponse(data: $0.data, error: false) }
-    static var toAPI: (Context) -> (Either<FromResponse, ToRequest>)
-        -> EitherIO<FromResponse, ToResponse> = { context in
+    static var toAPI: (Context) -> (Either<FromResponse, [ToRequest]>)
+        -> EitherIO<FromResponse, [ToResponse]> = { context in
             
         return {
-            pure(Either<FromResponse, ToResponse>
-                .right(ToResponse(data: $0.either({ $0.data }, { $0.data }))), context)
+            pure(Either<FromResponse, [ToResponse]>
+                .right([ToResponse(data: $0.either({ $0.data }, { $0.first!.data }))]), context)
         }
     }
+    static var response: ([ToResponse]) -> FromResponse = { FromResponse(data: $0.first!.data, error: false) }
 }
 struct ToResponse {
     var data: String = ""
@@ -73,44 +90,73 @@ struct Environment: APIConnectEnvironment {
 typealias MockAPIConnect = APIConnect<FromRequest, ToRequest, Environment>
 
 extension APIConnect where From == FromRequest, To == ToRequest {
-    static func run(_ from: FromRequest, _ context: Context) -> IO<FromResponse?> {
+    static func run(_ from: FromRequest,
+                    _ context: Context,
+                    _ payload: String? = nil,
+                    _ headers: Headers? = nil) -> IO<FromResponse?> {
         return APIConnect<FromRequest, ToRequest, E>(
             check: FromRequest.check,
             request: FromRequest.request,
             toAPI: ToRequest.toAPI,
+            response: ToRequest.response)
+            .run(from, context, payload, headers)
+        
+    }
+}
+
+typealias MockDelayedAPIConnect = APIConnect<DelayedFromRequest, ToRequest, Environment>
+
+extension APIConnect where From == DelayedFromRequest, To == ToRequest {
+    static func run(_ from: DelayedFromRequest,
+                    _ context: Context,
+                    _ payload: String? = nil,
+                    _ headers: Headers? = nil) -> IO<FromResponse?> {
+        return APIConnect<DelayedFromRequest, ToRequest, E>(
+            check: DelayedFromRequest.check,
+            request: DelayedFromRequest.request,
+            toAPI: ToRequest.toAPI,
             response: ToRequest.response,
-            fromAPI: FromRequest.fromAPI,
-            instant: FromRequest.instant)
-            .run(from, context)
+            fromAPI: DelayedFromRequest.fromAPI,
+            instant: DelayedFromRequest.instant)
+            .run(from, context, payload, headers)
 
     }
 }
 
+// MARK: - Tests
 class APIConnectTests: XCTestCase {
     
     func testCheckFail() throws {
-        let response = try MockAPIConnect
-            .run(FromRequest(data: "x", responseURL: nil),
+        let response = try MockDelayedAPIConnect
+            .run(DelayedFromRequest(data: "x", responseURL: nil),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
         XCTAssertEqual(response, FromResponse(data: "", error: true))
     }
     
-    func testRunWithResponseURL() throws {
-        Environment.env["fromAPI"] = nil
+    func testNormalRun() throws {
         let response = try MockAPIConnect
-            .run(FromRequest(data: "x", responseURL: URL(string: "https://test.com")),
+            .run(FromRequest(data: "x"),
+                 MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            .wait()
+        XCTAssertEqual(response, FromResponse(data: "x", error: false))
+    }
+
+    func testDelayedRun() throws {
+        Environment.env["fromAPI"] = nil
+        let response = try MockDelayedAPIConnect
+            .run(DelayedFromRequest(data: "x", responseURL: URL(string: "https://test.com")),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
         XCTAssertNil(response)
         XCTAssertEqual(Environment.env["fromAPI"], "x")
     }
-    
-    func testRunWithoutResponseURL() throws {
+
+    func testDelayedRunWithoutResponseURL() throws {
         Environment.env["fromAPI"] = nil
-        FromRequest.check = { _ in nil }
-        let response = try MockAPIConnect
-            .run(FromRequest(data: "x", responseURL: nil),
+        DelayedFromRequest.check = { _, _, _ in nil }
+        let response = try MockDelayedAPIConnect
+            .run(DelayedFromRequest(data: "x", responseURL: nil),
                  MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()
         XCTAssertEqual(response, FromResponse(data: "x", error: false))
@@ -119,10 +165,10 @@ class APIConnectTests: XCTestCase {
 
     func testCheckConfigs() {
         do {
-            try MockAPIConnect.checkConfigs()
+            try MockDelayedAPIConnect.checkConfigs()
             XCTFail("Should fail")
         } catch {
-            if case let MockAPIConnect.APIConnectError.combined(errors) = error {
+            if case let MockDelayedAPIConnect.APIConnectError.combined(errors) = error {
                 XCTAssertEqual(errors.count, 3, "We haven't found all the errors")
             } else {
                 XCTFail("Wrong error \(error)")

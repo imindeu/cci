@@ -26,11 +26,11 @@ class CircleCiTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Environment.env = [
-            "circleCiTokens": "circleCiTokens",
-            "slackToken": "slackToken",
-            "circleCiCompany": "company",
-            "circleCiVcs": "vcs",
-            "circleCiProjects": "projectX"
+            CircleCiJobRequest.Config.tokens.rawValue: CircleCiJobRequest.Config.tokens.rawValue,
+            SlackRequest.Config.slackToken.rawValue: SlackRequest.Config.slackToken.rawValue,
+            CircleCiJobRequest.Config.company.rawValue: CircleCiJobRequest.Config.company.rawValue,
+            CircleCiJobRequest.Config.vcs.rawValue: CircleCiJobRequest.Config.vcs.rawValue,
+            CircleCiJobRequest.Config.projects.rawValue: project,
         ]
         Environment.api = { hostname, _ in
             return { context, _ in
@@ -158,7 +158,7 @@ class CircleCiTests: XCTestCase {
                                                 userName: username,
                                                 text: "test \(branch) \(options.joined(separator: " "))")
         let testResponse = CircleCiJobRequest.slackRequest(testRequest)
-        XCTAssertEqual(testResponse.right?.job as? CircleCiTestJob,
+        XCTAssertEqual(testResponse.right?.first?.job as? CircleCiTestJob,
                        CircleCiTestJob(project: project,
                                        branch: branch,
                                        options: options,
@@ -169,7 +169,7 @@ class CircleCiTests: XCTestCase {
                                                   userName: username,
                                                   text: "deploy \(type) \(options.joined(separator: " ")) \(branch)")
         let deployResponse = CircleCiJobRequest.slackRequest(deployRequest)
-        XCTAssertEqual(deployResponse.right?.job as? CircleCiDeployJob,
+        XCTAssertEqual(deployResponse.right?.first?.job as? CircleCiDeployJob,
                        CircleCiDeployJob(project: project,
                                          branch: branch,
                                          options: options,
@@ -181,7 +181,7 @@ class CircleCiTests: XCTestCase {
         let api = try CircleCiJobRequest.apiWithSlack(context())
 
         // passthrough
-        let passthrough: Either<SlackResponse, CircleCiJobRequest> = .left(SlackResponse.error(text: ""))
+        let passthrough: Either<SlackResponse, [CircleCiJobRequest]> = .left(SlackResponse.error(text: ""))
         XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
         
         // build response
@@ -189,12 +189,12 @@ class CircleCiTests: XCTestCase {
                                   branch: branch,
                                   options: options,
                                   username: username)
-        let request: Either<SlackResponse, CircleCiJobRequest> = .right(CircleCiJobRequest(job: job))
+        let request: Either<SlackResponse, [CircleCiJobRequest]> = .right([CircleCiJobRequest(job: job)])
         let expected = CircleCiResponse(buildURL: "buildURL",
                                         buildNum: 10)
         let response = try api(request).wait().right
-        XCTAssertEqual(response?.job as? CircleCiTestJob, job)
-        XCTAssertEqual(response?.response, expected)
+        XCTAssertEqual(response?.first?.job as? CircleCiTestJob, job)
+        XCTAssertEqual(response?.first?.response, expected)
     }
         
     func testResponseToSlack() {
@@ -205,7 +205,7 @@ class CircleCiTests: XCTestCase {
                                                                   branch: branch,
                                                                   options: options,
                                                                   username: username))
-        let testSlackResponse = CircleCiJobRequest.responseToSlack(testResponse)
+        let testSlackResponse = CircleCiJobRequest.responseToSlack([testResponse])
         let expectedTestSlackResponse = SlackResponse(
             responseType: .inChannel,
             text: nil,
@@ -234,7 +234,7 @@ class CircleCiTests: XCTestCase {
                                                                           options: options,
                                                                           username: username,
                                                                           type: type))
-        let deploySlackResponse = CircleCiJobRequest.responseToSlack(deployResponse)
+        let deploySlackResponse = CircleCiJobRequest.responseToSlack([deployResponse])
         let expectedDeploySlackResponse = SlackResponse(
             responseType: .inChannel,
             text: nil,
