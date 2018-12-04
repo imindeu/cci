@@ -13,6 +13,10 @@ public protocol APIConnectEnvironment {
     static var env: [String: String] { get }
 }
 
+public protocol Headers {
+    func get(_ name: String) -> String?
+}
+
 extension APIConnectEnvironment {
     public static func get<A: Configuration>(_ key: A) -> String? {
         return env[key.rawValue]
@@ -23,10 +27,14 @@ extension APIConnectEnvironment {
     }
 }
 
+public protocol Checkable {}
+
 public protocol RequestModel {
     associatedtype ResponseModel
     associatedtype Config: Configuration
-    
+}
+
+public protocol DelayedRequestModel: RequestModel {
     var responseURL: URL? { get }
 }
 

@@ -30,7 +30,7 @@ class RouterTests: XCTestCase {
                                                                   branch: branch,
                                                                   options: options,
                                                                   username: username))
-        let slackResponse = CircleCiJobRequest.responseToSlack(response)
+        let slackResponse = CircleCiJobRequest.responseToSlack([response])
         let data = try? JSONEncoder().encode(slackResponse)
         XCTAssertEqual(data, body, file: file, line: line)
     }
@@ -38,11 +38,11 @@ class RouterTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Environment.env = [
-            "circleCiTokens": "circleCiTokens",
-            "slackToken": slackToken,
-            "circleCiCompany": "company",
-            "circleCiVcs": "vcs",
-            "circleCiProjects": project
+            CircleCiJobRequest.Config.tokens.rawValue: CircleCiJobRequest.Config.tokens.rawValue,
+            SlackRequest.Config.slackToken.rawValue: SlackRequest.Config.slackToken.rawValue,
+            CircleCiJobRequest.Config.company.rawValue: CircleCiJobRequest.Config.company.rawValue,
+            CircleCiJobRequest.Config.vcs.rawValue: CircleCiJobRequest.Config.vcs.rawValue,
+            CircleCiJobRequest.Config.projects.rawValue: project,
         ]
         Environment.api = { hostname, _ in
             return { context, request in

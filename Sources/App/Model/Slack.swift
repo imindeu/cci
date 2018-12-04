@@ -9,7 +9,7 @@ import APIModels
 import Foundation
 import HTTP
 
-extension SlackRequest: RequestModel {
+extension SlackRequest: DelayedRequestModel {
     public typealias ResponseModel = SlackResponse
     public typealias Config = SlackConfig
     
@@ -21,7 +21,7 @@ extension SlackRequest: RequestModel {
 }
 
 extension SlackRequest {
-    static func check(_ from: SlackRequest) -> SlackResponse? {
+    static func check(_ from: SlackRequest, _ payload: String? = nil, _ headers: Headers? = nil) -> SlackResponse? {
         var texts: [String] = []
         let token = Environment.get(Config.slackToken)
         if token == nil || from.token != token! {
