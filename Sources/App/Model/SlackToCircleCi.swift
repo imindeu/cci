@@ -26,10 +26,9 @@ extension APIConnect where From == SlackRequest {
 
 extension APIConnect where From == SlackRequest, To == CircleCiJobRequest {
     static func run(_ from: SlackRequest, _ context: Context) -> IO<SlackResponse?> {
-        return APIConnect<SlackRequest, CircleCiJobRequest, Environment>(
-            request: CircleCiJobRequest.slackRequest,
-            toAPI: CircleCiJobRequest.apiWithSlack,
-            response: CircleCiJobRequest.responseToSlack)
+        return SlackToCircleCi(request: CircleCiJobRequest.slackRequest,
+                               toAPI: CircleCiJobRequest.apiWithSlack,
+                               response: CircleCiJobRequest.responseToSlack)
             .run(from, context, nil, nil)
     }
 }

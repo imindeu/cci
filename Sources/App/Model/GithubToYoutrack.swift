@@ -13,8 +13,8 @@ typealias GithubToYoutrack = APIConnect<GithubWebhookRequest, YoutrackRequest, E
 extension APIConnect where From == GithubWebhookRequest {
     init(request: @escaping (_ from: GithubWebhookRequest) -> Either<GithubWebhookResponse, [To]>,
          toAPI: @escaping (_ context: Context)
-        -> (Either<GithubWebhookResponse, [To]>)
-        -> EitherIO<GithubWebhookResponse, [To.ResponseModel]>,
+            -> (Either<GithubWebhookResponse, [To]>)
+            -> EitherIO<GithubWebhookResponse, [To.ResponseModel]>,
          response: @escaping (_ with: [To.ResponseModel]) -> GithubWebhookResponse) {
         self.init(check: GithubWebhookRequest.check,
                   request: request,
@@ -24,11 +24,13 @@ extension APIConnect where From == GithubWebhookRequest {
 }
 
 extension APIConnect where From == GithubWebhookRequest, To == YoutrackRequest {
-    static func run(_ from: GithubWebhookRequest, _ context: Context, _ payload: String?, headers: Headers?) -> IO<GithubWebhookResponse?> {
-        return APIConnect<GithubWebhookRequest, YoutrackRequest, Environment>(
-            request: YoutrackRequest.githubWebhookRequest,
-            toAPI: YoutrackRequest.apiWithGithubWebhook,
-            response: YoutrackRequest.responseToGithubWebhook)
+    static func run(_ from: GithubWebhookRequest,
+                    _ context: Context,
+                    _ payload: String?,
+                    _ headers: Headers?) -> IO<GithubWebhookResponse?> {
+        return GithubToYoutrack(request: YoutrackRequest.githubWebhookRequest,
+                                toAPI: YoutrackRequest.apiWithGithubWebhook,
+                                response: YoutrackRequest.responseToGithubWebhook)
             .run(from, context, payload, headers)
     }
 }
