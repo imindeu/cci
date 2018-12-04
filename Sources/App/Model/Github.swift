@@ -43,6 +43,7 @@ extension GithubWebhookRequest {
 
 public struct GithubWebhookResponse: Equatable, Codable {
     public let failure: String?
+    
     public init(failure: String? = nil) {
         self.failure = failure
     }

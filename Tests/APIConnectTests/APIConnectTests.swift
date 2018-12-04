@@ -21,7 +21,7 @@ struct FromRequest: RequestModel {
 }
 
 extension FromRequest {
-    static var check: (FromRequest, String?, Headers?) -> FromResponse? = { _,_,_ in nil }
+    static var check: (FromRequest, String?, Headers?) -> FromResponse? = { _, _, _ in nil }
     static var request: (FromRequest) -> Either<FromResponse, [ToRequest]> = {
         return .right([ToRequest(data: $0.data)])
     }

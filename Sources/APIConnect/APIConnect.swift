@@ -23,7 +23,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
     public let response: (_ from: [To.ResponseModel]) -> From.ResponseModel
     public let fromAPI: ((_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>)?
     public let instant: ((_ context: Context) -> (From) -> IO<From.ResponseModel?>)?
-}
+} 
 
 public extension APIConnect {
     
@@ -67,7 +67,10 @@ public extension APIConnect {
         }
     }
     
-    public func run(_ from: From, _ context: Context, _ payload: String?, _ headers: Headers?) -> IO<From.ResponseModel?> {
+    public func run(_ from: From,
+                    _ context: Context,
+                    _ payload: String?,
+                    _ headers: Headers?) -> IO<From.ResponseModel?> {
         if let response = check(from, payload, headers) {
             return pure(response, context)
         }
@@ -101,7 +104,10 @@ public extension APIConnect where From: DelayedRequestModel {
         
     }
 
-    public func run(_ from: From, _ context: Context, _ payload: String?, _ headers: Headers?) -> IO<From.ResponseModel?> {
+    public func run(_ from: From,
+                    _ context: Context,
+                    _ payload: String?,
+                    _ headers: Headers?) -> IO<From.ResponseModel?> {
         if let response = check(from, payload, headers) {
             return pure(response, context)
         }
