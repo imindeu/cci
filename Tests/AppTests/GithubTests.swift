@@ -13,10 +13,6 @@ import Crypto
 
 @testable import App
 
-extension Dictionary: Headers where Key == String, Value == String {
-    public func get(_ name: String) -> String? { return self[name] }
-}
-
 class GithubWebhookTests: XCTestCase {
     
     func testVerify() throws {
@@ -46,6 +42,6 @@ class GithubWebhookTests: XCTestCase {
                                                                        refType: nil),
                                                   "y",
                                                   headers)
-        XCTAssertEqual(response, GithubWebhookResponse(failure: "bad signature"))
+        XCTAssertEqual(response, GithubWebhookResponse(error: GithubWebhookError.signature))
     }
 }

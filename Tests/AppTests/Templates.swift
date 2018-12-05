@@ -12,7 +12,11 @@ import NIO
 
 @testable import App
 
-func context() throws -> Context {
+extension Dictionary: Headers where Key == String, Value == String {
+    public func get(_ name: String) -> String? { return self[name] }
+}
+
+func context() -> Context {
     return MultiThreadedEventLoopGroup(numberOfThreads: 1)
 }
 

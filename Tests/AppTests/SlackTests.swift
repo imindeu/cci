@@ -19,13 +19,14 @@ class SlackTests: XCTestCase {
         let token = "slackToken"
         Environment.env = [token: token]
         let badURLRequest = SlackRequest.template(token: token, responseUrlString: "")
-        XCTAssertEqual(SlackRequest.check(badURLRequest), SlackResponse.error(text: "Error: bad response_url"))
+        XCTAssertEqual(SlackRequest.check(badURLRequest), SlackResponse.error(SlackError.missingResponseURL))
         
         let badTokenRequest = SlackRequest.template(token: "", responseUrlString: "https://test.com")
-        XCTAssertEqual(SlackRequest.check(badTokenRequest), SlackResponse.error(text: "Error: bad token"))
+        XCTAssertEqual(SlackRequest.check(badTokenRequest), SlackResponse.error(SlackError.badToken))
         
         let badRequest = SlackRequest.template(token: "", responseUrlString: "")
-        XCTAssertEqual(SlackRequest.check(badRequest), SlackResponse.error(text: "Error: bad token, response_url"))
+        XCTAssertEqual(SlackRequest.check(badRequest),
+                       SlackResponse.error(SlackError.combined([.badToken, .missingResponseURL])))
 
         let goodRequest = SlackRequest.template(token: token, responseUrlString: "https://test.com")
         XCTAssertNil(SlackRequest.check(goodRequest))
@@ -46,21 +47,21 @@ class SlackTests: XCTestCase {
         }
         
         let goodRequest = SlackRequest.template(responseUrlString: "https://test.com")
-        let goodApi = try SlackRequest.api(goodRequest, context())
-        try goodApi(SlackResponse.error(text: "")).wait()
+        let goodApi = SlackRequest.api(goodRequest, context())
+        try goodApi(SlackResponse(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
         XCTAssertTrue(usedApi)
         XCTAssertFalse(usedEmptyApi)
         
         usedApi = false
         let badRequest = SlackRequest.template(responseUrlString: "")
-        let badApi = try SlackRequest.api(badRequest, context())
-        try badApi(SlackResponse.error(text: "")).wait()
+        let badApi = SlackRequest.api(badRequest, context())
+        try badApi(SlackResponse(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
         XCTAssertTrue(usedEmptyApi)
         XCTAssertFalse(usedApi)
     }
     
     func testInstant() throws {
-        let instant = try SlackRequest.instant(context())
+        let instant = SlackRequest.instant(context())
         let response = try instant(SlackRequest.template()).wait()
         XCTAssertEqual(response, SlackResponse.instant)
     }
