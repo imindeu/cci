@@ -22,8 +22,8 @@ struct FromRequest: RequestModel {
 
 extension FromRequest {
     static var check: (FromRequest, String?, Headers?) -> FromResponse? = { _, _, _ in nil }
-    static var request: (FromRequest) -> Either<FromResponse, [ToRequest]> = {
-        return .right([ToRequest(data: $0.data)])
+    static var request: (FromRequest) -> Either<FromResponse, ToRequest> = {
+        return .right(ToRequest(data: $0.data))
     }
 }
 
@@ -38,8 +38,8 @@ struct DelayedFromRequest: DelayedRequestModel {
     var responseURL: URL?
 }
 extension DelayedFromRequest {
-    static var request: (DelayedFromRequest) -> Either<FromResponse, [ToRequest]> = {
-        return .right([ToRequest(data: $0.data)])
+    static var request: (DelayedFromRequest) -> Either<FromResponse, ToRequest> = {
+        return .right(ToRequest(data: $0.data))
     }
     static var check: (DelayedFromRequest, String?, Headers?) -> FromResponse? = { from, payload, headers in
         return from.responseURL == nil ? FromResponse(data: "", error: true) : nil
@@ -69,15 +69,15 @@ struct ToRequest: RequestModel {
     var data: String
 }
 extension ToRequest {
-    static var toAPI: (Context) -> (Either<FromResponse, [ToRequest]>)
-        -> EitherIO<FromResponse, [ToResponse]> = { context in
+    static var toAPI: (Context) -> (Either<FromResponse, ToRequest>)
+        -> EitherIO<FromResponse, ToResponse> = { context in
             
         return {
-            pure(Either<FromResponse, [ToResponse]>
-                .right([ToResponse(data: $0.either({ $0.data }, { $0.first!.data }))]), context)
+            pure(Either<FromResponse, ToResponse>
+                .right(ToResponse(data: $0.either({ $0.data }, { $0.data }))), context)
         }
     }
-    static var response: ([ToResponse]) -> FromResponse = { FromResponse(data: $0.first!.data, error: false) }
+    static var response: (ToResponse) -> FromResponse = { FromResponse(data: $0.data, error: false) }
 }
 struct ToResponse {
     var data: String = ""

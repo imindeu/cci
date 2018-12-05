@@ -35,12 +35,16 @@ struct YoutrackRequest: Equatable, Codable {
         case waitingForDeploy = "4DM%20iOS%20state%20Waiting%20for%20deploy"
     }
     
-    let issue: String
-    let command: Command
+    struct RequestData: Equatable, Codable {
+        let issue: String
+        let command: Command
+    }
+    
+    let data: [RequestData]
 }
 
 extension YoutrackRequest: RequestModel {
-    typealias ResponseModel = YoutrackResponseContainer
+    typealias ResponseModel = [YoutrackResponseContainer]
     typealias Config = YoutrackConfig
     
     public enum YoutrackConfig: String, Configuration {
@@ -51,23 +55,23 @@ extension YoutrackRequest: RequestModel {
 }
 
 extension YoutrackRequest {
-    static func githubWebhookRequest(_ from: GithubWebhookRequest) -> Either<GithubWebhookResponse, [YoutrackRequest]> {
+    static func githubWebhookRequest(_ from: GithubWebhookRequest) -> Either<GithubWebhookResponse, YoutrackRequest> {
            guard let (command, title) = from.youtrackData else {
             return .left(GithubWebhookResponse())
         }
         do {
             let regex = try NSRegularExpression(pattern: "4DM-[0-9]+")
-            let requests = regex.matches(in: title, options: [], range: NSRange(title.startIndex..., in: title))
+            let datas = regex.matches(in: title, options: [], range: NSRange(title.startIndex..., in: title))
                 .compactMap { Range($0.range, in: title).map { String(title[$0]) } }
-                .map { YoutrackRequest(issue: $0, command: command) }
-            return .right(requests)
+                .map { RequestData(issue: $0, command: command) }
+            return .right(YoutrackRequest(data: datas))
         } catch {
             return .left(GithubWebhookResponse(failure: error.localizedDescription))
         }
     }
     
     static func apiWithGithubWebhook(_ context: Context)
-        -> (Either<GithubWebhookResponse, [YoutrackRequest]>)
+        -> (Either<GithubWebhookResponse, YoutrackRequest>)
         -> EitherIO<GithubWebhookResponse, [YoutrackResponseContainer]> {
             let instantResponse: (GithubWebhookResponse)
                 -> EitherIO<GithubWebhookResponse, [YoutrackResponseContainer]> = {
@@ -75,7 +79,7 @@ extension YoutrackRequest {
             }
             return {
                 return $0.either(instantResponse) {
-                    requests -> EitherIO<GithubWebhookResponse, [YoutrackResponseContainer]> in
+                    request -> EitherIO<GithubWebhookResponse, [YoutrackResponseContainer]> in
                     
                     guard let token = Environment.get(Config.youtrackToken) else {
                         return instantResponse(GithubWebhookResponse(failure: "missing youtrack token"))
@@ -85,7 +89,7 @@ extension YoutrackRequest {
                         let host = url.host else {
                             return instantResponse(GithubWebhookResponse(failure: "bad youtrack url"))
                     }
-                    return requests.map(YoutrackRequest.fetch(context, url, host, token))
+                    return request.data.map(YoutrackRequest.fetch(context, url, host, token))
                     .flatten(on: context)
                     .map { results -> Either<GithubWebhookResponse, [YoutrackResponseContainer]> in
                         let initial: Either<GithubWebhookResponse, [YoutrackResponseContainer]> = .right([])
@@ -108,13 +112,13 @@ extension YoutrackRequest {
                               _ url: URL,
                               _ host: String,
                               _ token: String)
-        -> (_ request: YoutrackRequest)
+        -> (RequestData)
         -> EitherIO<GithubWebhookResponse, YoutrackResponseContainer> {
             
-        return { request in
+        return { requestData in
             var httpRequest = HTTPRequest()
             httpRequest.method = .POST
-            httpRequest.urlString = YoutrackRequest.path(base: url.path, issue: request.issue, command: request.command)
+            httpRequest.urlString = YoutrackRequest.path(base: url.path, issue: requestData.issue, command: requestData.command)
             httpRequest.headers = HTTPHeaders([
                 ("Accept", "application/json"),
                 ("Content-Type", "application/json"),
@@ -128,11 +132,11 @@ extension YoutrackRequest {
                     guard let youtrackResponse = try response.body.data.map(decode) else {
                         throw YoutrackError.decode
                     }
-                    return .right(YoutrackResponseContainer(response: youtrackResponse, request: request))
+                    return .right(YoutrackResponseContainer(response: youtrackResponse, data: requestData))
                 }
                 .catchMap {
                     return .left(
-                        GithubWebhookResponse(failure: "issue: \(request.issue): \(YoutrackError.underlying($0).text)")
+                        GithubWebhookResponse(failure: "issue: \(requestData.issue): \(YoutrackError.underlying($0).text)")
                     )
                 }
         }
@@ -173,7 +177,7 @@ private extension GithubWebhookRequest {
 
 struct YoutrackResponseContainer: Equatable, Codable {
     let response: YoutrackResponse
-    let request: YoutrackRequest
+    let data: YoutrackRequest.RequestData
 }
 
 struct YoutrackResponse: Equatable, Codable {

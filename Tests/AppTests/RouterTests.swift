@@ -30,7 +30,7 @@ class RouterTests: XCTestCase {
                                                                   branch: branch,
                                                                   options: options,
                                                                   username: username))
-        let slackResponse = CircleCiJobRequest.responseToSlack([response])
+        let slackResponse = CircleCiJobRequest.responseToSlack(response)
         let data = try? JSONEncoder().encode(slackResponse)
         XCTAssertEqual(data, body, file: file, line: line)
     }
