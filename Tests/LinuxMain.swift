@@ -1,37 +1,21 @@
-import XCTest
-@testable import APIConnectTests
-@testable import AppTests
+// Generated using Sourcery 0.15.0 — https://github.com/krzysztofzablocki/Sourcery
+// DO NOT EDIT
 
-// MARK: - APIConnectTests
+
+import XCTest
+
+@testable import APIConnectTests;@testable import APPTests
+
 extension APIConnectTests {
   static var allTests: [(String, (APIConnectTests) -> () throws -> Void)] = [
     ("testCheckFail", testCheckFail),
-    ("testRunWithResponseURL", testRunWithResponseURL),
-    ("testRunWithoutResponseURL", testRunWithoutResponseURL),
+    ("testNormalRun", testNormalRun),
+    ("testDelayedRun", testDelayedRun),
+    ("testDelayedRunWithoutResponseURL", testDelayedRunWithoutResponseURL),
     ("testCheckConfigs", testCheckConfigs)
   ]
 }
 
-extension IOTests {
-  static var allTests: [(String, (IOTests) -> () throws -> Void)] = [
-    ("testPure", testPure),
-    ("testMapEither", testMapEither)
-  ]
-}
-
-extension EitherTests {
-  static var allTests: [(String, (EitherTests) -> () throws -> Void)] = [
-    ("testEither", testEither),
-    ("testLeft", testLeft),
-    ("testIsLeft", testIsLeft),
-    ("testRight", testRight),
-    ("testIsRight", testIsRight),
-    ("testMap", testMap),
-    ("testFlatMap", testFlatMap)
-  ]
-}
-
-// MARK: - APPTests
 extension CircleCiTests {
   static var allTests: [(String, (CircleCiTests) -> () throws -> Void)] = [
     ("testTestJob", testTestJob),
@@ -42,8 +26,45 @@ extension CircleCiTests {
   ]
 }
 
-extension RouterTests {
-  static var allTests: [(String, (RouterTests) -> () throws -> Void)] = [
+extension EitherTests {
+  static var allTests: [(String, (EitherTests) -> () throws -> Void)] = [
+    ("testEither", testEither),
+    ("testLeft", testLeft),
+    ("testRight", testRight),
+    ("testIsLeft", testIsLeft),
+    ("testIsRight", testIsRight),
+    ("testMap", testMap),
+    ("testFlatMap", testFlatMap),
+    ("testCodable", testCodable)
+  ]
+}
+
+extension GithubWebhookTests {
+  static var allTests: [(String, (GithubWebhookTests) -> () throws -> Void)] = [
+    ("testVerify", testVerify),
+    ("testCheck", testCheck),
+    ("testCheckFailure", testCheckFailure)
+  ]
+}
+
+extension IOTests {
+  static var allTests: [(String, (IOTests) -> () throws -> Void)] = [
+    ("testPure", testPure),
+    ("testMapEither", testMapEither)
+  ]
+}
+
+extension RouterGithubToYoutrackTests {
+  static var allTests: [(String, (RouterGithubToYoutrackTests) -> () throws -> Void)] = [
+    ("testCheckConfigsFail", testCheckConfigsFail),
+    ("testCheckConfigs", testCheckConfigs),
+    ("testFullRun", testFullRun),
+    ("testEmptyRun", testEmptyRun)
+  ]
+}
+
+extension RouterSlackToCircleCiTests {
+  static var allTests: [(String, (RouterSlackToCircleCiTests) -> () throws -> Void)] = [
     ("testCheckConfigsFail", testCheckConfigsFail),
     ("testCheckConfigs", testCheckConfigs),
     ("testFullRun", testFullRun)
@@ -58,11 +79,23 @@ extension SlackTests {
   ]
 }
 
+extension YoutrackTests {
+  static var allTests: [(String, (YoutrackTests) -> () throws -> Void)] = [
+    ("testGithubWebhookRequest", testGithubWebhookRequest),
+    ("testApiWithGithubWebhook", testApiWithGithubWebhook),
+    ("testApiWithGithubWebhookFailure", testApiWithGithubWebhookFailure),
+    ("testResponseToGithubWebhook", testResponseToGithubWebhook)
+  ]
+}
+
 XCTMain([
   testCase(APIConnectTests.allTests),
-  testCase(IOTests.allTests),
-  testCase(EitherTests.allTests),
   testCase(CircleCiTests.allTests),
-  testCase(RouterTests.allTests),
-  testCase(SlackTests.allTests)
+  testCase(EitherTests.allTests),
+  testCase(GithubWebhookTests.allTests),
+  testCase(IOTests.allTests),
+  testCase(RouterGithubToYoutrackTests.allTests),
+  testCase(RouterSlackToCircleCiTests.allTests),
+  testCase(SlackTests.allTests),
+  testCase(YoutrackTests.allTests),
 ])
