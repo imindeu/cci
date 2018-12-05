@@ -1,5 +1,6 @@
 # cci
-slack commands to circleci
+- slack commands to circleci
+- githubwebhooks to youtrack
 
 ## commands:
 - help
@@ -10,9 +11,13 @@ slack commands to circleci
 
 ## environment variables:
 These need to be set on your cloud provider or in docker container:
-- *circleciToken*: token for the circleci API
 - *slackToken*: verification token for the slack command
-- *company*: company's name (that's in the circleci api url)
-- *vcs*: the vcs used by circleci (github or bitbucket)
-- *projects*: the projects that can be deployed (they have to be the same or the prefix for the slack channel, where the command is invomed)
+- *circleCiToken*: token for the circleci API
+- *circleCiCompany*: company's name (that's in the circleci api url)
+- *circleCiVcs*: the vcs used by circleci (github or bitbucket)
+- *circleCiProjects*: the projects that can be deployed (they have to be the same or the prefix for the slack channel, where the command is invomed)
+
+- *githubSecret*: github secret for webhook verification
+- *youtrackURL*: url of youtrack instance
+- *youtrackToken*: token for youtrack API authentication
 
