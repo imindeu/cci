@@ -64,9 +64,9 @@ class YoutrackTests: XCTestCase {
                         data: issues.map { YoutrackRequest.RequestData(issue: $0, command: .waitingForDeploy) }))
         
         let emptyRequest = GithubWebhookRequest(action: nil,
-                                                 pullRequest: nil,
-                                                 ref: "test",
-                                                 refType: GithubWebhookType.branch.rawValue)
+                                                pullRequest: nil,
+                                                ref: "test",
+                                                refType: GithubWebhookType.branch.rawValue)
         XCTAssertEqual(YoutrackRequest.githubWebhookRequest(emptyRequest).right,
                        YoutrackRequest(data: []))
 
@@ -91,7 +91,7 @@ class YoutrackTests: XCTestCase {
         let response = try api(request).wait().right
         XCTAssertEqual(response, expected)
         
-        let emptyRequest:Either<GithubWebhookResponse, YoutrackRequest> = .right(YoutrackRequest(data: []))
+        let emptyRequest: Either<GithubWebhookResponse, YoutrackRequest> = .right(YoutrackRequest(data: []))
         let emptyExpected: [YoutrackResponseContainer] = []
         let emptyResponse = try api(emptyRequest).wait().right
         XCTAssertEqual(emptyResponse, emptyExpected)
