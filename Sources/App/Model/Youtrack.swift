@@ -96,7 +96,7 @@ extension YoutrackRequest {
             }
     }
     
-    static func responseToGithubWebhook(_ from: [YoutrackResponse]) -> GithubWebhookResponse {
+    static func responseToGithubWebhook(_ from: [YoutrackResponseContainer]) -> GithubWebhookResponse {
         return GithubWebhookResponse()
     }
     
