@@ -7,6 +7,7 @@ public func configure(
 ) throws {
 
     try SlackToCircleCi.checkConfigs()
+    try GithubToYoutrack.checkConfigs()
     let router = EngineRouter.default()
     try routes(router)
     services.register(router, as: Router.self)
