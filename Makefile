@@ -1,3 +1,9 @@
+# create tests for linux
+
+imports = @testable import APIConnectTests;@testable import APPTests
+linux-main:
+	sourcery --sources ./Tests/ --templates ./.sourcery-templates/LinuxMain.stencil --output ./Tests/LinuxMain.swift --args testimports='$(imports)'
+
 # build/run locally on macos
 
 build-swift:
@@ -63,7 +69,8 @@ deploy:
 
 build-export-scp-deploy: build-image export-image scp deploy
 
-.PHONY: build-swift \
+.PHONY: sourcery \
+        build-swift \
 	run-swift \
 	build-image \
 	remove-image \
