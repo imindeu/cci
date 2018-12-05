@@ -1,8 +1,12 @@
 # create tests for linux
 
-imports = @testable import APIConnectTests;@testable import AppTests
+imports = @testable import APIConnectTests; @testable import AppTests
 linux-main:
-	sourcery --sources ./Tests/ --templates ./.sourcery-templates/LinuxMain.stencil --output ./Tests/LinuxMain.swift --args testimports='$(imports)'
+	sourcery \
+	  --sources ./Tests/ \
+	  --templates ./.sourcery-templates/LinuxMain.stencil \
+	  --output ./Tests/LinuxMain.swift \
+	  --args testimports='$(imports)'
 
 # build/run locally on macos
 
@@ -10,7 +14,17 @@ build-swift:
 	swift build --product Run --configuration release
 
 run-swift:
-	@port=${PORT};slackToken=${SLACKTOKEN};circleCiTokens=${CIRCLECITOKENS};circleCiVcs=${CIRCLECIVCS};circleCiProjects=${CIRCLECIPROJECTS}; circleCiCompany=${CIRCLECICOMPANY}; export port slackToken circleCiToken circleCiVcs circleCiProjects circleCiCompany; .build/release/Run
+	@port=${PORT}; \
+	  slackToken=${SLACKTOKEN}; \
+	  circleCiTokens=${CIRCLECITOKENS}; \
+	  circleCiVcs=${CIRCLECIVCS}; \
+	  circleCiProjects=${CIRCLECIPROJECTS}; \
+	  circleCiCompany=${CIRCLECICOMPANY}; \
+	  githubSecret=${GITHUBSECRET}; \
+	  youtrackURL=${YOUTRACKURL}; \
+	  youtrackToken=${YOUTRACKTOKEN}; \
+	  export port slackToken circleCiToken circleCiVcs circleCiProjects circleCiCompany githubSecret youtrackURL youtrackToken; \
+	  .build/release/Run
 
 
 # docker image
@@ -32,7 +46,17 @@ import-image:
 
 run-app:
 	@echo "Container starting..."
-	@${SUDO} docker run --name cci -i -d -t -p ${PORT}:${PORT} -e port=${PORT} -e slackToken=${SLACKTOKEN} -e circleCiTokens=${CIRCLECITOKENS} -e circleCiVcs=${CIRCLECIVCS} -e circleCiProjects=${CIRCLECIPROJECTS} -e circleCiCompany=${CIRCLECICOMPANY}  --restart unless-stopped cci
+	@${SUDO} docker run --name cci -i -d -t -p ${PORT}:${PORT} \
+	  -e port=${PORT} \
+	  -e slackToken=${SLACKTOKEN} \
+	  -e circleCiTokens=${CIRCLECITOKENS} \
+	  -e circleCiVcs=${CIRCLECIVCS} \
+	  -e circleCiProjects=${CIRCLECIPROJECTS} \
+	  -e circleCiCompany=${CIRCLECICOMPANY}  \
+	  -e githubSecret=${GITHUBSECRET} \
+	  -e youtrackURL=${YOUTRACKURL} \
+	  -e youtrackToken=${YOUTRACKTOKEN} \
+	  --restart unless-stopped cci
 	@echo "Started."
 
 stop-app:
@@ -64,7 +88,18 @@ scp:
 
 deploy:
 	@echo "Starting remote deploy..."
-	@ssh ${SSH_USER}@${SSH_HOST} "cd ${SSH_PATH} && make restart PORT=${PORT} SLACKTOKEN=${SLACKTOKEN} CIRCLECITOKENS=${CIRCLECITOKENS} CIRCLECIVCS=${CIRCLECIVCS} CIRCLECIPROJECTS=${CIRCLECIPROJECTS} CIRCLECICOMPANY=${CIRCLECICOMPANY} SUDO=${SUDO}"
+	@ssh ${SSH_USER}@${SSH_HOST} "\
+	  cd ${SSH_PATH} \
+	  && make restart PORT=${PORT} \
+	  SLACKTOKEN=${SLACKTOKEN} \
+	  CIRCLECITOKENS=${CIRCLECITOKENS} \
+	  CIRCLECIVCS=${CIRCLECIVCS} \
+	  CIRCLECIPROJECTS=${CIRCLECIPROJECTS} \
+	  CIRCLECICOMPANY=${CIRCLECICOMPANY} \
+	  GITHUBSECRET=${GITHUBSECRET} \
+	  YOUTRACKURL=${YOUTRACKURL} \
+	  YOUTRACKTOKEN=${YOUTRACKTOKEN} \
+	  SUDO=${SUDO}"
 	@echo "Deployed."
 
 build-export-scp-deploy: build-image export-image scp deploy
