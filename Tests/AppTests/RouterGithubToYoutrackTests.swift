@@ -77,11 +77,26 @@ class RouterGithubToYoutrackTests: XCTestCase {
         XCTAssertEqual(response, GithubWebhookResponse())
     }
 
-    func testEmptyRun() throws {
+    func testNoRegexRun() throws {
         let request = GithubWebhookRequest(action: nil,
                                            pullRequest: nil,
                                            ref: "test",
                                            refType: GithubWebhookType.branch.rawValue)
+        let response = try GithubToYoutrack.run(request,
+                                                MultiThreadedEventLoopGroup(numberOfThreads: 1),
+                                                "y",
+                                                [GithubWebhookRequest.headerName:
+                                                    "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
+            .wait()
+        XCTAssertNil(Environment.env["test.com"])
+        XCTAssertEqual(response, GithubWebhookResponse())
+    }
+
+    func testEmptyRun() throws {
+        let request = GithubWebhookRequest(action: nil,
+                                           pullRequest: nil,
+                                           ref: nil,
+                                           refType: nil)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
