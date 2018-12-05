@@ -12,16 +12,20 @@ import Core
 
 enum YoutrackError: Error {
     case decode
+    case missingToken
+    case badURL
     case underlying(Error)
 }
 
-extension YoutrackError {
-    var text: String {
+extension YoutrackError: LocalizedError {
+    var errorDescription: String? {
         switch self {
         case .decode: return "Decode error"
+        case .missingToken: return "Missing youtrack token"
+        case .badURL: return "Bad youtrack URL"
         case .underlying(let error):
             if let youtrackError = error as? YoutrackError {
-                return youtrackError.text
+                return youtrackError.localizedDescription
             }
             return "Unknown error (\(error))"
 
@@ -33,6 +37,14 @@ struct YoutrackRequest: Equatable, Codable {
         case inProgress = "4DM%20iOS%20state%20In%20Progress"
         case inReview = "4DM%20iOS%20state%20In%20Review"
         case waitingForDeploy = "4DM%20iOS%20state%20Waiting%20for%20deploy"
+        
+        init(_ githubWebhookType: GithubWebhookType) {
+            switch githubWebhookType {
+            case .branch: self = .inProgress
+            case .opened: self = .inReview
+            case .closed: self = .waitingForDeploy
+            }
+        }
     }
     
     struct RequestData: Equatable, Codable {
@@ -56,7 +68,7 @@ extension YoutrackRequest: RequestModel {
 
 extension YoutrackRequest {
     static func githubWebhookRequest(_ from: GithubWebhookRequest) -> Either<GithubWebhookResponse, YoutrackRequest> {
-           guard let (command, title) = from.youtrackData else {
+        guard let (command, title) = YoutrackRequest.commandAndTitle(from) else {
             return .left(GithubWebhookResponse())
         }
         do {
@@ -82,26 +94,31 @@ extension YoutrackRequest {
                     request -> EitherIO<GithubWebhookResponse, [YoutrackResponseContainer]> in
                     
                     guard let token = Environment.get(Config.youtrackToken) else {
-                        return instantResponse(GithubWebhookResponse(failure: "missing youtrack token"))
+                        return instantResponse(GithubWebhookResponse(error: YoutrackError.missingToken))
                     }
                     guard let string = Environment.get(Config.youtrackURL),
                         let url = URL(string: string),
                         let host = url.host else {
-                            return instantResponse(GithubWebhookResponse(failure: "bad youtrack url"))
+                            return instantResponse(GithubWebhookResponse(error: YoutrackError.badURL))
                     }
-                    return request.data.map(YoutrackRequest.fetch(context, url, host, token))
-                    .flatten(on: context)
-                    .map { results -> Either<GithubWebhookResponse, [YoutrackResponseContainer]> in
-                        let initial: Either<GithubWebhookResponse, [YoutrackResponseContainer]> = .right([])
-                        return results.reduce(initial, YoutrackRequest.flatten)
-                    }
-                    
+                    return request.data
+                        .map(YoutrackRequest.fetch(context, url, host, token))
+                        .flatten(on: context)
+                        .map { results -> Either<GithubWebhookResponse, [YoutrackResponseContainer]> in
+                            let initial: Either<GithubWebhookResponse, [YoutrackResponseContainer]> = .right([])
+                            return results.reduce(initial, YoutrackRequest.flatten)
+                        }
                 }
             }
     }
     
     static func responseToGithubWebhook(_ from: [YoutrackResponseContainer]) -> GithubWebhookResponse {
         return GithubWebhookResponse()
+    }
+    
+    private static func commandAndTitle(_ request: GithubWebhookRequest) -> (Command, String)? {
+        guard let (githubWebhookType, title) = request.type else { return nil }
+        return (Command(githubWebhookType), title)
     }
     
     private static func path(base: String, issue: String, command: Command) -> String {
@@ -118,7 +135,9 @@ extension YoutrackRequest {
         return { requestData in
             var httpRequest = HTTPRequest()
             httpRequest.method = .POST
-            httpRequest.urlString = YoutrackRequest.path(base: url.path, issue: requestData.issue, command: requestData.command)
+            httpRequest.urlString = YoutrackRequest.path(base: url.path,
+                                                         issue: requestData.issue,
+                                                         command: requestData.command)
             httpRequest.headers = HTTPHeaders([
                 ("Accept", "application/json"),
                 ("Content-Type", "application/json"),
@@ -136,8 +155,8 @@ extension YoutrackRequest {
                 }
                 .catchMap {
                     return .left(
-                        GithubWebhookResponse(failure: "issue: \(requestData.issue): \(YoutrackError.underlying($0).text)")
-                    )
+                        GithubWebhookResponse(
+                            failure: "issue: \(requestData.issue): \(YoutrackError.underlying($0).localizedDescription)"))
                 }
         }
     }
@@ -156,21 +175,6 @@ extension YoutrackRequest {
             return .right(rresults + [rnext])
         case let (.right, .left(lnext)):
             return .left(GithubWebhookResponse(failure: lnext.failure))
-        }
-    }
-}
-
-private extension GithubWebhookRequest {
-    var youtrackData: (YoutrackRequest.Command, String)? {
-        switch (action, pullRequest?.title, ref, refType) {
-        case let ("closed", .some(title), _, _):
-            return (.waitingForDeploy, title)
-        case let ("opened", .some(title), _, _):
-            return (.inReview, title)
-        case let (_, _, .some(title), "branch"):
-            return (.inProgress, title)
-        default:
-            return nil
         }
     }
 }

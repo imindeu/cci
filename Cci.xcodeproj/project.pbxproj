@@ -42,6 +42,8 @@
 		11FF8F1321B5855D00EB68DC /* GithubToYoutrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FF8F0F21B584EF00EB68DC /* GithubToYoutrack.swift */; };
 		11FF8F1421B5856300EB68DC /* Youtrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FF8F0D21B584D900EB68DC /* Youtrack.swift */; };
 		11FF8F1621B6594500EB68DC /* GithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FF8F1521B6594500EB68DC /* GithubTests.swift */; };
+		11FF8F1821B7CD8F00EB68DC /* YoutrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FF8F1721B7CD8F00EB68DC /* YoutrackTests.swift */; };
+		11FF8F1A21B7EF9200EB68DC /* RouterGithubToYoutrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FF8F1921B7EF9200EB68DC /* RouterGithubToYoutrackTests.swift */; };
 		OBJ_1000 /* Console.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Console::Product" /* Console.framework */; };
 		OBJ_1001 /* Service.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Service::Service::Product" /* Service.framework */; };
 		OBJ_1002 /* Logging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Logging::Product" /* Logging.framework */; };
@@ -1033,7 +1035,7 @@
 		OBJ_914 /* CNIODarwin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIODarwin::Product" /* CNIODarwin.framework */; };
 		OBJ_915 /* CNIOLinux.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOLinux::Product" /* CNIOLinux.framework */; };
 		OBJ_979 /* CircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* CircleCiTests.swift */; };
-		OBJ_980 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* RouterTests.swift */; };
+		OBJ_980 /* RouterSlackToCircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* RouterSlackToCircleCiTests.swift */; };
 		OBJ_981 /* SlackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* SlackTests.swift */; };
 		OBJ_982 /* Templates.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* Templates.swift */; };
 		OBJ_984 /* App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Cci::App::Product" /* App.framework */; };
@@ -4497,6 +4499,8 @@
 		11FF8F0D21B584D900EB68DC /* Youtrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Youtrack.swift; sourceTree = "<group>"; };
 		11FF8F0F21B584EF00EB68DC /* GithubToYoutrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GithubToYoutrack.swift; sourceTree = "<group>"; };
 		11FF8F1521B6594500EB68DC /* GithubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GithubTests.swift; sourceTree = "<group>"; };
+		11FF8F1721B7CD8F00EB68DC /* YoutrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YoutrackTests.swift; sourceTree = "<group>"; };
+		11FF8F1921B7EF9200EB68DC /* RouterGithubToYoutrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterGithubToYoutrackTests.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIModels::Product" /* APIModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIModels.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4689,7 +4693,7 @@
 		OBJ_297 /* DatabaseConnectable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConnectable.swift; sourceTree = "<group>"; };
 		OBJ_298 /* DatabaseConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConnection.swift; sourceTree = "<group>"; };
 		OBJ_299 /* DatabaseStringFindable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseStringFindable.swift; sourceTree = "<group>"; };
-		OBJ_30 /* RouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
+		OBJ_30 /* RouterSlackToCircleCiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterSlackToCircleCiTests.swift; sourceTree = "<group>"; };
 		OBJ_301 /* Container+ConnectionPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Container+ConnectionPool.swift"; sourceTree = "<group>"; };
 		OBJ_302 /* DatabaseConnectionPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConnectionPool.swift; sourceTree = "<group>"; };
 		OBJ_303 /* DatabaseConnectionPoolCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConnectionPoolCache.swift; sourceTree = "<group>"; };
@@ -6371,9 +6375,11 @@
 			children = (
 				OBJ_29 /* CircleCiTests.swift */,
 				11FF8F1521B6594500EB68DC /* GithubTests.swift */,
-				OBJ_30 /* RouterTests.swift */,
+				11FF8F1921B7EF9200EB68DC /* RouterGithubToYoutrackTests.swift */,
+				OBJ_30 /* RouterSlackToCircleCiTests.swift */,
 				OBJ_31 /* SlackTests.swift */,
 				OBJ_32 /* Templates.swift */,
+				11FF8F1721B7CD8F00EB68DC /* YoutrackTests.swift */,
 			);
 			name = AppTests;
 			path = Tests/AppTests;
@@ -10379,9 +10385,11 @@
 			files = (
 				11FF8F1621B6594500EB68DC /* GithubTests.swift in Sources */,
 				OBJ_979 /* CircleCiTests.swift in Sources */,
-				OBJ_980 /* RouterTests.swift in Sources */,
+				OBJ_980 /* RouterSlackToCircleCiTests.swift in Sources */,
 				OBJ_981 /* SlackTests.swift in Sources */,
 				OBJ_982 /* Templates.swift in Sources */,
+				11FF8F1A21B7EF9200EB68DC /* RouterGithubToYoutrackTests.swift in Sources */,
+				11FF8F1821B7CD8F00EB68DC /* YoutrackTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

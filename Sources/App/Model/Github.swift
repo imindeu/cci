@@ -10,6 +10,40 @@ import APIModels
 import Foundation
 import Crypto
 
+enum GithubWebhookError: Error {
+    case signature
+}
+
+extension GithubWebhookError: LocalizedError {
+    var errorDescription: String? {
+        switch self{
+        case .signature: return "Bad github webhook signature"
+        }
+    }
+}
+
+enum GithubWebhookType: String {
+    case branch
+    case opened
+    case closed
+}
+
+extension GithubWebhookRequest {
+    var type: (GithubWebhookType, String)? {
+        switch (action, pullRequest?.title, ref, refType) {
+        case let (GithubWebhookType.closed.rawValue, .some(title), _, _):
+            return (.closed, title)
+        case let (GithubWebhookType.opened.rawValue, .some(title), _, _):
+            return (.opened, title)
+        case let (_, _, .some(title), GithubWebhookType.branch.rawValue):
+            return (.branch, title)
+        default:
+            return nil
+        }
+
+    }
+}
+
 extension GithubWebhookRequest: RequestModel {
     public typealias ResponseModel = GithubWebhookResponse
     public typealias Config = GithubWebhookConfig
@@ -17,7 +51,6 @@ extension GithubWebhookRequest: RequestModel {
     public enum GithubWebhookConfig: String, Configuration {
         case githubSecret
     }
-
 }
 
 extension GithubWebhookRequest {
@@ -37,7 +70,7 @@ extension GithubWebhookRequest {
         let signature = headers?.get("HTTP_X_HUB_SIGNATURE")
         return verify(payload: payload, secret: secret, signature: signature)
             ? nil
-            : GithubWebhookResponse(failure: "bad signature")
+            : GithubWebhookResponse(error: GithubWebhookError.signature)
     }
 }
 
@@ -46,5 +79,9 @@ public struct GithubWebhookResponse: Equatable, Codable {
     
     public init(failure: String? = nil) {
         self.failure = failure
+    }
+    
+    public init(error: LocalizedError) {
+        self.failure = error.localizedDescription
     }
 }

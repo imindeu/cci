@@ -1,5 +1,5 @@
 //
-//  RouterTests.swift
+//  RouterSlackToCircleCiTests
 //  AppTests
 //
 //  Created by Peter Geszten-Kovacs on 2018. 09. 10..
@@ -12,7 +12,7 @@ import XCTest
 import Vapor
 @testable import App
 
-class RouterTests: XCTestCase {
+class RouterSlackToCircleCiTests: XCTestCase {
     let slackToken = "slackToken"
     let project = "projectX"
     let branch = "feature/branch-X"

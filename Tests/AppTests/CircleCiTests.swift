@@ -27,7 +27,6 @@ class CircleCiTests: XCTestCase {
         super.setUp()
         Environment.env = [
             CircleCiJobRequest.Config.tokens.rawValue: CircleCiJobRequest.Config.tokens.rawValue,
-            SlackRequest.Config.slackToken.rawValue: SlackRequest.Config.slackToken.rawValue,
             CircleCiJobRequest.Config.company.rawValue: CircleCiJobRequest.Config.company.rawValue,
             CircleCiJobRequest.Config.vcs.rawValue: CircleCiJobRequest.Config.vcs.rawValue,
             CircleCiJobRequest.Config.projects.rawValue: project,
@@ -82,8 +81,8 @@ class CircleCiTests: XCTestCase {
                 XCTFail("We should have a CircleCiError")
                 return
             }
-            if case CircleCiError.parse = error {
-                XCTAssertEqual(error.text, "Parse error (No branch found: ())")
+            if case CircleCiError.noBranch = error {
+                XCTAssertEqual(error.localizedDescription, CircleCiError.noBranch("").localizedDescription)
             } else {
                 XCTFail("We should have a parse error")
             }
@@ -127,8 +126,8 @@ class CircleCiTests: XCTestCase {
                 XCTFail("We should have a CircleCiError")
                 return
             }
-            if case CircleCiError.parse = error {
-                XCTAssertEqual(error.text, "Parse error (Unknown type: (unknown))")
+            if case CircleCiError.unknownType = error {
+                XCTAssertEqual(error.localizedDescription, CircleCiError.unknownType("unknown").localizedDescription)
             } else {
                 XCTFail("We should have a parse error")
             }
@@ -140,13 +139,13 @@ class CircleCiTests: XCTestCase {
         // no channel
         let noChannelRequest = SlackRequest.template(channelName: "nochannel")
         let noChannelResult = CircleCiJobRequest.slackRequest(noChannelRequest)
-        XCTAssertEqual(noChannelResult.left, SlackResponse.error(text: CircleCiError.noChannel("nochannel").text))
+        XCTAssertEqual(noChannelResult.left, SlackResponse.error(CircleCiError.noChannel("nochannel")))
         
         // unknown command
         let unknownCommandRequest = SlackRequest.template(channelName: project, text: "command branch")
         let unknownCommandResult = CircleCiJobRequest.slackRequest(unknownCommandRequest)
         XCTAssertEqual(unknownCommandResult.left,
-                       SlackResponse.error(text: CircleCiError.unknownCommand("command branch").text))
+                       SlackResponse.error(CircleCiError.unknownCommand("command branch")))
         
         // help command
         let helpRequest = SlackRequest.template(channelName: project, text: "help")
@@ -178,10 +177,13 @@ class CircleCiTests: XCTestCase {
     }
     
     func testApiWithSlack() throws {
-        let api = try CircleCiJobRequest.apiWithSlack(context())
+        let api = CircleCiJobRequest.apiWithSlack(context())
 
         // passthrough
-        let passthrough: Either<SlackResponse, CircleCiJobRequest> = .left(SlackResponse.error(text: ""))
+        let passthrough: Either<SlackResponse, CircleCiJobRequest> = .left(SlackResponse(responseType: .ephemeral,
+                                                                                         text: nil,
+                                                                                         attachments: [],
+                                                                                         mrkdwn: nil))
         XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
         
         // build response

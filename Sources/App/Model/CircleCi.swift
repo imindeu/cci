@@ -12,31 +12,32 @@ import HTTP
 
 enum CircleCiError: Error {
     case noChannel(String)
+    case noBranch(String)
     case unknownCommand(String)
-    case parse(String)
+    case unknownType(String)
     case underlying(Error)
     case decode
-    case noJob
 }
 
-extension CircleCiError {
-    var text: String {
+extension CircleCiError: LocalizedError {
+    var errorDescription: String? {
         switch self {
         case .noChannel(let name):
             return "No project found (channel: \(name))"
         case .unknownCommand(let text):
             return "Unknown command (\(text))"
-        case .parse(let string):
-            return "Parse error (\(string))"
+        case .noBranch(let string):
+            return "No branch found (\(string))"
+        case .unknownType(let text):
+            return "Unknown type (\(text))"
         case .decode:
             return "Decode error"
         case .underlying(let error):
             if let circleCiError = error as? CircleCiError {
-                return circleCiError.text
+                return circleCiError.localizedDescription
+                
             }
             return "Unknown error (\(error))"
-        case .noJob:
-            return "No job"
         }
     }
 }
@@ -124,7 +125,7 @@ extension CircleCiTestJob {
                       username: String) throws -> Either<SlackResponse, CircleCiJob> {
         
         guard !parameters.isEmpty else {
-            throw CircleCiError.parse("No branch found: (\(parameters.joined(separator: " ")))")
+            throw CircleCiError.noBranch(parameters.joined(separator: " "))
         }
         guard parameters[0] != "help" else {
             return .left(CircleCiTestJob.helpResponse)
@@ -195,11 +196,11 @@ extension CircleCiDeployJob {
             "beta": "master",
             "app_store": "release"]
         if parameters.isEmpty || !types.keys.contains(parameters[0]) {
-            throw CircleCiError.parse("Unknown type: (\(parameters.joined(separator: " ")))")
+            throw CircleCiError.unknownType(parameters.joined(separator: " "))
         }
         let type = parameters[0]
         guard let branch = parameters[safe: 1] ?? types[type] else {
-            throw CircleCiError.parse("No branch found: (\(parameters.joined(separator: " ")))")
+            throw CircleCiError.noBranch(parameters.joined(separator: " "))
         }
         return .right(CircleCiDeployJob(project: project,
                                         branch: branch,
@@ -254,13 +255,13 @@ extension CircleCiJobRequest {
         let projects: [String] = Environment.getArray(CircleCiConfig.projects)
         
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
-            return .left(SlackResponse.error(text: CircleCiError.noChannel(from.channelName).text))
+            return .left(SlackResponse.error(CircleCiError.noChannel(from.channelName)))
         }
         let project = projects[index]
         
         var parameters = from.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
         guard !parameters.isEmpty else {
-            return .left(SlackResponse.error(text: CircleCiError.unknownCommand(from.text).text))
+            return .left(SlackResponse.error(CircleCiError.unknownCommand(from.text)))
         }
         let command = parameters[0]
         parameters.removeFirst()
@@ -278,13 +279,13 @@ extension CircleCiJobRequest {
                            username: from.userName)
                     .map { CircleCiJobRequest(job: $0) }
             } catch {
-                return .left(SlackResponse.error(text: CircleCiError.underlying(error).text,
+                return .left(SlackResponse.error(CircleCiError.underlying(error),
                                                  helpResponse: job.type.helpResponse))
             }
         } else if command == "help" {
             return .left(helpResponse)
         } else {
-            return .left(SlackResponse.error(text: CircleCiError.unknownCommand(from.text).text))
+            return .left(SlackResponse.error(CircleCiError.unknownCommand(from.text)))
         }
     }
     
@@ -321,11 +322,11 @@ extension CircleCiJobRequest {
                                 return .right(CircleCiBuildResponse(response: deployResponse, job: job))
                             }
                             .catchMap {
-                                return .left(SlackResponse.error(text: CircleCiError.underlying($0).text,
+                                return .left(SlackResponse.error(CircleCiError.underlying($0),
                                                                  helpResponse: CircleCiJobRequest.helpResponse))
                             }
                     } catch let error {
-                        return instantResponse(SlackResponse.error(text: CircleCiError.underlying(error).text,
+                        return instantResponse(SlackResponse.error(CircleCiError.underlying(error),
                                                                    helpResponse: CircleCiJobRequest.helpResponse))
                     }
                 }
