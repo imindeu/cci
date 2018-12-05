@@ -1,12 +1,13 @@
 # create tests for linux
 
 imports = @testable import APIConnectTests; @testable import AppTests
+
 linux-main:
 	sourcery \
 	  --sources ./Tests/ \
 	  --templates ./.sourcery-templates/LinuxMain.stencil \
 	  --output ./Tests/LinuxMain.swift \
-	  --args testimports='$(imports)'
+	  --args testimports='${imports}'
 
 # build/run locally on macos
 
