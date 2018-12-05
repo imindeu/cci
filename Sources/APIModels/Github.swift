@@ -10,6 +10,13 @@ public struct GithubWebhookRequest: Equatable, Codable {
     public let pullRequest: PullRequest?
     public let ref: String?
     public let refType: String?
+    
+    public init(action: String?, pullRequest: PullRequest?, ref: String?, refType: String?) {
+        self.action = action
+        self.pullRequest = pullRequest
+        self.ref = ref
+        self.refType = refType
+    }
 
     public struct PullRequest: Equatable, Codable {
         public let title: String

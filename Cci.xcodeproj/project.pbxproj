@@ -6370,10 +6370,10 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_29 /* CircleCiTests.swift */,
+				11FF8F1521B6594500EB68DC /* GithubTests.swift */,
 				OBJ_30 /* RouterTests.swift */,
 				OBJ_31 /* SlackTests.swift */,
 				OBJ_32 /* Templates.swift */,
-				11FF8F1521B6594500EB68DC /* GithubTests.swift */,
 			);
 			name = AppTests;
 			path = Tests/AppTests;
