@@ -156,7 +156,8 @@ extension YoutrackRequest {
                 .catchMap {
                     return .left(
                         GithubWebhookResponse(
-                            failure: "issue: \(requestData.issue): \(YoutrackError.underlying($0).localizedDescription)"))
+                            failure: "issue: \(requestData.issue): " +
+                                "\(YoutrackError.underlying($0).localizedDescription)"))
                 }
         }
     }

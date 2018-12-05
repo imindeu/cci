@@ -16,7 +16,7 @@ enum GithubWebhookError: Error {
 
 extension GithubWebhookError: LocalizedError {
     var errorDescription: String? {
-        switch self{
+        switch self {
         case .signature: return "Bad github webhook signature"
         }
     }
