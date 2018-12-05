@@ -250,7 +250,7 @@ extension CircleCiJobRequest {
         return response
     }
     
-    static func slackRequest(_ from: SlackRequest) -> Either<SlackResponse, [CircleCiJobRequest]> {
+    static func slackRequest(_ from: SlackRequest) -> Either<SlackResponse, CircleCiJobRequest> {
         let projects: [String] = Environment.getArray(CircleCiConfig.projects)
         
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
@@ -276,7 +276,7 @@ extension CircleCiJobRequest {
                            parameters: parameters,
                            options: options,
                            username: from.userName)
-                    .map { [CircleCiJobRequest(job: $0)] }
+                    .map { CircleCiJobRequest(job: $0) }
             } catch {
                 return .left(SlackResponse.error(text: CircleCiError.underlying(error).text,
                                                  helpResponse: job.type.helpResponse))
@@ -289,17 +289,14 @@ extension CircleCiJobRequest {
     }
     
     static func apiWithSlack(_ context: Context)
-        -> (Either<SlackResponse, [CircleCiJobRequest]>)
-        -> EitherIO<SlackResponse, [CircleCiBuildResponse]> {
+        -> (Either<SlackResponse, CircleCiJobRequest>)
+        -> EitherIO<SlackResponse, CircleCiBuildResponse> {
             
-            let instantResponse: (SlackResponse) -> EitherIO<SlackResponse, [CircleCiBuildResponse]> = {
+            let instantResponse: (SlackResponse) -> EitherIO<SlackResponse, CircleCiBuildResponse> = {
                 pure(.left($0), context)
             }
             return {
-                return $0.either(instantResponse) { jobRequests -> EitherIO<SlackResponse, [CircleCiBuildResponse]> in
-                    guard let jobRequest = jobRequests.first else {
-                        return instantResponse(SlackResponse.error(text: CircleCiError.noJob.text))
-                    }
+                return $0.either(instantResponse) { jobRequest -> EitherIO<SlackResponse, CircleCiBuildResponse> in
                     let job = jobRequest.job
                     var request = HTTPRequest()
                     request.method = .POST
@@ -314,14 +311,14 @@ extension CircleCiJobRequest {
                             ("Content-Type", "application/json")
                         ])
                         return Environment.api("circleci.com", nil)(context, request)
-                            .map { response -> Either<SlackResponse, [CircleCiBuildResponse]> in
+                            .map { response -> Either<SlackResponse, CircleCiBuildResponse> in
                                 let decode: (Data) throws -> CircleCiResponse = { data in
                                     return try JSONDecoder().decode(CircleCiResponse.self, from: data)
                                 }
                                 guard let deployResponse = try response.body.data.map(decode) else {
                                     throw CircleCiError.decode
                                 }
-                                return .right([CircleCiBuildResponse(response: deployResponse, job: job)])
+                                return .right(CircleCiBuildResponse(response: deployResponse, job: job))
                             }
                             .catchMap {
                                 return .left(SlackResponse.error(text: CircleCiError.underlying($0).text,
@@ -334,14 +331,11 @@ extension CircleCiJobRequest {
                 }
             }
     }
-    static func responseToSlack(_ from: [CircleCiBuildResponse]) -> SlackResponse {
-        guard let first = from.first else {
-            return SlackResponse.error(text: CircleCiError.noJob.text)
-        }
-        let job = first.job
-        let response = first.response
+    static func responseToSlack(_ from: CircleCiBuildResponse) -> SlackResponse {
+        let job = from.job
+        let response = from.response
         let fallback = "Job '\(job.name)' has started at <\(response.buildURL)|#\(response.buildNum)>. " +
-        "(project: \(first.job.project), branch: \(job.branch))"
+        "(project: \(from.job.project), branch: \(job.branch))"
         var fields = job.slackResponseFields
         job.options.forEach { option in
             let array = option.split(separator: ":").map(String.init)

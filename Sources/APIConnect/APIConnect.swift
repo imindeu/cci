@@ -16,11 +16,11 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
     }
     
     public let check: (_ from: From, _ payload: String?, _ headers: Headers?) -> From.ResponseModel?
-    public let request: (_ from: From) -> Either<From.ResponseModel, [To]>
+    public let request: (_ from: From) -> Either<From.ResponseModel, To>
     public let toAPI: (_ context: Context)
-        -> (Either<From.ResponseModel, [To]>)
-        -> EitherIO<From.ResponseModel, [To.ResponseModel]>
-    public let response: (_ from: [To.ResponseModel]) -> From.ResponseModel
+        -> (Either<From.ResponseModel, To>)
+        -> EitherIO<From.ResponseModel, To.ResponseModel>
+    public let response: (_ from: To.ResponseModel) -> From.ResponseModel
     public let fromAPI: ((_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>)?
     public let instant: ((_ context: Context) -> (From) -> IO<From.ResponseModel?>)?
 } 
@@ -28,11 +28,11 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
 public extension APIConnect {
     
     public init(check: @escaping (_ from: From, _ payload: String?, _ headers: Headers?) -> From.ResponseModel?,
-                request: @escaping (_ from: From) -> Either<From.ResponseModel, [To]>,
+                request: @escaping (_ from: From) -> Either<From.ResponseModel, To>,
                 toAPI: @escaping (_ context: Context)
-                    -> (Either<From.ResponseModel, [To]>)
-                    -> EitherIO<From.ResponseModel, [To.ResponseModel]>,
-                response: @escaping (_ with: [To.ResponseModel]) -> From.ResponseModel) {
+                    -> (Either<From.ResponseModel, To>)
+                    -> EitherIO<From.ResponseModel, To.ResponseModel>,
+                response: @escaping (_ with: To.ResponseModel) -> From.ResponseModel) {
         
         self.check = check
         self.request = request
@@ -85,11 +85,11 @@ public extension APIConnect {
 public extension APIConnect where From: DelayedRequestModel {
     
     public init(check: @escaping (_ from: From, _ payload: String?, _ headers: Headers?) -> From.ResponseModel?,
-                request: @escaping (_ from: From) -> Either<From.ResponseModel, [To]>,
+                request: @escaping (_ from: From) -> Either<From.ResponseModel, To>,
                 toAPI: @escaping (_ context: Context)
-                    -> (Either<From.ResponseModel, [To]>)
-                    -> EitherIO<From.ResponseModel, [To.ResponseModel]>,
-                response: @escaping (_ with: [To.ResponseModel]) -> From.ResponseModel,
+                    -> (Either<From.ResponseModel, To>)
+                    -> EitherIO<From.ResponseModel, To.ResponseModel>,
+                response: @escaping (_ with: To.ResponseModel) -> From.ResponseModel,
                 fromAPI: @escaping (_ request: From, _ context: Context)
                     -> (From.ResponseModel)
                     -> IO<Void>,
