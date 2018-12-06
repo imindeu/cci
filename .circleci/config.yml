@@ -6,7 +6,7 @@ jobs:
       - image: norionomura/swift:swift-4.2-branch
     steps:
       - checkout
-      - run: swift test
+      - run: swift test --parallel
   deploy:
     docker:
       - image: docker:latest
