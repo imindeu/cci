@@ -251,7 +251,8 @@ extension CircleCiJobRequest {
         return response
     }
     
-    static func slackRequest(_ from: SlackRequest) -> Either<SlackResponse, CircleCiJobRequest> {
+    static func slackRequest(_ from: SlackRequest,
+                             _ headers: Headers? = nil) -> Either<SlackResponse, CircleCiJobRequest> {
         let projects: [String] = Environment.getArray(CircleCiConfig.projects)
         
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {

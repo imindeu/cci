@@ -11,7 +11,7 @@ import APIModels
 typealias GithubToYoutrack = APIConnect<GithubWebhookRequest, YoutrackRequest, Environment>
 
 extension APIConnect where From == GithubWebhookRequest {
-    init(request: @escaping (_ from: GithubWebhookRequest) -> Either<GithubWebhookResponse, To>,
+    init(request: @escaping (_ from: GithubWebhookRequest, _ headers: Headers?) -> Either<GithubWebhookResponse, To>,
          toAPI: @escaping (_ context: Context)
             -> (Either<GithubWebhookResponse, To>)
             -> EitherIO<GithubWebhookResponse, To.ResponseModel>,

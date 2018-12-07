@@ -10,7 +10,7 @@ import APIModels
 typealias SlackToCircleCi = APIConnect<SlackRequest, CircleCiJobRequest, Environment>
 
 extension APIConnect where From == SlackRequest {
-    init(request: @escaping (_ from: SlackRequest) -> Either<SlackResponse, To>,
+    init(request: @escaping (_ from: SlackRequest, _ headers: Headers?) -> Either<SlackResponse, To>,
          toAPI: @escaping (_ context: Context)
             -> (Either<SlackResponse, To>)
             -> EitherIO<SlackResponse, To.ResponseModel>,

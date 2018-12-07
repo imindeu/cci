@@ -22,8 +22,8 @@ struct FromRequest: RequestModel {
 
 extension FromRequest {
     static var check: (FromRequest, String?, Headers?) -> FromResponse? = { _, _, _ in nil }
-    static var request: (FromRequest) -> Either<FromResponse, ToRequest> = {
-        return .right(ToRequest(data: $0.data))
+    static var request: (FromRequest, Headers?) -> Either<FromResponse, ToRequest> = { from, _ in
+        return .right(ToRequest(data: from.data))
     }
 }
 
@@ -38,8 +38,8 @@ struct DelayedFromRequest: DelayedRequestModel {
     var responseURL: URL?
 }
 extension DelayedFromRequest {
-    static var request: (DelayedFromRequest) -> Either<FromResponse, ToRequest> = {
-        return .right(ToRequest(data: $0.data))
+    static var request: (DelayedFromRequest, Headers?) -> Either<FromResponse, ToRequest> = { from, _ in
+        return .right(ToRequest(data: from.data))
     }
     static var check: (DelayedFromRequest, String?, Headers?) -> FromResponse? = { from, payload, headers in
         return from.responseURL == nil ? FromResponse(data: "", error: true) : nil

@@ -69,7 +69,8 @@ extension YoutrackRequest: RequestModel {
 }
 
 extension YoutrackRequest {
-    static func githubWebhookRequest(_ from: GithubWebhookRequest) -> Either<GithubWebhookResponse, YoutrackRequest> {
+    static func githubWebhookRequest(_ from: GithubWebhookRequest,
+                                     _ headers: Headers? = nil) -> Either<GithubWebhookResponse, YoutrackRequest> {
         guard let (command, title) = YoutrackRequest.commandAndTitle(from) else {
             return .left(GithubWebhookResponse())
         }
