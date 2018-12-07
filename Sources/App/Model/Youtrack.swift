@@ -15,6 +15,7 @@ enum YoutrackError: Error {
     case missingToken
     case badURL
     case underlying(Error)
+    case noIssue
 }
 
 extension YoutrackError: LocalizedError {
@@ -29,6 +30,7 @@ extension YoutrackError: LocalizedError {
             }
             return "Unknown error (\(error))"
 
+        case .noIssue: return "No youtrack issue found"
         }
     }
 }
@@ -78,7 +80,7 @@ extension YoutrackRequest {
                 .map { RequestData(issue: $0, command: command) }
             return .right(YoutrackRequest(data: datas))
         } catch {
-            return .left(GithubWebhookResponse(failure: error.localizedDescription))
+            return .left(GithubWebhookResponse(value: error.localizedDescription))
         }
     }
     
@@ -113,7 +115,13 @@ extension YoutrackRequest {
     }
     
     static func responseToGithubWebhook(_ from: [YoutrackResponseContainer]) -> GithubWebhookResponse {
-        return GithubWebhookResponse()
+        let value: String
+        if from.isEmpty {
+            value = YoutrackError.noIssue.localizedDescription
+        } else {
+            value = from.compactMap { $0.response.value }.joined(separator: "\n")
+        }
+        return GithubWebhookResponse(value: value)
     }
     
     private static func commandAndTitle(_ request: GithubWebhookRequest) -> (Command, String)? {
@@ -156,7 +164,7 @@ extension YoutrackRequest {
                 .catchMap {
                     return .left(
                         GithubWebhookResponse(
-                            failure: "issue: \(requestData.issue): " +
+                            value: "issue: \(requestData.issue): " +
                                 "\(YoutrackError.underlying($0).localizedDescription)"))
                 }
         }
@@ -168,14 +176,14 @@ extension YoutrackRequest {
             
         switch (lhs, rhs) {
         case let (.left(lresult), .left(lnext)):
-            let failure = (lresult.failure ?? "") + "\n" + (lnext.failure ?? "" )
-            return .left(GithubWebhookResponse(failure: failure))
+            let value = (lresult.value ?? "") + "\n" + (lnext.value ?? "" )
+            return .left(GithubWebhookResponse(value: value))
         case let (.left(lresult), .right):
-            return .left(GithubWebhookResponse(failure: lresult.failure))
+            return .left(GithubWebhookResponse(value: lresult.value))
         case let (.right(rresults), .right(rnext)):
             return .right(rresults + [rnext])
         case let (.right, .left(lnext)):
-            return .left(GithubWebhookResponse(failure: lnext.failure))
+            return .left(GithubWebhookResponse(value: lnext.value))
         }
     }
 }

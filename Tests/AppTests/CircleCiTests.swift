@@ -56,7 +56,7 @@ class CircleCiTests: XCTestCase {
         XCTAssertEqual(goodJob.name, CircleCiJobKind.test.rawValue)
         XCTAssertEqual(goodJob.urlEncodedBranch, urlEncodedBranch)
         XCTAssertEqual(goodJob.buildParameters,
-                       ["DEPLOY_OPTIONS": options.joined(separator: " "),
+                       ["CCI_OPTIONS": options.joined(separator: " "),
                         "CIRCLE_JOB": CircleCiJobKind.test.rawValue])
 
         // parse
@@ -100,8 +100,8 @@ class CircleCiTests: XCTestCase {
         XCTAssertEqual(goodJob.name, CircleCiJobKind.deploy.rawValue)
         XCTAssertEqual(goodJob.urlEncodedBranch, urlEncodedBranch)
         XCTAssertEqual(goodJob.buildParameters,
-                       ["DEPLOY_TYPE": type,
-                        "DEPLOY_OPTIONS": options.joined(separator: " "),
+                       ["CCI_DEPLOY_TYPE": type,
+                        "CCI_OPTIONS": options.joined(separator: " "),
                         "CIRCLE_JOB": CircleCiJobKind.deploy.rawValue])
         
         // parse

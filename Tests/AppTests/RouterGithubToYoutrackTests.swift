@@ -26,11 +26,12 @@ class RouterGithubToYoutrackTests: XCTestCase {
             return { context, request in
                 Environment.env[hostname] = hostname
                 if hostname == "test.com" {
+                    let command = request.url.query ?? ""
                     let response = HTTPResponse(
                         status: .ok,
                         version: HTTPVersion(major: 1, minor: 1),
                         headers: HTTPHeaders([]),
-                        body: "{}")
+                        body: "{\"value\": \"\(command)\"}")
                     return pure(response, context)
                 } else {
                     XCTFail("Shouldn't have an api for anything else")
@@ -74,7 +75,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()
         XCTAssertEqual(Environment.env["test.com"], "test.com")
-        XCTAssertEqual(response, GithubWebhookResponse())
+        XCTAssertEqual(response, GithubWebhookResponse(value: "command=4DM%20iOS%20state%20In%20Progress"))
     }
 
     func testNoRegexRun() throws {
@@ -89,7 +90,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()
         XCTAssertNil(Environment.env["test.com"])
-        XCTAssertEqual(response, GithubWebhookResponse())
+        XCTAssertEqual(response, GithubWebhookResponse(value: YoutrackError.noIssue.localizedDescription))
     }
 
     func testEmptyRun() throws {

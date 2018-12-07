@@ -61,7 +61,7 @@ protocol CircleCiJob {
 extension CircleCiJob {
     var buildParameters: [String: String] {
         return [
-            "DEPLOY_OPTIONS": options.joined(separator: " "),
+            "CCI_OPTIONS": options.joined(separator: " "),
             "CIRCLE_JOB": name
         ]
     }
@@ -148,8 +148,8 @@ struct CircleCiDeployJob: CircleCiJob, Equatable {
 extension CircleCiDeployJob {
     var buildParameters: [String: String] {
         return [
-            "DEPLOY_TYPE": type,
-            "DEPLOY_OPTIONS": options.joined(separator: " "),
+            "CCI_DEPLOY_TYPE": type,
+            "CCI_OPTIONS": options.joined(separator: " "),
             "CIRCLE_JOB": name
         ]
     }

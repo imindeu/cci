@@ -82,7 +82,7 @@ class YoutrackTests: XCTestCase {
     func testApiWithGithubWebhook() throws {
         let api = YoutrackRequest.apiWithGithubWebhook(context())
         
-        let passthrough: Either<GithubWebhookResponse, YoutrackRequest> = .left(GithubWebhookResponse(failure: "x"))
+        let passthrough: Either<GithubWebhookResponse, YoutrackRequest> = .left(GithubWebhookResponse(value: "x"))
         XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
         
         let data = issues.map { YoutrackRequest.RequestData(issue: $0, command: .inProgress) }
@@ -113,15 +113,16 @@ class YoutrackTests: XCTestCase {
     }
     
     func testResponseToGithubWebhook() {
-        let expected = GithubWebhookResponse()
+        let emptyExpected = GithubWebhookResponse(value: YoutrackError.noIssue.localizedDescription)
         let empty = YoutrackRequest.responseToGithubWebhook([])
-        XCTAssertEqual(empty, expected)
+        XCTAssertEqual(empty, emptyExpected)
         
         let single = YoutrackRequest.responseToGithubWebhook([
             YoutrackResponseContainer(response: YoutrackResponse(),
                                       data: YoutrackRequest.RequestData(issue: "4DM-1000", command: .inReview))
         ])
-        XCTAssertEqual(single, expected)
+        let singleExpected = GithubWebhookResponse(value: "")
+        XCTAssertEqual(single, singleExpected)
     }
 
 }

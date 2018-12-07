@@ -76,13 +76,13 @@ extension GithubWebhookRequest {
 }
 
 public struct GithubWebhookResponse: Equatable, Codable {
-    public let failure: String?
+    public let value: String?
     
-    public init(failure: String? = nil) {
-        self.failure = failure
+    public init(value: String? = nil) {
+        self.value = value
     }
     
     public init(error: LocalizedError) {
-        self.failure = error.localizedDescription
+        self.value = error.localizedDescription
     }
 }
