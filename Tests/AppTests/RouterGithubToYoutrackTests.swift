@@ -71,7 +71,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
-                                                [GithubWebhookRequest.headerName:
+                                                [GithubWebhookRequest.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()
         XCTAssertEqual(Environment.env["test.com"], "test.com")
@@ -86,7 +86,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
-                                                [GithubWebhookRequest.headerName:
+                                                [GithubWebhookRequest.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()
         XCTAssertNil(Environment.env["test.com"])
@@ -101,7 +101,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
-                                                [GithubWebhookRequest.headerName:
+                                                [GithubWebhookRequest.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()
         XCTAssertNil(Environment.env["test.com"])

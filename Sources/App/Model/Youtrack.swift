@@ -11,7 +11,7 @@ import HTTP
 import Core
 
 enum YoutrackError: Error {
-    case decode
+    case decode(String)
     case missingToken
     case badURL
     case underlying(Error)
@@ -21,7 +21,7 @@ enum YoutrackError: Error {
 extension YoutrackError: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .decode: return "Decode error"
+        case .decode(let body): return "Decode error (\(body))"
         case .missingToken: return "Missing youtrack token"
         case .badURL: return "Bad youtrack URL"
         case .underlying(let error):
@@ -157,7 +157,13 @@ extension YoutrackRequest {
                         return try JSONDecoder().decode(YoutrackResponse.self, from: data)
                     }
                     guard let youtrackResponse = try response.body.data.map(decode) else {
-                        throw YoutrackError.decode
+                        let body: String
+                        if let data = response.body.data {
+                            body = String(data: data, encoding: .utf8) ?? "Data not converted to String"
+                        } else {
+                            body = "No data"
+                        }
+                        throw YoutrackError.decode(body)
                     }
                     return .right(YoutrackResponseContainer(response: youtrackResponse, data: requestData))
                 }

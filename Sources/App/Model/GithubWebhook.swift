@@ -29,7 +29,8 @@ enum GithubWebhookType: String {
 }
 
 extension GithubWebhookRequest {
-    static var headerName: String { return "X-Hub-Signature" }
+    static var signatureHeaderName: String { return "X-Hub-Signature" }
+    static var eventHeaderName: String { return "X-GitHub-Event" }
     
     var type: (GithubWebhookType, String)? {
         switch (action, pullRequest?.title, ref, refType) {
@@ -68,7 +69,7 @@ extension GithubWebhookRequest {
     
     static func check(_ from: GithubWebhookRequest, _ payload: String?, _ headers: Headers?) -> GithubWebhookResponse? {
         let secret = Environment.get(Config.githubSecret)
-        let signature = headers?.get(GithubWebhookRequest.headerName)
+        let signature = headers?.get(GithubWebhookRequest.signatureHeaderName)
         return verify(payload: payload, secret: secret, signature: signature)
             ? nil
             : GithubWebhookResponse(error: GithubWebhookError.signature)

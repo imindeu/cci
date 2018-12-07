@@ -23,7 +23,7 @@ class GithubWebhookTests: XCTestCase {
     
     func testCheck() {
         Environment.env[GithubWebhookRequest.Config.githubSecret.rawValue] = "x"
-        let headers = [GithubWebhookRequest.headerName: "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"]
+        let headers = [GithubWebhookRequest.signatureHeaderName: "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"]
         let response = GithubWebhookRequest.check(GithubWebhookRequest(action: nil,
                                                                        pullRequest: nil,
                                                                        ref: nil,
