@@ -157,11 +157,11 @@ extension YoutrackRequest {
                         return try JSONDecoder().decode(YoutrackResponse.self, from: data)
                     }
                     guard let youtrackResponse = try response.body.data.map(decode) else {
-                        let body: String
+                        var body: String = "\(httpRequest) "
                         if let data = response.body.data {
-                            body = String(data: data, encoding: .utf8) ?? "Data not converted to String"
+                            body += String(data: data, encoding: .utf8) ?? "Data not converted to String"
                         } else {
-                            body = "No data"
+                            body += "No data"
                         }
                         throw YoutrackError.decode(body)
                     }
