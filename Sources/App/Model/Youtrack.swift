@@ -153,18 +153,10 @@ extension YoutrackRequest {
             ])
             return Environment.api(host, url.port)(context, httpRequest)
                 .map { response -> Either<GithubWebhookResponse, YoutrackResponseContainer> in
-                    let decode: (Data) throws -> YoutrackResponse = { data in
-                        return try JSONDecoder().decode(YoutrackResponse.self, from: data)
+                    guard let responseData = response.body.data else {
+                        return .right(YoutrackResponseContainer(response: YoutrackResponse(), data: requestData))
                     }
-                    guard let youtrackResponse = try response.body.data.map(decode) else {
-                        var body: String = "\(httpRequest) "
-                        if let data = response.body.data {
-                            body += String(data: data, encoding: .utf8) ?? "Data not converted to String"
-                        } else {
-                            body += "No data"
-                        }
-                        throw YoutrackError.decode(body)
-                    }
+                    let youtrackResponse = try JSONDecoder().decode(YoutrackResponse.self, from: responseData)
                     return .right(YoutrackResponseContainer(response: youtrackResponse, data: requestData))
                 }
                 .catchMap {
