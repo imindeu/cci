@@ -154,7 +154,9 @@ extension YoutrackRequest {
             return Environment.api(host, url.port)(context, httpRequest)
                 .map { response -> Either<GithubWebhookResponse, YoutrackResponseContainer> in
                     guard let responseData = response.body.data else {
-                        return .right(YoutrackResponseContainer(response: YoutrackResponse(), data: requestData))
+                        let youtrackResponse = YoutrackResponse(value: "issue: \(requestData.issue)")
+                        return .right(YoutrackResponseContainer(response: youtrackResponse,
+                                                                data: requestData))
                     }
                     let youtrackResponse = try JSONDecoder().decode(YoutrackResponse.self, from: responseData)
                     return .right(YoutrackResponseContainer(response: youtrackResponse, data: requestData))
