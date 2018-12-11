@@ -15,8 +15,9 @@ enum CircleCiError: Error {
     case noBranch(String)
     case unknownCommand(String)
     case unknownType(String)
-    case underlying(Error)
     case decode
+    case badResponse(String?)
+    case underlying(Error)
 }
 
 extension CircleCiError: LocalizedError {
@@ -32,6 +33,8 @@ extension CircleCiError: LocalizedError {
             return "Unknown type (\(text))"
         case .decode:
             return "Decode error"
+        case .badResponse(let message):
+            return "CircleCi message: \"\(message ?? "")\""
         case .underlying(let error):
             if let circleCiError = error as? CircleCiError {
                 return circleCiError.localizedDescription
@@ -334,9 +337,11 @@ extension CircleCiJobRequest {
             }
     }
     static func responseToSlack(_ from: CircleCiBuildResponse) -> SlackResponse {
+        guard let buildURL = from.response.buildURL, let buildNum = from.response.buildNum else {
+            return SlackResponse.error(CircleCiError.badResponse(from.response.message))
+        }
         let job = from.job
-        let response = from.response
-        let fallback = "Job '\(job.name)' has started at <\(response.buildURL)|#\(response.buildNum)>. " +
+        let fallback = "Job '\(job.name)' has started at <\(buildURL)|#\(buildNum)>. " +
         "(project: \(from.job.project), branch: \(job.branch))"
         var fields = job.slackResponseFields
         job.options.forEach { option in
@@ -347,7 +352,7 @@ extension CircleCiJobRequest {
         }
         let attachment = SlackResponse.Attachment(
             fallback: fallback,
-            text: "Job '\(job.name)' has started at <\(response.buildURL)|#\(response.buildNum)>.",
+            text: "Job '\(job.name)' has started at <\(buildURL)|#\(buildNum)>.",
             color: "#764FA5",
             mrkdwnIn: ["text", "fields"],
             fields: fields)

@@ -198,7 +198,35 @@ class CircleCiTests: XCTestCase {
         XCTAssertEqual(response?.job as? CircleCiTestJob, job)
         XCTAssertEqual(response?.response, expected)
     }
+    
+    func testApiWithSlackMessage() throws {
+        Environment.api = { hostname, _ in
+            return { context, _ in
+                if hostname == "circleci.com" {
+                    let response = HTTPResponse(
+                        status: .ok,
+                        version: HTTPVersion(major: 1, minor: 1),
+                        headers: HTTPHeaders([]),
+                        body: "{\"message\":\"x\"}")
+                    return pure(response, context)
+                } else {
+                    return Environment.emptyApi(context)
+                }
+            }
+        }
+        let api = CircleCiJobRequest.apiWithSlack(context())
         
+        let job = CircleCiTestJob(project: project,
+                                  branch: branch,
+                                  options: options,
+                                  username: username)
+        let request: Either<SlackResponse, CircleCiJobRequest> = .right(CircleCiJobRequest(job: job))
+        let expected = CircleCiResponse(message: "x")
+        let response = try api(request).wait().right
+        XCTAssertEqual(response?.job as? CircleCiTestJob, job)
+        XCTAssertEqual(response?.response, expected)
+        
+    }
     func testResponseToSlack() {
         // test
         let testResponse = CircleCiBuildResponse(response: CircleCiResponse(buildURL: "buildURL",
@@ -258,5 +286,14 @@ class CircleCiTests: XCTestCase {
             mrkdwn: true)
         XCTAssertEqual(deploySlackResponse, expectedDeploySlackResponse)
 
+        let messageResponse = CircleCiBuildResponse(response: CircleCiResponse(message: "x"),
+                                                    job: CircleCiTestJob(project: project,
+                                                                         branch: branch,
+                                                                         options: options,
+                                                                         username: username))
+        let messageSlackResponse = CircleCiJobRequest.responseToSlack(messageResponse)
+        XCTAssertEqual(messageSlackResponse, SlackResponse.error(CircleCiError.badResponse("x")))
+
     }
+
 }
