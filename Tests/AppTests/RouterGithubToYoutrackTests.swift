@@ -40,7 +40,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
             }
         }
     }
-
+    
     func testCheckConfigsFail() {
         Environment.env = [:]
         do {
@@ -65,9 +65,9 @@ class RouterGithubToYoutrackTests: XCTestCase {
     
     func testFullRun() throws {
         let request = Github.Payload(action: nil,
-                                            pullRequest: nil,
-                                            ref: "test 4DM-1000",
-                                            refType: Github.RefType.branch)
+                                     pullRequest: nil,
+                                     ref: "test 4DM-1000",
+                                     refType: Github.RefType.branch)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
@@ -79,12 +79,12 @@ class RouterGithubToYoutrackTests: XCTestCase {
         XCTAssertEqual(Environment.env["test.com"], "test.com")
         XCTAssertEqual(response, Github.PayloadResponse(value: "command=4DM%20iOS%20state%20In%20Progress"))
     }
-
+    
     func testNoRegexRun() throws {
         let request = Github.Payload(action: nil,
-                                            pullRequest: nil,
-                                            ref: "test",
-                                            refType: Github.RefType.branch)
+                                     pullRequest: nil,
+                                     ref: "test",
+                                     refType: Github.RefType.branch)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
@@ -96,12 +96,12 @@ class RouterGithubToYoutrackTests: XCTestCase {
         XCTAssertNil(Environment.env["test.com"])
         XCTAssertEqual(response, Github.PayloadResponse(value: Youtrack.Error.noIssue.localizedDescription))
     }
-
+    
     func testEmptyRun() throws {
         let request = Github.Payload(action: nil,
-                                            pullRequest: nil,
-                                            ref: nil,
-                                            refType: nil)
+                                     pullRequest: nil,
+                                     ref: nil,
+                                     refType: nil)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
@@ -111,5 +111,5 @@ class RouterGithubToYoutrackTests: XCTestCase {
         XCTAssertNil(Environment.env["test.com"])
         XCTAssertEqual(response, Github.PayloadResponse())
     }
-
+    
 }

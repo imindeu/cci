@@ -6,8 +6,9 @@ linux-main:
 	sourcery \
 	  --sources ./Tests/ \
 	  --templates ./.sourcery-templates/LinuxMain.stencil \
-	  --output ./Tests/LinuxMain.swift \
-	  --args testimports='${imports}'
+	  --output ./Tests \
+	  --args testimports='${imports}' \
+	  && mv ./Tests/LinuxMain.generated.swift ./Tests/LinuxMain.swift
 
 # build/run locally on macos
 

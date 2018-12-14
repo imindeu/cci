@@ -42,9 +42,6 @@ included:
   - Sources
   - Tests
 
-excluded:
-  - Tests/LinuxMain.swift
-
 force_cast: error
 force_try: error
 unavailable_function: error

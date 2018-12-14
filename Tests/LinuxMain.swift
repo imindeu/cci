@@ -1,7 +1,6 @@
 // Generated using Sourcery 0.15.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
-
 import XCTest
 
 @testable import APIConnectTests; @testable import AppTests
