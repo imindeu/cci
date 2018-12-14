@@ -24,7 +24,7 @@ class RouterSlackToCircleCiTests: XCTestCase {
             XCTFail("Empty body", file: file, line: line)
             return
         }
-        let response = CircleCiBuildResponse(response: CircleCiResponse(buildURL: "buildURL",
+        let response = CircleCiBuildResponse(response: CircleCi.Response(buildURL: "buildURL",
                                                                         buildNum: 10),
                                              job: CircleCiTestJob(project: project,
                                                                   branch: branch,
@@ -39,7 +39,7 @@ class RouterSlackToCircleCiTests: XCTestCase {
         super.setUp()
         Environment.env = [
             CircleCiJobRequest.Config.tokens.rawValue: CircleCiJobRequest.Config.tokens.rawValue,
-            SlackRequest.Config.slackToken.rawValue: SlackRequest.Config.slackToken.rawValue,
+            Slack.Request.Config.slackToken.rawValue: Slack.Request.Config.slackToken.rawValue,
             CircleCiJobRequest.Config.company.rawValue: CircleCiJobRequest.Config.company.rawValue,
             CircleCiJobRequest.Config.vcs.rawValue: CircleCiJobRequest.Config.vcs.rawValue,
             CircleCiJobRequest.Config.projects.rawValue: project,
@@ -87,7 +87,7 @@ class RouterSlackToCircleCiTests: XCTestCase {
     }
     
     func testFullRun() throws {
-        let request = SlackRequest(token: slackToken,
+        let request = Slack.Request(token: slackToken,
                                    teamId: "",
                                    teamDomain: "",
                                    enterpriseId: "",
@@ -105,6 +105,6 @@ class RouterSlackToCircleCiTests: XCTestCase {
             .wait()
         XCTAssertEqual(Environment.env["slack.com"], "slack.com")
         XCTAssertEqual(Environment.env["circleci.com"], "circleci.com")
-        XCTAssertEqual(response, SlackResponse.instant)
+        XCTAssertEqual(response, Slack.Response.instant)
     }
 }

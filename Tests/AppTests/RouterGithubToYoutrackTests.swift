@@ -18,7 +18,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Environment.env = [
-            GithubWebhookRequest.Config.githubSecret.rawValue: "x",
+            GithubWebhook.Request.Config.githubSecret.rawValue: "x",
             YoutrackRequest.Config.youtrackToken.rawValue: YoutrackRequest.Config.youtrackToken.rawValue,
             YoutrackRequest.Config.youtrackURL.rawValue: "https://test.com/youtrack/rest"
         ]
@@ -64,52 +64,52 @@ class RouterGithubToYoutrackTests: XCTestCase {
     }
     
     func testFullRun() throws {
-        let request = GithubWebhookRequest(action: nil,
+        let request = GithubWebhook.Request(action: nil,
                                            pullRequest: nil,
                                            ref: "test 4DM-1000",
-                                           refType: GithubWebhookType.branchCreated.rawValue)
+                                           refType: GithubWebhook.RefType.branch)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
-                                                [GithubWebhookRequest.signatureHeaderName:
+                                                [GithubWebhook.Request.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369",
-                                                 GithubWebhookRequest.eventHeaderName:
+                                                 GithubWebhook.Request.eventHeaderName:
                                                     "create"])
             .wait()
         XCTAssertEqual(Environment.env["test.com"], "test.com")
-        XCTAssertEqual(response, GithubWebhookResponse(value: "command=4DM%20iOS%20state%20In%20Progress"))
+        XCTAssertEqual(response, GithubWebhook.Response(value: "command=4DM%20iOS%20state%20In%20Progress"))
     }
 
     func testNoRegexRun() throws {
-        let request = GithubWebhookRequest(action: nil,
+        let request = GithubWebhook.Request(action: nil,
                                            pullRequest: nil,
                                            ref: "test",
-                                           refType: GithubWebhookType.branchCreated.rawValue)
+                                           refType: GithubWebhook.RefType.branch)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
-                                                [GithubWebhookRequest.signatureHeaderName:
+                                                [GithubWebhook.Request.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369",
-                                                 GithubWebhookRequest.eventHeaderName:
+                                                 GithubWebhook.Request.eventHeaderName:
                                                     "create"])
             .wait()
         XCTAssertNil(Environment.env["test.com"])
-        XCTAssertEqual(response, GithubWebhookResponse(value: YoutrackError.noIssue.localizedDescription))
+        XCTAssertEqual(response, GithubWebhook.Response(value: YoutrackError.noIssue.localizedDescription))
     }
 
     func testEmptyRun() throws {
-        let request = GithubWebhookRequest(action: nil,
+        let request = GithubWebhook.Request(action: nil,
                                            pullRequest: nil,
                                            ref: nil,
                                            refType: nil)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
-                                                [GithubWebhookRequest.signatureHeaderName:
+                                                [GithubWebhook.Request.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()
         XCTAssertNil(Environment.env["test.com"])
-        XCTAssertEqual(response, GithubWebhookResponse())
+        XCTAssertEqual(response, GithubWebhook.Response())
     }
 
 }

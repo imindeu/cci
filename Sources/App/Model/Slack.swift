@@ -9,37 +9,36 @@ import APIModels
 import Foundation
 import HTTP
 
-enum SlackError: Error {
-    case badToken
-    case missingResponseURL
-    case combined([SlackError])
-}
-
-extension SlackError: LocalizedError {
-    var errorDescription: String? {
-        switch self {
-        case .badToken: return "Bad slack token"
-        case .missingResponseURL: return "Missing slack token"
-        case .combined(let errors):
-            return errors.map { $0.localizedDescription }.joined(separator: ", ")
+extension Slack {
+    enum Error: LocalizedError {
+        case badToken
+        case missingResponseURL
+        case combined([Error])
+        
+        public var errorDescription: String? {
+            switch self {
+            case .badToken: return "Bad slack token"
+            case .missingResponseURL: return "Missing slack token"
+            case .combined(let errors):
+                return errors.map { $0.localizedDescription }.joined(separator: ", ")
+            }
         }
     }
 }
 
-extension SlackRequest: DelayedRequestModel {
-    public typealias ResponseModel = SlackResponse
-    public typealias Config = SlackConfig
+extension Slack.Request: DelayedRequestModel {
+    public typealias ResponseModel = Slack.Response
     
-    public enum SlackConfig: String, Configuration {
+    public enum Config: String, Configuration {
         case slackToken
     }
     
     public var responseURL: URL? { return URL(string: responseUrlString) }
 }
 
-extension SlackRequest {
-    static func check(_ from: SlackRequest, _ payload: String? = nil, _ headers: Headers? = nil) -> SlackResponse? {
-        var errors: [SlackError] = []
+extension Slack.Request {
+    static func check(_ from: Slack.Request, _ payload: String? = nil, _ headers: Headers? = nil) -> Slack.Response? {
+        var errors: [Slack.Error] = []
         let token = Environment.get(Config.slackToken)
         if token == nil || from.token != token! {
             errors.append(.badToken)
@@ -48,9 +47,9 @@ extension SlackRequest {
             errors.append(.missingResponseURL)
         }
         guard !errors.isEmpty else { return nil }
-        return SlackResponse.error(SlackError.combined(errors))
+        return Slack.Response.error(Slack.Error.combined(errors))
     }
-    static func api(_ request: SlackRequest, _ context: Context) -> (SlackResponse) -> IO<Void> {
+    static func api(_ request: Slack.Request, _ context: Context) -> (Slack.Response) -> IO<Void> {
         return { response in
             guard let url = request.responseURL,
                 let hostname = url.host,
@@ -67,23 +66,23 @@ extension SlackRequest {
             return returnAPI(context, request).map { _ in () }
         }
     }
-    static func instant(_ context: Context) -> (SlackRequest) -> IO<SlackResponse?> {
-        return const(pure(SlackResponse.instant, context))
+    static func instant(_ context: Context) -> (Slack.Request) -> IO<Slack.Response?> {
+        return const(pure(Slack.Response.instant, context))
     }
 }
 
-extension SlackResponse {
-    static var instant: SlackResponse? {
+extension Slack.Response {
+    static var instant: Slack.Response? {
         return nil
     }
 }
 
-extension SlackResponse {
-    static func error(_ error: LocalizedError, helpResponse: SlackResponse? = nil) -> SlackResponse {
+extension Slack.Response {
+    static func error(_ error: LocalizedError, helpResponse: Slack.Response? = nil) -> Slack.Response {
         let text = error.localizedDescription
-        let attachment = SlackResponse.Attachment(fallback: text, text: text, color: "danger", mrkdwnIn: [], fields: [])
+        let attachment = Slack.Response.Attachment(fallback: text, text: text, color: "danger", mrkdwnIn: [], fields: [])
         guard let helpResponse = helpResponse else {
-            return SlackResponse(responseType: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
+            return Slack.Response(responseType: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
         }
         var copy = helpResponse
         let attachments = copy.attachments

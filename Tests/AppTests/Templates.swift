@@ -20,7 +20,7 @@ func context() -> Context {
     return MultiThreadedEventLoopGroup(numberOfThreads: 1)
 }
 
-extension SlackRequest {
+extension Slack.Request {
     static func template(token: String = "",
                          teamId: String = "",
                          teamDomain: String = "",
@@ -33,8 +33,8 @@ extension SlackRequest {
                          command: String = "",
                          text: String = "",
                          responseUrlString: String = "",
-                         triggerId: String = "") -> SlackRequest {
-        return SlackRequest(token: token,
+                         triggerId: String = "") -> Slack.Request {
+        return Slack.Request(token: token,
                             teamId: teamId,
                             teamDomain: teamDomain,
                             enterpriseId: enterpriseId,

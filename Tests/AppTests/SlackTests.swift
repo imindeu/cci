@@ -18,18 +18,18 @@ class SlackTests: XCTestCase {
     func testCheck() {
         let token = "slackToken"
         Environment.env = [token: token]
-        let badURLRequest = SlackRequest.template(token: token, responseUrlString: "")
-        XCTAssertEqual(SlackRequest.check(badURLRequest), SlackResponse.error(SlackError.missingResponseURL))
+        let badURLRequest = Slack.Request.template(token: token, responseUrlString: "")
+        XCTAssertEqual(Slack.Request.check(badURLRequest), Slack.Response.error(Slack.Error.missingResponseURL))
         
-        let badTokenRequest = SlackRequest.template(token: "", responseUrlString: "https://test.com")
-        XCTAssertEqual(SlackRequest.check(badTokenRequest), SlackResponse.error(SlackError.badToken))
+        let badTokenRequest = Slack.Request.template(token: "", responseUrlString: "https://test.com")
+        XCTAssertEqual(Slack.Request.check(badTokenRequest), Slack.Response.error(Slack.Error.badToken))
         
-        let badRequest = SlackRequest.template(token: "", responseUrlString: "")
-        XCTAssertEqual(SlackRequest.check(badRequest),
-                       SlackResponse.error(SlackError.combined([.badToken, .missingResponseURL])))
+        let badRequest = Slack.Request.template(token: "", responseUrlString: "")
+        XCTAssertEqual(Slack.Request.check(badRequest),
+                       Slack.Response.error(Slack.Error.combined([.badToken, .missingResponseURL])))
 
-        let goodRequest = SlackRequest.template(token: token, responseUrlString: "https://test.com")
-        XCTAssertNil(SlackRequest.check(goodRequest))
+        let goodRequest = Slack.Request.template(token: token, responseUrlString: "https://test.com")
+        XCTAssertNil(Slack.Request.check(goodRequest))
     }
     
     func testApi() throws {
@@ -46,23 +46,23 @@ class SlackTests: XCTestCase {
             }
         }
         
-        let goodRequest = SlackRequest.template(responseUrlString: "https://test.com")
-        let goodApi = SlackRequest.api(goodRequest, context())
-        try goodApi(SlackResponse(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
+        let goodRequest = Slack.Request.template(responseUrlString: "https://test.com")
+        let goodApi = Slack.Request.api(goodRequest, context())
+        try goodApi(Slack.Response(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
         XCTAssertTrue(usedApi)
         XCTAssertFalse(usedEmptyApi)
         
         usedApi = false
-        let badRequest = SlackRequest.template(responseUrlString: "")
-        let badApi = SlackRequest.api(badRequest, context())
-        try badApi(SlackResponse(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
+        let badRequest = Slack.Request.template(responseUrlString: "")
+        let badApi = Slack.Request.api(badRequest, context())
+        try badApi(Slack.Response(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
         XCTAssertTrue(usedEmptyApi)
         XCTAssertFalse(usedApi)
     }
     
     func testInstant() throws {
-        let instant = SlackRequest.instant(context())
-        let response = try instant(SlackRequest.template()).wait()
-        XCTAssertEqual(response, SlackResponse.instant)
+        let instant = Slack.Request.instant(context())
+        let response = try instant(Slack.Request.template()).wait()
+        XCTAssertEqual(response, Slack.Response.instant)
     }
 }
