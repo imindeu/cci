@@ -18,8 +18,8 @@ class YoutrackTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Environment.env = [
-            YoutrackRequest.Config.youtrackToken.rawValue: YoutrackRequest.Config.youtrackToken.rawValue,
-            YoutrackRequest.Config.youtrackURL.rawValue: "https://test.com/youtrack/rest/"
+            Youtrack.Request.Config.youtrackToken.rawValue: Youtrack.Request.Config.youtrackToken.rawValue,
+            Youtrack.Request.Config.youtrackURL.rawValue: "https://test.com/youtrack/rest/"
         ]
         Environment.api = { hostname, _ in
             return { context, _ in
@@ -39,100 +39,102 @@ class YoutrackTests: XCTestCase {
     
     func testGithubWebhookRequest() {
         let title = "test \(issues.joined(separator: ", "))"
-        let branchHeaders = [GithubWebhook.Request.eventHeaderName: "create"]
-        let pullRequestHeaders = [GithubWebhook.Request.eventHeaderName: "pull_request"]
-
+        let branchHeaders = [GithubWebhook.eventHeaderName: "create"]
+        let pullRequestHeaders = [GithubWebhook.eventHeaderName: "pull_request"]
+        
         let branchRequest = GithubWebhook.Request(action: nil,
-                                                 pullRequest: nil,
-                                                 ref: title,
-                                                 refType: GithubWebhook.RefType.branch)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(branchRequest, branchHeaders).right,
-                       YoutrackRequest(
-                        data: issues.map { YoutrackRequest.RequestData(issue: $0, command: .inProgress) }))
+                                                  pullRequest: nil,
+                                                  ref: title,
+                                                  refType: GithubWebhook.RefType.branch)
+        XCTAssertEqual(Youtrack.githubWebhookRequest(branchRequest, branchHeaders).right,
+                       Youtrack.Request(
+                        data: issues.map { Youtrack.Request.RequestData(issue: $0, command: .inProgress) }))
         
         let openedRequest = GithubWebhook.Request(action: GithubWebhook.Action.opened,
-                                                 pullRequest: GithubWebhook.PullRequest(title: title),
-                                                 ref: nil,
-                                                 refType: nil)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(openedRequest, pullRequestHeaders).right,
-                       YoutrackRequest(data: issues.map { YoutrackRequest.RequestData(issue: $0, command: .inReview) }))
+                                                  pullRequest: GithubWebhook.PullRequest(title: title),
+                                                  ref: nil,
+                                                  refType: nil)
+        XCTAssertEqual(Youtrack.githubWebhookRequest(openedRequest, pullRequestHeaders).right,
+                       Youtrack.Request(data: issues.map {
+                        Youtrack.Request.RequestData(issue: $0, command: .inReview)
+                       }))
         
         let closedRequest = GithubWebhook.Request(action: GithubWebhook.Action.closed,
-                                                 pullRequest: GithubWebhook.PullRequest(title: title),
-                                                 ref: nil,
-                                                 refType: nil)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(closedRequest, pullRequestHeaders).right,
-                       YoutrackRequest(
-                        data: issues.map { YoutrackRequest.RequestData(issue: $0, command: .waitingForDeploy) }))
+                                                  pullRequest: GithubWebhook.PullRequest(title: title),
+                                                  ref: nil,
+                                                  refType: nil)
+        XCTAssertEqual(Youtrack.githubWebhookRequest(closedRequest, pullRequestHeaders).right,
+                       Youtrack.Request(
+                        data: issues.map { Youtrack.Request.RequestData(issue: $0, command: .waitingForDeploy) }))
         
         let emptyRequest = GithubWebhook.Request(action: nil,
-                                                pullRequest: nil,
-                                                ref: "test",
-                                                refType: GithubWebhook.RefType.branch)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(emptyRequest, branchHeaders).right,
-                       YoutrackRequest(data: []))
-
+                                                 pullRequest: nil,
+                                                 ref: "test",
+                                                 refType: GithubWebhook.RefType.branch)
+        XCTAssertEqual(Youtrack.githubWebhookRequest(emptyRequest, branchHeaders).right,
+                       Youtrack.Request(data: []))
+        
         let wrongRequest = GithubWebhook.Request(action: nil,
-                                                pullRequest: nil,
-                                                ref: nil,
-                                                refType: nil)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(wrongRequest, branchHeaders).left,
+                                                 pullRequest: nil,
+                                                 ref: nil,
+                                                 refType: nil)
+        XCTAssertEqual(Youtrack.githubWebhookRequest(wrongRequest, branchHeaders).left,
                        GithubWebhook.Response())
         
         // empty header
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(branchRequest, nil).left,
+        XCTAssertEqual(Youtrack.githubWebhookRequest(branchRequest, nil).left,
                        GithubWebhook.Response())
         
         // wrong header
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(branchRequest, pullRequestHeaders).left,
+        XCTAssertEqual(Youtrack.githubWebhookRequest(branchRequest, pullRequestHeaders).left,
                        GithubWebhook.Response())
-
+        
     }
     
     func testApiWithGithubWebhook() throws {
-        let api = YoutrackRequest.apiWithGithubWebhook(context())
+        let api = Youtrack.apiWithGithubWebhook(context())
         
-        let passthrough: Either<GithubWebhook.Response, YoutrackRequest> = .left(GithubWebhook.Response(value: "x"))
+        let passthrough: Either<GithubWebhook.Response, Youtrack.Request> = .left(GithubWebhook.Response(value: "x"))
         XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
         
-        let data = issues.map { YoutrackRequest.RequestData(issue: $0, command: .inProgress) }
-        let request: Either<GithubWebhook.Response, YoutrackRequest> = .right(YoutrackRequest(data: data))
-        let expected = data.map { YoutrackResponseContainer(response: YoutrackResponse(), data: $0) }
+        let data = issues.map { Youtrack.Request.RequestData(issue: $0, command: .inProgress) }
+        let request: Either<GithubWebhook.Response, Youtrack.Request> = .right(Youtrack.Request(data: data))
+        let expected = data.map { Youtrack.ResponseContainer(response: Youtrack.Response(), data: $0) }
         let response = try api(request).wait().right
         XCTAssertEqual(response, expected)
         
-        let emptyRequest: Either<GithubWebhook.Response, YoutrackRequest> = .right(YoutrackRequest(data: []))
-        let emptyExpected: [YoutrackResponseContainer] = []
+        let emptyRequest: Either<GithubWebhook.Response, Youtrack.Request> = .right(Youtrack.Request(data: []))
+        let emptyExpected: [Youtrack.ResponseContainer] = []
         let emptyResponse = try api(emptyRequest).wait().right
         XCTAssertEqual(emptyResponse, emptyExpected)
     }
     
     func testApiWithGithubWebhookFailure() throws {
-        let api = YoutrackRequest.apiWithGithubWebhook(context())
-        Environment.env[YoutrackRequest.Config.youtrackURL.rawValue] = "x"
-        let data = issues.map { YoutrackRequest.RequestData(issue: $0, command: .inProgress) }
-        let request: Either<GithubWebhook.Response, YoutrackRequest> = .right(YoutrackRequest(data: data))
-        let badUrlExpected = GithubWebhook.Response(error: YoutrackError.badURL)
+        let api = Youtrack.apiWithGithubWebhook(context())
+        Environment.env[Youtrack.Request.Config.youtrackURL.rawValue] = "x"
+        let data = issues.map { Youtrack.Request.RequestData(issue: $0, command: .inProgress) }
+        let request: Either<GithubWebhook.Response, Youtrack.Request> = .right(Youtrack.Request(data: data))
+        let badUrlExpected = GithubWebhook.Response(error: Youtrack.Error.badURL)
         let badUrlResponse = try api(request).wait().left
         XCTAssertEqual(badUrlResponse, badUrlExpected)
-
-        Environment.env[YoutrackRequest.Config.youtrackToken.rawValue] = nil
-        let badTokenExpected = GithubWebhook.Response(error: YoutrackError.missingToken)
+        
+        Environment.env[Youtrack.Request.Config.youtrackToken.rawValue] = nil
+        let badTokenExpected = GithubWebhook.Response(error: Youtrack.Error.missingToken)
         let badTokenResponse = try api(request).wait().left
         XCTAssertEqual(badTokenResponse, badTokenExpected)
     }
     
     func testResponseToGithubWebhook() {
-        let emptyExpected = GithubWebhook.Response(value: YoutrackError.noIssue.localizedDescription)
-        let empty = YoutrackRequest.responseToGithubWebhook([])
+        let emptyExpected = GithubWebhook.Response(value: Youtrack.Error.noIssue.localizedDescription)
+        let empty = Youtrack.responseToGithubWebhook([])
         XCTAssertEqual(empty, emptyExpected)
         
-        let single = YoutrackRequest.responseToGithubWebhook([
-            YoutrackResponseContainer(response: YoutrackResponse(),
-                                      data: YoutrackRequest.RequestData(issue: "4DM-1000", command: .inReview))
+        let single = Youtrack.responseToGithubWebhook([
+            Youtrack.ResponseContainer(response: Youtrack.Response(),
+                                       data: Youtrack.Request.RequestData(issue: "4DM-1000", command: .inReview))
         ])
         let singleExpected = GithubWebhook.Response(value: "")
         XCTAssertEqual(single, singleExpected)
     }
-
+    
 }

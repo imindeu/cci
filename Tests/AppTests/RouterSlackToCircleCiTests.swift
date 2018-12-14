@@ -24,13 +24,13 @@ class RouterSlackToCircleCiTests: XCTestCase {
             XCTFail("Empty body", file: file, line: line)
             return
         }
-        let response = CircleCiBuildResponse(response: CircleCi.Response(buildURL: "buildURL",
-                                                                        buildNum: 10),
+        let response = CircleCi.BuildResponse(response: CircleCi.Response(buildURL: "buildURL",
+                                                                          buildNum: 10),
                                              job: CircleCiTestJob(project: project,
                                                                   branch: branch,
                                                                   options: options,
                                                                   username: username))
-        let slackResponse = CircleCiJobRequest.responseToSlack(response)
+        let slackResponse = CircleCi.responseToSlack(response)
         let data = try? JSONEncoder().encode(slackResponse)
         XCTAssertEqual(data, body, file: file, line: line)
     }
@@ -38,11 +38,11 @@ class RouterSlackToCircleCiTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Environment.env = [
-            CircleCiJobRequest.Config.tokens.rawValue: CircleCiJobRequest.Config.tokens.rawValue,
+            CircleCi.JobRequest.Config.tokens.rawValue: CircleCi.JobRequest.Config.tokens.rawValue,
             Slack.Request.Config.slackToken.rawValue: Slack.Request.Config.slackToken.rawValue,
-            CircleCiJobRequest.Config.company.rawValue: CircleCiJobRequest.Config.company.rawValue,
-            CircleCiJobRequest.Config.vcs.rawValue: CircleCiJobRequest.Config.vcs.rawValue,
-            CircleCiJobRequest.Config.projects.rawValue: project,
+            CircleCi.JobRequest.Config.company.rawValue: CircleCi.JobRequest.Config.company.rawValue,
+            CircleCi.JobRequest.Config.vcs.rawValue: CircleCi.JobRequest.Config.vcs.rawValue,
+            CircleCi.JobRequest.Config.projects.rawValue: project,
         ]
         Environment.api = { hostname, _ in
             return { context, request in
@@ -87,19 +87,20 @@ class RouterSlackToCircleCiTests: XCTestCase {
     }
     
     func testFullRun() throws {
+        let text = "\(CircleCiJobKind.test.rawValue) \(branch) \(options.joined(separator: " "))"
         let request = Slack.Request(token: slackToken,
-                                   teamId: "",
-                                   teamDomain: "",
-                                   enterpriseId: "",
-                                   enterpriseName: nil,
-                                   channelId: "",
-                                   channelName: project,
-                                   userId: "",
-                                   userName: username,
-                                   command: "x",
-                                   text: "\(CircleCiJobKind.test.rawValue) \(branch) \(options.joined(separator: " "))",
-                                   responseUrlString: "https://slack.com",
-                                   triggerId: "")
+                                    teamId: "",
+                                    teamDomain: "",
+                                    enterpriseId: "",
+                                    enterpriseName: nil,
+                                    channelId: "",
+                                    channelName: project,
+                                    userId: "",
+                                    userName: username,
+                                    command: "x",
+                                    text: text,
+                                    responseUrlString: "https://slack.com",
+                                    triggerId: "")
         let response = try SlackToCircleCi.run(request,
                                                MultiThreadedEventLoopGroup(numberOfThreads: 1))
             .wait()

@@ -35,17 +35,17 @@ extension Slack.Request {
                          responseUrlString: String = "",
                          triggerId: String = "") -> Slack.Request {
         return Slack.Request(token: token,
-                            teamId: teamId,
-                            teamDomain: teamDomain,
-                            enterpriseId: enterpriseId,
-                            enterpriseName: enterpriseName,
-                            channelId: channelId,
-                            channelName: channelName,
-                            userId: userId,
-                            userName: userName,
-                            command: command,
-                            text: text,
-                            responseUrlString: responseUrlString,
-                            triggerId: triggerId)
+                             teamId: teamId,
+                             teamDomain: teamDomain,
+                             enterpriseId: enterpriseId,
+                             enterpriseName: enterpriseName,
+                             channelId: channelId,
+                             channelName: channelName,
+                             userId: userId,
+                             userName: userName,
+                             command: command,
+                             text: text,
+                             responseUrlString: responseUrlString,
+                             triggerId: triggerId)
     }
 }

@@ -7,7 +7,7 @@
 import APIConnect
 import APIModels
 
-typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCiJobRequest, Environment>
+typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCi.JobRequest, Environment>
 
 extension APIConnect where From == Slack.Request {
     init(request: @escaping (_ from: Slack.Request, _ headers: Headers?) -> Either<Slack.Response, To>,
@@ -24,11 +24,11 @@ extension APIConnect where From == Slack.Request {
     }
 }
 
-extension APIConnect where From == Slack.Request, To == CircleCiJobRequest {
+extension APIConnect where From == Slack.Request, To == CircleCi.JobRequest {
     static func run(_ from: Slack.Request, _ context: Context) -> IO<Slack.Response?> {
-        return SlackToCircleCi(request: CircleCiJobRequest.slackRequest,
-                               toAPI: CircleCiJobRequest.apiWithSlack,
-                               response: CircleCiJobRequest.responseToSlack)
+        return SlackToCircleCi(request: CircleCi.slackRequest,
+                               toAPI: CircleCi.apiWithSlack,
+                               response: CircleCi.responseToSlack)
             .run(from, context, nil, nil)
     }
 }

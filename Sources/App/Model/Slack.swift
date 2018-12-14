@@ -80,7 +80,11 @@ extension Slack.Response {
 extension Slack.Response {
     static func error(_ error: LocalizedError, helpResponse: Slack.Response? = nil) -> Slack.Response {
         let text = error.localizedDescription
-        let attachment = Slack.Response.Attachment(fallback: text, text: text, color: "danger", mrkdwnIn: [], fields: [])
+        let attachment = Slack.Response.Attachment(fallback: text,
+                                                   text: text,
+                                                   color: "danger",
+                                                   mrkdwnIn: [],
+                                                   fields: [])
         guard let helpResponse = helpResponse else {
             return Slack.Response(responseType: .ephemeral, text: nil, attachments: [attachment], mrkdwn: true)
         }
