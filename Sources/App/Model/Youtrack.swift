@@ -42,9 +42,9 @@ struct YoutrackRequest: Equatable, Codable {
         
         init(_ githubWebhookType: GithubWebhookType) {
             switch githubWebhookType {
-            case .branch: self = .inProgress
-            case .opened: self = .inReview
-            case .closed: self = .waitingForDeploy
+            case .branchCreated: self = .inProgress
+            case .pullRequestOpened: self = .inReview
+            case .pullRequestClosed: self = .waitingForDeploy
             }
         }
     }
@@ -70,8 +70,8 @@ extension YoutrackRequest: RequestModel {
 
 extension YoutrackRequest {
     static func githubWebhookRequest(_ from: GithubWebhookRequest,
-                                     _ headers: Headers? = nil) -> Either<GithubWebhookResponse, YoutrackRequest> {
-        guard let (command, title) = YoutrackRequest.commandAndTitle(from) else {
+                                     _ headers: Headers?) -> Either<GithubWebhookResponse, YoutrackRequest> {
+        guard let (command, title) = YoutrackRequest.commandAndTitle(from, headers) else {
             return .left(GithubWebhookResponse())
         }
         do {
@@ -125,8 +125,8 @@ extension YoutrackRequest {
         return GithubWebhookResponse(value: value)
     }
     
-    private static func commandAndTitle(_ request: GithubWebhookRequest) -> (Command, String)? {
-        guard let (githubWebhookType, title) = request.type else { return nil }
+    private static func commandAndTitle(_ request: GithubWebhookRequest, _ headers: Headers?) -> (Command, String)? {
+        guard let (githubWebhookType, title) = request.type(headers: headers) else { return nil }
         return (Command(githubWebhookType), title)
     }
     

@@ -33,6 +33,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		110E8C9321C3A97C000C899A /* Github.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110E8C9221C3A97C000C899A /* Github.swift */; };
+		110E8C9421C3A97C000C899A /* Github.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110E8C9221C3A97C000C899A /* Github.swift */; };
 		1118F52921B29EE5009BD9EB /* APIConnectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52821B29EE5009BD9EB /* APIConnectTests.swift */; };
 		1118F52B21B2C3F2009BD9EB /* IOTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F52A21B2C3F2009BD9EB /* IOTests.swift */; };
 		1118F53421B561DD009BD9EB /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1118F53321B561DD009BD9EB /* Either.swift */; };
@@ -4490,6 +4492,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		110E8C9221C3A97C000C899A /* Github.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Github.swift; sourceTree = "<group>"; };
 		1118F52821B29EE5009BD9EB /* APIConnectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConnectTests.swift; sourceTree = "<group>"; };
 		1118F52A21B2C3F2009BD9EB /* IOTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOTests.swift; sourceTree = "<group>"; };
 		1118F53321B561DD009BD9EB /* Either.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
@@ -6058,6 +6061,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_18 /* CircleCi.swift */,
+				110E8C9221C3A97C000C899A /* Github.swift */,
 				11FF8F0921B5830000EB68DC /* GithubWebhook.swift */,
 				OBJ_19 /* Slack.swift */,
 			);
@@ -10332,6 +10336,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				110E8C9321C3A97C000C899A /* Github.swift in Sources */,
 				OBJ_741 /* APIConnect.swift in Sources */,
 				OBJ_742 /* IO.swift in Sources */,
 				OBJ_743 /* Model.swift in Sources */,
@@ -10356,6 +10361,7 @@
 			files = (
 				11FF8F1121B5855200EB68DC /* GithubWebhook.swift in Sources */,
 				OBJ_860 /* CircleCi.swift in Sources */,
+				110E8C9421C3A97C000C899A /* Github.swift in Sources */,
 				OBJ_861 /* Slack.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

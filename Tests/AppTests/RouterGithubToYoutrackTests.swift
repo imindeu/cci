@@ -67,12 +67,14 @@ class RouterGithubToYoutrackTests: XCTestCase {
         let request = GithubWebhookRequest(action: nil,
                                            pullRequest: nil,
                                            ref: "test 4DM-1000",
-                                           refType: GithubWebhookType.branch.rawValue)
+                                           refType: GithubWebhookType.branchCreated.rawValue)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
                                                 [GithubWebhookRequest.signatureHeaderName:
-                                                    "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
+                                                    "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369",
+                                                 GithubWebhookRequest.eventHeaderName:
+                                                    "create"])
             .wait()
         XCTAssertEqual(Environment.env["test.com"], "test.com")
         XCTAssertEqual(response, GithubWebhookResponse(value: "command=4DM%20iOS%20state%20In%20Progress"))
@@ -82,12 +84,14 @@ class RouterGithubToYoutrackTests: XCTestCase {
         let request = GithubWebhookRequest(action: nil,
                                            pullRequest: nil,
                                            ref: "test",
-                                           refType: GithubWebhookType.branch.rawValue)
+                                           refType: GithubWebhookType.branchCreated.rawValue)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",
                                                 [GithubWebhookRequest.signatureHeaderName:
-                                                    "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
+                                                    "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369",
+                                                 GithubWebhookRequest.eventHeaderName:
+                                                    "create"])
             .wait()
         XCTAssertNil(Environment.env["test.com"])
         XCTAssertEqual(response, GithubWebhookResponse(value: YoutrackError.noIssue.localizedDescription))

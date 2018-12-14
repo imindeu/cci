@@ -22,24 +22,32 @@ extension GithubWebhookError: LocalizedError {
     }
 }
 
-enum GithubWebhookType: String {
-    case branch
-    case opened
-    case closed
+enum GithubWebhookType: String, Equatable {
+    case branchCreated
+    case pullRequestOpened
+    case pullRequestClosed
+}
+
+enum GithubWebhookEventType: String {
+    case create = "create"
+    case pullRequest = "pull_request"
 }
 
 extension GithubWebhookRequest {
     static var signatureHeaderName: String { return "X-Hub-Signature" }
     static var eventHeaderName: String { return "X-GitHub-Event" }
     
-    var type: (GithubWebhookType, String)? {
-        switch (action, pullRequest?.title, ref, refType) {
-        case let (GithubWebhookType.closed.rawValue, .some(title), _, _):
-            return (.closed, title)
-        case let (GithubWebhookType.opened.rawValue, .some(title), _, _):
-            return (.opened, title)
-        case let (_, _, .some(title), GithubWebhookType.branch.rawValue):
-            return (.branch, title)
+    func type(headers: Headers?) -> (GithubWebhookType, String)? {
+        let event = headers?.get(GithubWebhookRequest.eventHeaderName).flatMap(GithubWebhookEventType.init)
+        let pullRequestType = action.flatMap(GithubWebhookType.init)
+        let branchType = refType.flatMap(GithubWebhookType.init)
+        switch (event, pullRequestType, pullRequest?.title, ref, branchType) {
+        case let (.some(.pullRequest), .some(.pullRequestClosed), .some(title), _, _):
+            return (.pullRequestClosed, title)
+        case let (.some(.pullRequest), .some(.pullRequestOpened), .some(title), _, _):
+            return (.pullRequestOpened, title)
+        case let (.some(.create), _, _, .some(title), .some(.branchCreated)):
+            return (.branchCreated, title)
         default:
             return nil
         }

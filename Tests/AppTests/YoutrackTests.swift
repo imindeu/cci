@@ -39,42 +39,52 @@ class YoutrackTests: XCTestCase {
     
     func testGithubWebhookRequest() {
         let title = "test \(issues.joined(separator: ", "))"
-        
+        let branchHeaders = [GithubWebhookRequest.eventHeaderName: "create"]
+        let pullRequestHeaders = [GithubWebhookRequest.eventHeaderName: "pull_request"]
+
         let branchRequest = GithubWebhookRequest(action: nil,
                                                  pullRequest: nil,
                                                  ref: title,
-                                                 refType: GithubWebhookType.branch.rawValue)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(branchRequest).right,
+                                                 refType: GithubWebhookType.branchCreated.rawValue)
+        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(branchRequest, branchHeaders).right,
                        YoutrackRequest(
                         data: issues.map { YoutrackRequest.RequestData(issue: $0, command: .inProgress) }))
         
-        let openedRequest = GithubWebhookRequest(action: GithubWebhookType.opened.rawValue,
+        let openedRequest = GithubWebhookRequest(action: GithubWebhookType.pullRequestOpened.rawValue,
                                                  pullRequest: GithubWebhookRequest.PullRequest(title: title),
                                                  ref: nil,
                                                  refType: nil)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(openedRequest).right,
+        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(openedRequest, pullRequestHeaders).right,
                        YoutrackRequest(data: issues.map { YoutrackRequest.RequestData(issue: $0, command: .inReview) }))
         
-        let closedRequest = GithubWebhookRequest(action: GithubWebhookType.closed.rawValue,
+        let closedRequest = GithubWebhookRequest(action: GithubWebhookType.pullRequestClosed.rawValue,
                                                  pullRequest: GithubWebhookRequest.PullRequest(title: title),
                                                  ref: nil,
                                                  refType: nil)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(closedRequest).right,
+        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(closedRequest, pullRequestHeaders).right,
                        YoutrackRequest(
                         data: issues.map { YoutrackRequest.RequestData(issue: $0, command: .waitingForDeploy) }))
         
         let emptyRequest = GithubWebhookRequest(action: nil,
                                                 pullRequest: nil,
                                                 ref: "test",
-                                                refType: GithubWebhookType.branch.rawValue)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(emptyRequest).right,
+                                                refType: GithubWebhookType.branchCreated.rawValue)
+        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(emptyRequest, branchHeaders).right,
                        YoutrackRequest(data: []))
 
         let wrongRequest = GithubWebhookRequest(action: nil,
                                                 pullRequest: nil,
                                                 ref: nil,
                                                 refType: nil)
-        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(wrongRequest).left,
+        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(wrongRequest, branchHeaders).left,
+                       GithubWebhookResponse())
+        
+        // empty header
+        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(branchRequest, nil).left,
+                       GithubWebhookResponse())
+        
+        // wrong header
+        XCTAssertEqual(YoutrackRequest.githubWebhookRequest(branchRequest, pullRequestHeaders).left,
                        GithubWebhookResponse())
 
     }
