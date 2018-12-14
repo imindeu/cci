@@ -22,6 +22,7 @@ extension CircleCiTests {
     ("testDeployJob", testDeployJob),
     ("testSlackRequest", testSlackRequest),
     ("testApiWithSlack", testApiWithSlack),
+    ("testApiWithSlackMessage", testApiWithSlackMessage),
     ("testResponseToSlack", testResponseToSlack)
   ]
 }
@@ -39,11 +40,12 @@ extension EitherTests {
   ]
 }
 
-extension GithubWebhookTests {
-  static var allTests: [(String, (GithubWebhookTests) -> () throws -> Void)] = [
+extension GithubTests {
+  static var allTests: [(String, (GithubTests) -> () throws -> Void)] = [
     ("testVerify", testVerify),
     ("testCheck", testCheck),
-    ("testCheckFailure", testCheckFailure)
+    ("testCheckFailure", testCheckFailure),
+    ("testType", testType)
   ]
 }
 
@@ -59,6 +61,7 @@ extension RouterGithubToYoutrackTests {
     ("testCheckConfigsFail", testCheckConfigsFail),
     ("testCheckConfigs", testCheckConfigs),
     ("testFullRun", testFullRun),
+    ("testNoRegexRun", testNoRegexRun),
     ("testEmptyRun", testEmptyRun)
   ]
 }
@@ -81,10 +84,10 @@ extension SlackTests {
 
 extension YoutrackTests {
   static var allTests: [(String, (YoutrackTests) -> () throws -> Void)] = [
-    ("testGithubWebhookRequest", testGithubWebhookRequest),
-    ("testApiWithGithubWebhook", testApiWithGithubWebhook),
-    ("testApiWithGithubWebhookFailure", testApiWithGithubWebhookFailure),
-    ("testResponseToGithubWebhook", testResponseToGithubWebhook)
+    ("testGithubRequest", testGithubRequest),
+    ("testApiWithGithub", testApiWithGithub),
+    ("testApiWithGithubFailure", testApiWithGithubFailure),
+    ("testResponseToGithub", testResponseToGithub)
   ]
 }
 
@@ -92,7 +95,7 @@ XCTMain([
   testCase(APIConnectTests.allTests),
   testCase(CircleCiTests.allTests),
   testCase(EitherTests.allTests),
-  testCase(GithubWebhookTests.allTests),
+  testCase(GithubTests.allTests),
   testCase(IOTests.allTests),
   testCase(RouterGithubToYoutrackTests.allTests),
   testCase(RouterSlackToCircleCiTests.allTests),

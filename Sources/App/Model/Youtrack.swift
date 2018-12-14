@@ -40,7 +40,7 @@ enum Youtrack {
             case inReview = "4DM%20iOS%20state%20In%20Review"
             case waitingForDeploy = "4DM%20iOS%20state%20Waiting%20for%20deploy"
             
-            init(_ githubWebhookType: GithubWebhook.RequestType) {
+            init(_ githubWebhookType: Github.RequestType) {
                 switch githubWebhookType {
                 case .branchCreated: self = .inProgress
                 case .pullRequestOpened: self = .inReview
@@ -90,10 +90,10 @@ private typealias Response = Youtrack.Response
 private typealias ResponseContainer = Youtrack.ResponseContainer
 
 extension Youtrack {
-    static func githubWebhookRequest(_ from: GithubWebhook.Request,
-                                     _ headers: Headers?) -> Either<GithubWebhook.Response, Youtrack.Request> {
+    static func githubWebhookRequest(_ from: Github.Payload,
+                                     _ headers: Headers?) -> Either<Github.PayloadResponse, Youtrack.Request> {
         guard let (command, title) = Youtrack.commandAndTitle(from, headers) else {
-            return .left(GithubWebhook.Response())
+            return .left(Github.PayloadResponse())
         }
         do {
             let regex = try NSRegularExpression(pattern: "4DM-[0-9]+")
@@ -102,51 +102,51 @@ extension Youtrack {
                 .map { RequestData(issue: $0, command: command) }
             return .right(Request(data: datas))
         } catch {
-            return .left(GithubWebhook.Response(value: error.localizedDescription))
+            return .left(Github.PayloadResponse(value: error.localizedDescription))
         }
     }
     
-    static func apiWithGithubWebhook(_ context: Context)
-        -> (Either<GithubWebhook.Response, Youtrack.Request>)
-        -> EitherIO<GithubWebhook.Response, [Youtrack.ResponseContainer]> {
-            let instantResponse: (GithubWebhook.Response)
-                -> EitherIO<GithubWebhook.Response, [ResponseContainer]> = {
+    static func apiWithGithub(_ context: Context)
+        -> (Either<Github.PayloadResponse, Youtrack.Request>)
+        -> EitherIO<Github.PayloadResponse, [Youtrack.ResponseContainer]> {
+            let instantResponse: (Github.PayloadResponse)
+                -> EitherIO<Github.PayloadResponse, [ResponseContainer]> = {
                 pure(.left($0), context)
             }
             return {
                 return $0.either(instantResponse) {
-                    request -> EitherIO<GithubWebhook.Response, [ResponseContainer]> in
+                    request -> EitherIO<Github.PayloadResponse, [ResponseContainer]> in
                     
                     guard let token = Environment.get(Config.youtrackToken) else {
-                        return instantResponse(GithubWebhook.Response(error: Youtrack.Error.missingToken))
+                        return instantResponse(Github.PayloadResponse(error: Youtrack.Error.missingToken))
                     }
                     guard let string = Environment.get(Config.youtrackURL),
                         let url = URL(string: string),
                         let host = url.host else {
-                            return instantResponse(GithubWebhook.Response(error: Youtrack.Error.badURL))
+                            return instantResponse(Github.PayloadResponse(error: Youtrack.Error.badURL))
                     }
                     return request.data
                         .map(Youtrack.fetch(context, url, host, token))
                         .flatten(on: context)
-                        .map { results -> Either<GithubWebhook.Response, [ResponseContainer]> in
-                            let initial: Either<GithubWebhook.Response, [ResponseContainer]> = .right([])
+                        .map { results -> Either<Github.PayloadResponse, [ResponseContainer]> in
+                            let initial: Either<Github.PayloadResponse, [ResponseContainer]> = .right([])
                             return results.reduce(initial, Youtrack.flatten)
                         }
                 }
             }
     }
     
-    static func responseToGithubWebhook(_ from: [Youtrack.ResponseContainer]) -> GithubWebhook.Response {
+    static func responseToGithub(_ from: [Youtrack.ResponseContainer]) -> Github.PayloadResponse {
         let value: String
         if from.isEmpty {
             value = Youtrack.Error.noIssue.localizedDescription
         } else {
             value = from.compactMap { $0.response.value }.joined(separator: "\n")
         }
-        return GithubWebhook.Response(value: value)
+        return Github.PayloadResponse(value: value)
     }
     
-    private static func commandAndTitle(_ request: GithubWebhook.Request, _ headers: Headers?) -> (Command, String)? {
+    private static func commandAndTitle(_ request: Github.Payload, _ headers: Headers?) -> (Command, String)? {
         guard let (githubWebhookType, title) = request.type(headers: headers) else { return nil }
         return (Command(githubWebhookType), title)
     }
@@ -160,7 +160,7 @@ extension Youtrack {
                               _ host: String,
                               _ token: String)
         -> (RequestData)
-        -> EitherIO<GithubWebhook.Response, ResponseContainer> {
+        -> EitherIO<Github.PayloadResponse, ResponseContainer> {
             
         return { requestData in
             var httpRequest = HTTPRequest()
@@ -174,7 +174,7 @@ extension Youtrack {
                 ("Authorization", "Bearer \(token)")
             ])
             return Environment.api(host, url.port)(context, httpRequest)
-                .map { response -> Either<GithubWebhook.Response, ResponseContainer> in
+                .map { response -> Either<Github.PayloadResponse, ResponseContainer> in
                     guard let responseData = response.body.data else {
                         let youtrackResponse = Response(value: "issue: \(requestData.issue)")
                         return .right(ResponseContainer(response: youtrackResponse,
@@ -185,27 +185,27 @@ extension Youtrack {
                 }
                 .catchMap {
                     return .left(
-                        GithubWebhook.Response(
+                        Github.PayloadResponse(
                             value: "issue: \(requestData.issue): " +
                                 "\(Youtrack.Error.underlying($0).localizedDescription)"))
                 }
         }
     }
 
-    private static func flatten(_ lhs: Either<GithubWebhook.Response, [ResponseContainer]>,
-                                _ rhs: Either<GithubWebhook.Response, ResponseContainer>)
-        -> Either<GithubWebhook.Response, [ResponseContainer]> {
+    private static func flatten(_ lhs: Either<Github.PayloadResponse, [ResponseContainer]>,
+                                _ rhs: Either<Github.PayloadResponse, ResponseContainer>)
+        -> Either<Github.PayloadResponse, [ResponseContainer]> {
             
         switch (lhs, rhs) {
         case let (.left(lresult), .left(lnext)):
             let value = (lresult.value ?? "") + "\n" + (lnext.value ?? "" )
-            return .left(GithubWebhook.Response(value: value))
+            return .left(Github.PayloadResponse(value: value))
         case let (.left(lresult), .right):
-            return .left(GithubWebhook.Response(value: lresult.value))
+            return .left(Github.PayloadResponse(value: lresult.value))
         case let (.right(rresults), .right(rnext)):
             return .right(rresults + [rnext])
         case let (.right, .left(lnext)):
-            return .left(GithubWebhook.Response(value: lnext.value))
+            return .left(Github.PayloadResponse(value: lnext.value))
         }
     }
 }

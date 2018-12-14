@@ -8,29 +8,29 @@
 import APIConnect
 import APIModels
 
-typealias GithubToYoutrack = APIConnect<GithubWebhook.Request, Youtrack.Request, Environment>
+typealias GithubToYoutrack = APIConnect<Github.Payload, Youtrack.Request, Environment>
 
-extension APIConnect where From == GithubWebhook.Request {
-    init(request: @escaping (_ from: GithubWebhook.Request, _ headers: Headers?) -> Either<GithubWebhook.Response, To>,
+extension APIConnect where From == Github.Payload {
+    init(request: @escaping (_ from: Github.Payload, _ headers: Headers?) -> Either<Github.PayloadResponse, To>,
          toAPI: @escaping (_ context: Context)
-            -> (Either<GithubWebhook.Response, To>)
-            -> EitherIO<GithubWebhook.Response, To.ResponseModel>,
-         response: @escaping (_ with: To.ResponseModel) -> GithubWebhook.Response) {
-        self.init(check: GithubWebhook.check,
+            -> (Either<Github.PayloadResponse, To>)
+            -> EitherIO<Github.PayloadResponse, To.ResponseModel>,
+         response: @escaping (_ with: To.ResponseModel) -> Github.PayloadResponse) {
+        self.init(check: Github.check,
                   request: request,
                   toAPI: toAPI,
                   response: response)
     }
 }
 
-extension APIConnect where From == GithubWebhook.Request, To == Youtrack.Request {
-    static func run(_ from: GithubWebhook.Request,
+extension APIConnect where From == Github.Payload, To == Youtrack.Request {
+    static func run(_ from: Github.Payload,
                     _ context: Context,
                     _ payload: String?,
-                    _ headers: Headers?) -> IO<GithubWebhook.Response?> {
+                    _ headers: Headers?) -> IO<Github.PayloadResponse?> {
         return GithubToYoutrack(request: Youtrack.githubWebhookRequest,
-                                toAPI: Youtrack.apiWithGithubWebhook,
-                                response: Youtrack.responseToGithubWebhook)
+                                toAPI: Youtrack.apiWithGithub,
+                                response: Youtrack.responseToGithub)
             .run(from, context, payload, headers)
     }
 }

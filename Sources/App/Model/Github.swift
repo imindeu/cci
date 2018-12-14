@@ -10,27 +10,27 @@ import APIModels
 import Foundation
 import Crypto
 
-private typealias Response = GithubWebhook.Response
-private typealias Request = GithubWebhook.Request
-private typealias Event = GithubWebhook.Event
-private typealias RefType = GithubWebhook.RefType
-private typealias Action = GithubWebhook.Action
+private typealias Response = Github.PayloadResponse
+private typealias Payload = Github.Payload
+private typealias Event = Github.Event
+private typealias RefType = Github.RefType
+private typealias Action = Github.Action
 
-extension GithubWebhook {
+extension Github {
     static var signatureHeaderName: String { return "X-Hub-Signature" }
     static var eventHeaderName: String { return "X-GitHub-Event" }
 }
-extension Request: RequestModel {
-    public typealias ResponseModel = GithubWebhook.Response
+extension Payload: RequestModel {
+    public typealias ResponseModel = Github.PayloadResponse
     
     public enum Config: String, Configuration {
         case githubSecret
     }
 }
 
-extension Request {
-    func type(headers: Headers?) -> (GithubWebhook.RequestType, String)? {
-        let event = headers?.get(GithubWebhook.eventHeaderName).flatMap(Event.init)
+extension Payload {
+    func type(headers: Headers?) -> (Github.RequestType, String)? {
+        let event = headers?.get(Github.eventHeaderName).flatMap(Event.init)
         
         switch (event, action, pullRequest?.title, ref, refType) {
         case let (.some(.pullRequest), .some(.closed), .some(title), _, _):
@@ -45,8 +45,8 @@ extension Request {
     }
 }
 
-public extension GithubWebhook {
-    public struct Response: Equatable, Codable {
+public extension Github {
+    public struct PayloadResponse: Equatable, Codable {
         public let value: String?
         
         public init(value: String? = nil) {
@@ -76,7 +76,7 @@ public extension GithubWebhook {
 
 }
 
-extension GithubWebhook {
+extension Github {
     static func verify(payload: String?, secret: String?, signature: String?) -> Bool {
         guard let payload = payload,
             let secret = secret,
@@ -87,14 +87,14 @@ extension GithubWebhook {
         return signature == "sha1=\(digest.hexEncodedString())"
     }
     
-    static func check(_ from: GithubWebhook.Request,
+    static func check(_ from: Github.Payload,
                       _ payload: String?,
-                      _ headers: Headers?) -> GithubWebhook.Response? {
+                      _ headers: Headers?) -> Github.PayloadResponse? {
         
-        let secret = Environment.get(Request.Config.githubSecret)
-        let signature = headers?.get(GithubWebhook.signatureHeaderName)
+        let secret = Environment.get(Payload.Config.githubSecret)
+        let signature = headers?.get(Github.signatureHeaderName)
         return verify(payload: payload, secret: secret, signature: signature)
             ? nil
-            : Response(error: GithubWebhook.Error.signature)
+            : PayloadResponse(error: Github.Error.signature)
     }
 }

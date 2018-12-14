@@ -13,18 +13,18 @@ import Crypto
 
 @testable import App
 
-class GithubWebhookTests: XCTestCase {
+class GithubTests: XCTestCase {
     
     func testVerify() throws {
         let signature = "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"
-        XCTAssertTrue(GithubWebhook.verify(payload: "y", secret: "x", signature: signature))
-        XCTAssertFalse(GithubWebhook.verify(payload: "x", secret: "x", signature: signature))
+        XCTAssertTrue(Github.verify(payload: "y", secret: "x", signature: signature))
+        XCTAssertFalse(Github.verify(payload: "x", secret: "x", signature: signature))
     }
     
     func testCheck() {
-        Environment.env[GithubWebhook.Request.Config.githubSecret.rawValue] = "x"
-        let headers = [GithubWebhook.signatureHeaderName: "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"]
-        let response = GithubWebhook.check(GithubWebhook.Request(action: nil,
+        Environment.env[Github.Payload.Config.githubSecret.rawValue] = "x"
+        let headers = [Github.signatureHeaderName: "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"]
+        let response = Github.check(Github.Payload(action: nil,
                                                                  pullRequest: nil,
                                                                  ref: nil,
                                                                  refType: nil),
@@ -34,33 +34,33 @@ class GithubWebhookTests: XCTestCase {
     }
     
     func testCheckFailure() {
-        Environment.env[GithubWebhook.Request.Config.githubSecret.rawValue] = "y"
+        Environment.env[Github.Payload.Config.githubSecret.rawValue] = "y"
         let headers = ["HTTP_X_HUB_SIGNATURE": "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"]
-        let response = GithubWebhook.check(GithubWebhook.Request(action: nil,
+        let response = Github.check(Github.Payload(action: nil,
                                                                  pullRequest: nil,
                                                                  ref: nil,
                                                                  refType: nil),
                                            "y",
                                            headers)
-        XCTAssertEqual(response, GithubWebhook.Response(error: GithubWebhook.Error.signature))
+        XCTAssertEqual(response, Github.PayloadResponse(error: Github.Error.signature))
     }
     
     func testType() {
         let title = "test 4DM-2001, 4DM-2002"
-        let branchHeaders = [GithubWebhook.eventHeaderName: "create"]
-        let pullRequestHeaders = [GithubWebhook.eventHeaderName: "pull_request"]
+        let branchHeaders = [Github.eventHeaderName: "create"]
+        let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
         
-        let branchRequest = GithubWebhook.Request(action: nil,
+        let branchRequest = Github.Payload(action: nil,
                                                   pullRequest: nil,
                                                   ref: title,
-                                                  refType: GithubWebhook.RefType.branch)
+                                                  refType: Github.RefType.branch)
         let branchType = branchRequest.type(headers: branchHeaders)
         XCTAssertNotNil(branchType)
         XCTAssertEqual(branchType?.0, .branchCreated)
         XCTAssertEqual(branchType?.1, title)
         
-        let openedRequest = GithubWebhook.Request(action: GithubWebhook.Action.opened,
-                                                  pullRequest: GithubWebhook.PullRequest(title: title),
+        let openedRequest = Github.Payload(action: Github.Action.opened,
+                                                  pullRequest: Github.PullRequest(title: title),
                                                   ref: nil,
                                                   refType: nil)
         let openedType = openedRequest.type(headers: pullRequestHeaders)
@@ -68,8 +68,8 @@ class GithubWebhookTests: XCTestCase {
         XCTAssertEqual(openedType?.0, .pullRequestOpened)
         XCTAssertEqual(openedType?.1, title)
         
-        let closedRequest = GithubWebhook.Request(action: GithubWebhook.Action.closed,
-                                                  pullRequest: GithubWebhook.PullRequest(title: title),
+        let closedRequest = Github.Payload(action: Github.Action.closed,
+                                                  pullRequest: Github.PullRequest(title: title),
                                                   ref: nil,
                                                   refType: nil)
         let closedType = closedRequest.type(headers: pullRequestHeaders)
@@ -77,7 +77,7 @@ class GithubWebhookTests: XCTestCase {
         XCTAssertEqual(closedType?.0, .pullRequestClosed)
         XCTAssertEqual(closedType?.1, title)
         
-        let wrongRequest = GithubWebhook.Request(action: nil,
+        let wrongRequest = Github.Payload(action: nil,
                                                  pullRequest: nil,
                                                  ref: nil,
                                                  refType: nil)
