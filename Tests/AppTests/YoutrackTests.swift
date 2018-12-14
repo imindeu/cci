@@ -41,7 +41,11 @@ class YoutrackTests: XCTestCase {
         let title = "test \(issues.joined(separator: ", "))"
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
-        
+        let pullRequest = Github.PullRequest(id: 0,
+                                             title: title,
+                                             head: Github.Branch(ref: "feature"),
+                                             base: Github.Branch(ref: "dev"))
+
         let branchRequest = Github.Payload(action: nil,
                                            pullRequest: nil,
                                            ref: title,
@@ -51,7 +55,7 @@ class YoutrackTests: XCTestCase {
                         data: issues.map { Youtrack.Request.RequestData(issue: $0, command: .inProgress) }))
         
         let openedRequest = Github.Payload(action: Github.Action.opened,
-                                           pullRequest: Github.PullRequest(title: title),
+                                           pullRequest: pullRequest,
                                            ref: nil,
                                            refType: nil)
         XCTAssertEqual(Youtrack.githubWebhookRequest(openedRequest, pullRequestHeaders).right,
@@ -60,7 +64,7 @@ class YoutrackTests: XCTestCase {
                        }))
         
         let closedRequest = Github.Payload(action: Github.Action.closed,
-                                           pullRequest: Github.PullRequest(title: title),
+                                           pullRequest: pullRequest,
                                            ref: nil,
                                            refType: nil)
         XCTAssertEqual(Youtrack.githubWebhookRequest(closedRequest, pullRequestHeaders).right,

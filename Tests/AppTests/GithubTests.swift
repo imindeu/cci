@@ -49,6 +49,10 @@ class GithubTests: XCTestCase {
         let title = "test 4DM-2001, 4DM-2002"
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
+        let pullRequest = Github.PullRequest(id: 0,
+                                             title: title,
+                                             head: Github.Branch(ref: "feature"),
+                                             base: Github.Branch(ref: "dev"))
         
         let branchRequest = Github.Payload(action: nil,
                                            pullRequest: nil,
@@ -60,7 +64,7 @@ class GithubTests: XCTestCase {
         XCTAssertEqual(branchType?.1, title)
         
         let openedRequest = Github.Payload(action: Github.Action.opened,
-                                           pullRequest: Github.PullRequest(title: title),
+                                           pullRequest: pullRequest,
                                            ref: nil,
                                            refType: nil)
         let openedType = openedRequest.type(headers: pullRequestHeaders)
@@ -69,7 +73,7 @@ class GithubTests: XCTestCase {
         XCTAssertEqual(openedType?.1, title)
         
         let closedRequest = Github.Payload(action: Github.Action.closed,
-                                           pullRequest: Github.PullRequest(title: title),
+                                           pullRequest: pullRequest,
                                            ref: nil,
                                            refType: nil)
         let closedType = closedRequest.type(headers: pullRequestHeaders)

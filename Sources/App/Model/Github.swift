@@ -19,6 +19,12 @@ private typealias Action = Github.Action
 extension Github {
     static var signatureHeaderName: String { return "X-Hub-Signature" }
     static var eventHeaderName: String { return "X-GitHub-Event" }
+    
+    static var waitingForReviewLabel: Label { return Label(name: "waiting for review") }
+    
+    static var devBranch: Branch { return Branch(ref: "dev") }
+    static var masterBranch: Branch { return Branch(ref: "master") }
+    static var releaseBranch: Branch { return Branch(ref: "release") }
 }
 extension Payload: RequestModel {
     public typealias ResponseModel = Github.PayloadResponse
@@ -58,7 +64,7 @@ public extension Github {
         }
     }
     
-    public enum RequestType: String, Equatable {
+    public enum RequestType {
         case branchCreated
         case pullRequestOpened
         case pullRequestClosed
