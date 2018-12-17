@@ -203,7 +203,7 @@ extension Github {
         switch type {
         case .pullRequestLabeled:
             guard let installationId = from.installation?.id,
-                let comments = from.pullRequest?.links.comments,
+                let comments = from.pullRequest?.links.comments.href,
                 let url = URL(string: comments) else {
                 return defaultResponse
             }

@@ -50,7 +50,7 @@ class GithubTests: XCTestCase {
                                              head: Github.Branch(ref: "feature"),
                                              base: Github.Branch(ref: "dev"),
                                              label: Github.waitingForReviewLabel,
-                                             links: Github.Links(comments: ""))
+                                             links: Github.Links(comments: Github.Link(href: "")))
         
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
@@ -133,7 +133,7 @@ class GithubTests: XCTestCase {
                                              base: Github.masterBranch,
                                              label: Github.waitingForReviewLabel,
                                              requestedReviewers: [reviewer],
-                                             links: Github.Links(comments: commentLink))
+                                             links: Github.Links(comments: Github.Link(href: commentLink)))
         
         let response = Github.githubRequest(Github.Payload(action: .labeled,
                                                            pullRequest: pullRequest,
@@ -159,7 +159,7 @@ class GithubTests: XCTestCase {
                                              base: Github.masterBranch,
                                              label: Github.waitingForReviewLabel,
                                              requestedReviewers: [],
-                                             links: Github.Links(comments: commentLink))
+                                             links: Github.Links(comments: Github.Link(href: commentLink)))
         
         let response = Github.githubRequest(Github.Payload(action: .labeled,
                                                            pullRequest: pullRequest,

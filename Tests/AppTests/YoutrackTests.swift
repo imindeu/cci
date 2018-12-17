@@ -45,7 +45,7 @@ class YoutrackTests: XCTestCase {
                                              title: title,
                                              head: Github.Branch(ref: "feature"),
                                              base: Github.Branch(ref: "dev"),
-                                             links: Github.Links(comments: ""))
+                                             links: Github.Links(comments: Github.Link(href: "")))
 
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)

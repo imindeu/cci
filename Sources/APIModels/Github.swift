@@ -105,11 +105,19 @@ public enum Github {
             self.body = body
         }
     }
+    
+    public struct Link: Equatable, Codable {
+        public let href: String
+        
+        public init(href: String) {
+            self.href = href
+        }
+    }
 
     public struct Links: Equatable, Codable {
-        public let comments: String
+        public let comments: Link
         
-        public init(comments: String) {
+        public init(comments: Link) {
             self.comments = comments
         }
     }
