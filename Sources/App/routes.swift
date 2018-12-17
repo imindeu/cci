@@ -10,7 +10,21 @@ public func routes(_ router: Router) throws {
     router.post(Github.Payload.self, at: "githubWebhook", use: { req, payload in
         return req.http.body.consumeData(max: .max, on: req)
             .map { String(data: $0, encoding: .utf8) }
-            .flatMap { GithubToYoutrack.run(payload, req, $0, req.http.headers) }
+            .flatMap { body -> IO<Github.PayloadResponse> in
+                return [GithubToYoutrack.run(payload, req, body, req.http.headers),
+                        GithubToGithub.run(payload, req, body, req.http.headers)]
+                    .flatten(on: req)
+                    .map { results in
+                        return results
+                            .compactMap(id)
+                            .reduce(Github.PayloadResponse()) { next, result in
+                                guard let value = next.value else {
+                                    return result
+                                }
+                                return Github.PayloadResponse(value: (result.value ?? "") + "\n\(value)")
+                            }
+                    }
+            }
     })
 }
 

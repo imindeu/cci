@@ -11,13 +11,14 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/vapor/vapor.git", from: "3.1.0"),
         .package(url: "https://github.com/vapor/http.git", from: "3.1.6"),
+        .package(url: "https://github.com/vapor/jwt.git", from: "3.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.11.0"),
     ],
     targets: [
         .target(name: "APIConnect", dependencies: ["HTTP"]),
         .testTarget(name: "APIConnectTests", dependencies: ["APIConnect"]),
         .target(name: "APIModels", dependencies: []),
-        .target(name: "App", dependencies: ["APIConnect", "APIModels", "Vapor"]),
+        .target(name: "App", dependencies: ["APIConnect", "APIModels", "Vapor", "JWT"]),
         .testTarget(name: "AppTests", dependencies: ["App"]),
         .target(name: "Run", dependencies: ["App"]),
     ]

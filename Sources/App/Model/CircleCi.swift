@@ -321,14 +321,12 @@ extension CircleCi {
                             ("Content-Type", "application/json")
                         ])
                         return Environment.api("circleci.com", nil)(context, request)
-                            .map { response -> Either<Slack.Response, BuildResponse> in
-                                let decode: (Data) throws -> CircleCi.Response = { data in
-                                    return try JSONDecoder().decode(CircleCi.Response.self, from: data)
-                                }
-                                guard let deployResponse = try response.body.data.map(decode) else {
+                            .decode(CircleCi.Response.self)
+                            .map { response in
+                                guard let response = response else {
                                     throw CircleCi.Error.decode
                                 }
-                                return .right(BuildResponse(response: deployResponse, job: job))
+                                return .right(BuildResponse(response: response, job: job))
                             }
                             .catchMap {
                                 return .left(Slack.Response.error(CircleCi.Error.underlying($0),

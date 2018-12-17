@@ -19,6 +19,8 @@ class RouterGithubToYoutrackTests: XCTestCase {
         super.setUp()
         Environment.env = [
             Github.Payload.Config.githubSecret.rawValue: "x",
+            Github.APIRequest.Config.githubPrivateKey.rawValue: "",
+            Github.APIRequest.Config.githubAppId.rawValue: "1234",
             Youtrack.Request.Config.youtrackToken.rawValue: Youtrack.Request.Config.youtrackToken.rawValue,
             Youtrack.Request.Config.youtrackURL.rawValue: "https://test.com/youtrack/rest"
         ]
@@ -64,9 +66,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
     }
     
     func testFullRun() throws {
-        let request = Github.Payload(action: nil,
-                                     pullRequest: nil,
-                                     ref: "test 4DM-1000",
+        let request = Github.Payload(ref: "test 4DM-1000",
                                      refType: Github.RefType.branch)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
@@ -81,9 +81,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
     }
     
     func testNoRegexRun() throws {
-        let request = Github.Payload(action: nil,
-                                     pullRequest: nil,
-                                     ref: "test",
+        let request = Github.Payload(ref: "test",
                                      refType: Github.RefType.branch)
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
@@ -98,10 +96,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
     }
     
     func testEmptyRun() throws {
-        let request = Github.Payload(action: nil,
-                                     pullRequest: nil,
-                                     ref: nil,
-                                     refType: nil)
+        let request = Github.Payload()
         let response = try GithubToYoutrack.run(request,
                                                 MultiThreadedEventLoopGroup(numberOfThreads: 1),
                                                 "y",

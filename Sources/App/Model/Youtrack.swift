@@ -40,11 +40,12 @@ enum Youtrack {
             case inReview = "4DM%20iOS%20state%20In%20Review"
             case waitingForDeploy = "4DM%20iOS%20state%20Waiting%20for%20deploy"
             
-            init(_ githubWebhookType: Github.RequestType) {
+            init?(_ githubWebhookType: Github.RequestType) {
                 switch githubWebhookType {
                 case .branchCreated: self = .inProgress
                 case .pullRequestOpened: self = .inReview
                 case .pullRequestClosed: self = .waitingForDeploy
+                case .pullRequestLabeled: return nil
                 }
             }
         }
@@ -90,8 +91,8 @@ private typealias Response = Youtrack.Response
 private typealias ResponseContainer = Youtrack.ResponseContainer
 
 extension Youtrack {
-    static func githubWebhookRequest(_ from: Github.Payload,
-                                     _ headers: Headers?) -> Either<Github.PayloadResponse, Youtrack.Request> {
+    static func githubRequest(_ from: Github.Payload,
+                              _ headers: Headers?) -> Either<Github.PayloadResponse, Youtrack.Request> {
         guard let (command, title) = Youtrack.commandAndTitle(from, headers) else {
             return .left(Github.PayloadResponse())
         }
@@ -147,8 +148,9 @@ extension Youtrack {
     }
     
     private static func commandAndTitle(_ request: Github.Payload, _ headers: Headers?) -> (Command, String)? {
-        guard let (githubWebhookType, title) = request.type(headers: headers) else { return nil }
-        return (Command(githubWebhookType), title)
+        guard let (githubWebhookType, title) = request.type(headers: headers),
+            let command = Command(githubWebhookType) else { return nil }
+        return (command, title)
     }
     
     private static func path(base: String, issue: String, command: Command) -> String {
@@ -174,13 +176,9 @@ extension Youtrack {
                 ("Authorization", "Bearer \(token)")
             ])
             return Environment.api(host, url.port)(context, httpRequest)
-                .map { response -> Either<Github.PayloadResponse, ResponseContainer> in
-                    guard let responseData = response.body.data else {
-                        let youtrackResponse = Response(value: "issue: \(requestData.issue)")
-                        return .right(ResponseContainer(response: youtrackResponse,
-                                                        data: requestData))
-                    }
-                    let youtrackResponse = try JSONDecoder().decode(Response.self, from: responseData)
+                .decode(Response.self)
+                .map { response in
+                    let youtrackResponse = response ?? Response(value: "issue: \(requestData.issue)")
                     return .right(ResponseContainer(response: youtrackResponse, data: requestData))
                 }
                 .catchMap {

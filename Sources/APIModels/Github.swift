@@ -11,12 +11,18 @@ public enum Github {
         public let pullRequest: PullRequest?
         public let ref: String?
         public let refType: RefType?
+        public let installation: Installation?
         
-        public init(action: Action?, pullRequest: PullRequest?, ref: String?, refType: RefType?) {
+        public init(action: Action? = nil,
+                    pullRequest: PullRequest? = nil,
+                    ref: String? = nil,
+                    refType: RefType? = nil,
+                    installation: Installation? = nil) {
             self.action = action
             self.pullRequest = pullRequest
             self.ref = ref
             self.refType = refType
+            self.installation = installation
         }
         
         enum CodingKeys: String, CodingKey {
@@ -24,6 +30,7 @@ public enum Github {
             case pullRequest = "pull_request"
             case ref
             case refType = "ref_type"
+            case installation
         }
     }
     
@@ -32,14 +39,46 @@ public enum Github {
         public let title: String
         public let head: Branch
         public let base: Branch
-        public let labels: [Label]
-        
-        public init(id: Int, title: String, head: Branch, base: Branch, labels: [Label] = []) {
+        public let label: Label?
+        public let assignees: [User]
+        public let requestedReviewers: [User]
+        public let links: Links
+
+        public init(id: Int,
+                    title: String,
+                    head: Branch,
+                    base: Branch,
+                    label: Label? = nil,
+                    assignees: [User] = [],
+                    requestedReviewers: [User] = [],
+                    links: Links) {
             self.id = id
             self.title = title
             self.head = head
             self.base = base
-            self.labels = labels
+            self.label = label
+            self.assignees = assignees
+            self.requestedReviewers = requestedReviewers
+            self.links = links
+        }
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case title
+            case head
+            case base
+            case label
+            case assignees
+            case requestedReviewers = "requested_reviewers"
+            case links = "_links"
+        }
+    }
+    
+    public struct User: Equatable, Codable {
+        public let login: String
+        
+        public init(login: String) {
+            self.login = login
         }
     }
     
@@ -59,6 +98,30 @@ public enum Github {
         }
     }
     
+    public struct IssueComment: Equatable, Codable {
+        public let body: String
+        
+        public init(body: String) {
+            self.body = body
+        }
+    }
+
+    public struct Links: Equatable, Codable {
+        public let comments: String
+        
+        public init(comments: String) {
+            self.comments = comments
+        }
+    }
+    
+    public struct Installation: Equatable, Codable {
+        public let id: Int
+        
+        public init(id: Int) {
+            self.id = id
+        }
+    }
+
     public enum Action: String, Equatable, Codable {
         case opened
         case closed

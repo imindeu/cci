@@ -9,12 +9,12 @@ import Foundation
 
 public protocol Configuration: RawRepresentable & CaseIterable where RawValue == String {}
 
-public protocol APIConnectEnvironment {
-    static var env: [String: String] { get }
-}
-
 public protocol Headers {
     func get(_ name: String) -> String?
+}
+
+public protocol APIConnectEnvironment {
+    static var env: [String: String] { get }
 }
 
 extension APIConnectEnvironment {
