@@ -23,9 +23,11 @@ run-swift:
 	  circleCiProjects=${CIRCLECIPROJECTS}; \
 	  circleCiCompany=${CIRCLECICOMPANY}; \
 	  githubSecret=${GITHUBSECRET}; \
+	  githubAppId=${GITHUBAPPID}; \
+	  githubPrivateKey=${GITHUBPRIVATEKEY}; \
 	  youtrackURL=${YOUTRACKURL}; \
 	  youtrackToken=${YOUTRACKTOKEN}; \
-	  export port slackToken circleCiToken circleCiVcs circleCiProjects circleCiCompany githubSecret youtrackURL youtrackToken; \
+	  export port slackToken circleCiToken circleCiVcs circleCiProjects circleCiCompany githubSecret githubAppId githubPrivateKey youtrackURL youtrackToken; \
 	  .build/release/Run
 
 
@@ -56,6 +58,8 @@ run-app:
 	  -e circleCiProjects=${CIRCLECIPROJECTS} \
 	  -e circleCiCompany=${CIRCLECICOMPANY}  \
 	  -e githubSecret=${GITHUBSECRET} \
+	  -e githubAppId=${GITHUBAPPID} \
+	  -e githubPrivateKey=${GITHUBPRIVATEKEY} \
 	  -e youtrackURL=${YOUTRACKURL} \
 	  -e youtrackToken=${YOUTRACKTOKEN} \
 	  --restart unless-stopped cci
@@ -99,6 +103,8 @@ deploy:
 	  CIRCLECIPROJECTS=${CIRCLECIPROJECTS} \
 	  CIRCLECICOMPANY=${CIRCLECICOMPANY} \
 	  GITHUBSECRET=${GITHUBSECRET} \
+	  GITHUBAPPID=${GITHUBAPPID} \
+	  GITHUBPRIVATEKEY=${GITHUBPRIVATEKEY} \
 	  YOUTRACKURL=${YOUTRACKURL} \
 	  YOUTRACKTOKEN=${YOUTRACKTOKEN} \
 	  SUDO=${SUDO}"
