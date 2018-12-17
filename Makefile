@@ -24,7 +24,7 @@ run-swift:
 	  circleCiCompany=${CIRCLECICOMPANY}; \
 	  githubSecret=${GITHUBSECRET}; \
 	  githubAppId=${GITHUBAPPID}; \
-	  githubPrivateKey=${GITHUBPRIVATEKEY}; \
+	  githubPrivateKey="${GITHUBPRIVATEKEY}"; \
 	  youtrackURL=${YOUTRACKURL}; \
 	  youtrackToken=${YOUTRACKTOKEN}; \
 	  export port slackToken circleCiToken circleCiVcs circleCiProjects circleCiCompany githubSecret githubAppId githubPrivateKey youtrackURL youtrackToken; \
@@ -59,7 +59,7 @@ run-app:
 	  -e circleCiCompany=${CIRCLECICOMPANY}  \
 	  -e githubSecret=${GITHUBSECRET} \
 	  -e githubAppId=${GITHUBAPPID} \
-	  -e githubPrivateKey=${GITHUBPRIVATEKEY} \
+	  -e githubPrivateKey="${GITHUBPRIVATEKEY}" \
 	  -e youtrackURL=${YOUTRACKURL} \
 	  -e youtrackToken=${YOUTRACKTOKEN} \
 	  --restart unless-stopped cci
@@ -104,7 +104,7 @@ deploy:
 	  CIRCLECICOMPANY=${CIRCLECICOMPANY} \
 	  GITHUBSECRET=${GITHUBSECRET} \
 	  GITHUBAPPID=${GITHUBAPPID} \
-	  GITHUBPRIVATEKEY=${GITHUBPRIVATEKEY} \
+	  GITHUBPRIVATEKEY="${GITHUBPRIVATEKEY}" \
 	  YOUTRACKURL=${YOUTRACKURL} \
 	  YOUTRACKTOKEN=${YOUTRACKTOKEN} \
 	  SUDO=${SUDO}"
