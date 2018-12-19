@@ -1,6 +1,9 @@
 # create tests for linux
 
 imports = @testable import APIConnectTests; @testable import AppTests
+hasImages = $$(${SUDO} docker images | awk '{print $1}' | grep "cci" | wc -l)
+hasRunningContainer = $$(${SUDO} docker ps | awk '{print $2}' | grep "cci" | wc -l)
+hasContainer = $$(${SUDO} docker ps -a | awk '{print $2}' | grep "cci" | wc -l)
 
 linux-main:
 	sourcery \
@@ -36,8 +39,13 @@ run-swift:
 build-image: 
 	docker build -t cci .
 
+ifeq ($(hasImages),1)
 remove-image: 
 	${SUDO} docker rmi cci
+else
+remove-image:
+	@echo "No image, skipping remove"
+endif
 
 export-image:
 	docker save -o cci-image cci
@@ -65,11 +73,21 @@ run-app:
 	  --restart unless-stopped cci
 	@echo "Started."
 
+ifeq ($(hasRunningContainer),1)
 stop-app:
 	${SUDO} docker stop cci
+else
+stop-app:
+	@echo "No running container, skipping stop"
+endif
 
+ifeq ($(hasContainer),1)
 remove-app:
 	${SUDO} docker rm cci
+else
+remove-app:
+	@echo "No container, skipping remove"
+endif
 
 connect:
 	${SUDO} docker exec -it cci /bin/bash
@@ -112,6 +130,8 @@ deploy:
 
 build-export-scp-deploy: build-image export-image scp deploy
 
+build-export-restart: build-image export-image restart
+
 .PHONY: sourcery \
         build-swift \
 	run-swift \
@@ -129,4 +149,5 @@ build-export-scp-deploy: build-image export-image scp deploy
 	restart \
 	scp \
 	deploy \
-	build-export-scp-deploy
+	build-export-scp-deploy \
+	build-export-restart
