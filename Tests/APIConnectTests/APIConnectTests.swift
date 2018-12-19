@@ -126,18 +126,18 @@ extension APIConnect where From == DelayedFromRequest, To == ToRequest {
 // MARK: - Tests
 class APIConnectTests: XCTestCase {
     
+    private let context = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+
     func testCheckFail() throws {
         let response = try MockDelayedAPIConnect
-            .run(DelayedFromRequest(data: "x", responseURL: nil),
-                 MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            .run(DelayedFromRequest(data: "x", responseURL: nil), context)
             .wait()
         XCTAssertEqual(response, FromResponse(data: "", error: true))
     }
     
     func testNormalRun() throws {
         let response = try MockAPIConnect
-            .run(FromRequest(data: "x"),
-                 MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            .run(FromRequest(data: "x"), context)
             .wait()
         XCTAssertEqual(response, FromResponse(data: "x", error: false))
     }
@@ -145,8 +145,7 @@ class APIConnectTests: XCTestCase {
     func testDelayedRun() throws {
         Environment.env["fromAPI"] = nil
         let response = try MockDelayedAPIConnect
-            .run(DelayedFromRequest(data: "x", responseURL: URL(string: "https://test.com")),
-                 MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            .run(DelayedFromRequest(data: "x", responseURL: URL(string: "https://test.com")), context)
             .wait()
         XCTAssertNil(response)
         XCTAssertEqual(Environment.env["fromAPI"], "x")
@@ -156,8 +155,7 @@ class APIConnectTests: XCTestCase {
         Environment.env["fromAPI"] = nil
         DelayedFromRequest.check = { _, _, _ in nil }
         let response = try MockDelayedAPIConnect
-            .run(DelayedFromRequest(data: "x", responseURL: nil),
-                 MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            .run(DelayedFromRequest(data: "x", responseURL: nil), context)
             .wait()
         XCTAssertEqual(response, FromResponse(data: "x", error: false))
         XCTAssertNil(Environment.env["fromAPI"])

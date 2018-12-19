@@ -70,7 +70,7 @@ extension APIConnect where From == Github.Payload, To == Github.APIRequest {
         return GithubToGithub(request: Github.githubRequest,
                               toAPI: Github.apiWithGithub,
                               response: Github.responseToGithub)
-            .run(from, context, nil, nil)
+            .run(from, context, payload, headers)
     }
 }
 
@@ -81,5 +81,18 @@ extension APIConnect where From == Slack.Request, To == CircleCi.JobRequest {
                                toAPI: CircleCi.apiWithSlack,
                                response: CircleCi.responseToSlack)
             .run(from, context, nil, nil)
+    }
+}
+
+extension Github {
+    public static func webhook(_ from: Github.Payload,
+                               _ context: Context,
+                               _ headers: Headers?) -> (String?) -> IO<Github.PayloadResponse?> {
+        return {
+            [GithubToYoutrack.run(from, context, $0, headers),
+             GithubToGithub.run(from, context, $0, headers)]
+                .flatten(on: context)
+                .map(Github.reduce)
+        }
     }
 }

@@ -19,8 +19,6 @@ class RouterGithubToYoutrackTests: XCTestCase {
         super.setUp()
         Environment.env = [
             Github.Payload.Config.githubSecret.rawValue: "x",
-            Github.APIRequest.Config.githubPrivateKey.rawValue: "",
-            Github.APIRequest.Config.githubAppId.rawValue: "1234",
             Youtrack.Request.Config.youtrackToken.rawValue: Youtrack.Request.Config.youtrackToken.rawValue,
             Youtrack.Request.Config.youtrackURL.rawValue: "https://test.com/youtrack/rest"
         ]
@@ -69,7 +67,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
         let request = Github.Payload(ref: "test 4DM-1000",
                                      refType: Github.RefType.branch)
         let response = try GithubToYoutrack.run(request,
-                                                MultiThreadedEventLoopGroup(numberOfThreads: 1),
+                                                context(),
                                                 "y",
                                                 [Github.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369",
@@ -84,7 +82,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
         let request = Github.Payload(ref: "test",
                                      refType: Github.RefType.branch)
         let response = try GithubToYoutrack.run(request,
-                                                MultiThreadedEventLoopGroup(numberOfThreads: 1),
+                                                context(),
                                                 "y",
                                                 [Github.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369",
@@ -98,7 +96,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
     func testEmptyRun() throws {
         let request = Github.Payload()
         let response = try GithubToYoutrack.run(request,
-                                                MultiThreadedEventLoopGroup(numberOfThreads: 1),
+                                                context(),
                                                 "y",
                                                 [Github.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])

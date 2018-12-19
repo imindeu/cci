@@ -102,7 +102,7 @@ class RouterSlackToCircleCiTests: XCTestCase {
                                     responseUrlString: "https://slack.com",
                                     triggerId: "")
         let response = try SlackToCircleCi.run(request,
-                                               MultiThreadedEventLoopGroup(numberOfThreads: 1))
+                                               context())
             .wait()
         XCTAssertEqual(Environment.env["slack.com"], "slack.com")
         XCTAssertEqual(Environment.env["circleci.com"], "circleci.com")

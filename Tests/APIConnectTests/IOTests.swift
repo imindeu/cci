@@ -10,20 +10,20 @@ import XCTest
 import NIO
 
 class IOTests: XCTestCase {
+    
+    private let context = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
     func testPure() throws {
-        XCTAssertEqual(try pure(1, MultiThreadedEventLoopGroup(numberOfThreads: 1)).wait(), 1)
+        XCTAssertEqual(try pure(1, context).wait(), 1)
     }
     
     func testMapEither() throws {
         XCTAssertEqual(
-            try pure(Either<Int, String>.left(1),
-                     MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            try pure(Either<Int, String>.left(1), context)
                 .mapEither(String.init, id).wait(),
             "1")
         XCTAssertEqual(
-            try pure(Either<Int, String>.right("x"),
-                     MultiThreadedEventLoopGroup(numberOfThreads: 1))
+            try pure(Either<Int, String>.right("x"), context)
                 .mapEither(String.init, id).wait(),
             "x")
     }

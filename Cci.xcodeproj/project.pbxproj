@@ -34,6 +34,7 @@
 
 /* Begin PBXBuildFile section */
 		110E8E9921C7AD09000C899A /* APIConnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110E8E9721C7AC76000C899A /* APIConnect.swift */; };
+		114FBC7321CA731C00E43560 /* RouterGithubToGithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */; };
 		OBJ_1013 /* CircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* CircleCiTests.swift */; };
 		OBJ_1014 /* GithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* GithubTests.swift */; };
 		OBJ_1015 /* RouterGithubToYoutrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* RouterGithubToYoutrackTests.swift */; };
@@ -4694,6 +4695,7 @@
 
 /* Begin PBXFileReference section */
 		110E8E9721C7AC76000C899A /* APIConnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConnect.swift; sourceTree = "<group>"; };
+		114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterGithubToGithubTests.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIModels::Product" /* APIModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIModels.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -6718,8 +6720,8 @@
 		OBJ_32 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_33 /* AppTests */,
 				OBJ_41 /* APIConnectTests */,
+				OBJ_33 /* AppTests */,
 			);
 			name = Tests;
 			sourceTree = SOURCE_ROOT;
@@ -6753,6 +6755,7 @@
 			children = (
 				OBJ_34 /* CircleCiTests.swift */,
 				OBJ_35 /* GithubTests.swift */,
+				114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */,
 				OBJ_36 /* RouterGithubToYoutrackTests.swift */,
 				OBJ_37 /* RouterSlackToCircleCiTests.swift */,
 				OBJ_38 /* SlackTests.swift */,
@@ -7325,7 +7328,7 @@
 			path = Container;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -7334,7 +7337,6 @@
 				OBJ_45 /* Dependencies */,
 				OBJ_714 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_504 /* Environment */ = {
@@ -9687,7 +9689,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_714 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -9793,6 +9795,7 @@
 				OBJ_1017 /* SlackTests.swift in Sources */,
 				OBJ_1018 /* Templates.swift in Sources */,
 				OBJ_1019 /* YoutrackTests.swift in Sources */,
+				114FBC7321CA731C00E43560 /* RouterGithubToGithubTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

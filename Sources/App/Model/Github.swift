@@ -129,14 +129,13 @@ extension Github {
     
     // MARK: webhook
     static func verify(payload: String?, secret: String?, signature: String?) -> Bool {
-        return true
-//        guard let payload = payload,
-//            let secret = secret,
-//            let signature = signature,
-//            let digest = try? HMAC(algorithm: .sha1).authenticate(payload, key: secret) else {
-//            return false
-//        }
-//        return signature == "sha1=\(digest.hexEncodedString())"
+        guard let payload = payload,
+            let secret = secret,
+            let signature = signature,
+            let digest = try? HMAC(algorithm: .sha1).authenticate(payload, key: secret) else {
+            return false
+        }
+        return signature == "sha1=\(digest.hexEncodedString())"
     }
     
     static func check(_ from: Github.Payload,
@@ -237,6 +236,18 @@ extension Github {
     
     static func responseToGithub(_ from: Github.APIResponse) -> Github.PayloadResponse {
         return PayloadResponse()
+    }
+    
+    static func reduce(_ responses: [Github.PayloadResponse?]) -> Github.PayloadResponse? {
+        return responses
+            .reduce(Github.PayloadResponse()) { next, result in
+                guard let value = next.value else {
+                    return result ?? Github.PayloadResponse()
+                }
+                let response = (result?.value.map { $0 + "\n" } ?? "") + value
+                return Github.PayloadResponse(value: response)
+            }
+
     }
     
     static func reviewText(_ reviewers: [User]) -> String {

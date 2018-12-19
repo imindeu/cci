@@ -1,0 +1,120 @@
+//
+//  RouterGithubToGithubTests.swift
+//  AppTests
+//
+//  Created by Peter Geszten-Kovacs on 2018. 12. 19..
+//
+import APIConnect
+import APIModels
+
+import XCTest
+import HTTP
+
+@testable import App
+
+class RouterGithubToGithubTests: XCTestCase {
+
+    override func setUp() {
+        super.setUp()
+        Environment.env = [
+            Github.Payload.Config.githubSecret.rawValue: "x",
+            Github.APIRequest.Config.githubAppId.rawValue: "0101",
+            Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
+        ]
+        Environment.api = { hostname, _ in
+            return { context, request in
+                Environment.env[hostname] = hostname
+                if hostname == "test.com" {
+                    let command = request.url.query ?? ""
+                    let response = HTTPResponse(
+                        status: .ok,
+                        version: HTTPVersion(major: 1, minor: 1),
+                        headers: HTTPHeaders([]),
+                        body: "{\"value\": \"\(command)\"}")
+                    return pure(response, context)
+                } else if hostname == "api.github.com" {
+                    let response = HTTPResponse(
+                        status: .ok,
+                        version: HTTPVersion(major: 1, minor: 1),
+                        headers: HTTPHeaders([]),
+                        body: "{\"token\":\"x\"}")
+                    return pure(response, context)
+                } else {
+                    XCTFail("Shouldn't have an api for anything else")
+                    return Environment.emptyApi(context)
+                }
+            }
+        }
+    }
+    
+    func testCheckConfigsFail() {
+        Environment.env = [:]
+        do {
+            try GithubToGithub.checkConfigs()
+        } catch {
+            if case let GithubToGithub.APIConnectError.combined(errors) = error {
+                XCTAssertEqual(errors.count, 2,
+                               "We haven't found all the errors (no conflict)")
+            } else {
+                XCTFail("Wrong error \(error)")
+            }
+        }
+    }
+    
+    func testCheckConfigs() {
+        do {
+            try GithubToGithub.checkConfigs()
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
+    func testFullRun() throws {
+        let commentLink = "http://test.com/comment/link"
+        let pullRequest = Github.PullRequest(id: 1,
+                                             title: "x",
+                                             head: Github.devBranch,
+                                             base: Github.masterBranch,
+                                             label: Github.waitingForReviewLabel,
+                                             requestedReviewers: [Github.User(login: "z")],
+                                             links: Github.Links(comments: Github.Link(href: commentLink)))
+        let request = Github.Payload(action: .labeled,
+                                     pullRequest: pullRequest,
+                                     installation: Github.Installation(id: 1))
+        let response = try GithubToGithub.run(request,
+                                              context(),
+                                              "y",
+                                              [Github.eventHeaderName: "pull_request",
+                                               Github.signatureHeaderName:
+                                                "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
+            .wait()
+        XCTAssertEqual(Environment.env["api.github.com"], "api.github.com")
+        XCTAssertEqual(Environment.env["test.com"], "test.com")
+        XCTAssertEqual(response, Github.PayloadResponse())
+    }
+
+    func testEmptyRun() throws {
+        let commentLink = "http://test.com/comment/link"
+        let pullRequest = Github.PullRequest(id: 1,
+                                             title: "x",
+                                             head: Github.devBranch,
+                                             base: Github.masterBranch,
+                                             label: Github.waitingForReviewLabel,
+                                             assignees: [],
+                                             requestedReviewers: [],
+                                             links: Github.Links(comments: Github.Link(href: commentLink)))
+        let request = Github.Payload(action: .labeled,
+                                     pullRequest: pullRequest,
+                                     installation: Github.Installation(id: 1))
+        let response = try GithubToYoutrack.run(request,
+                                                context(),
+                                                "y",
+                                                [Github.eventHeaderName: "pull_request",
+                                                 Github.signatureHeaderName:
+                                                    "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
+            .wait()
+        XCTAssertNil(Environment.env["test.com"])
+        XCTAssertEqual(response, Github.PayloadResponse())
+    }
+
+}
