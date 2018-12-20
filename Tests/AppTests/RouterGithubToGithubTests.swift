@@ -75,11 +75,11 @@ class RouterGithubToGithubTests: XCTestCase {
                                              title: "x",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
-                                             label: Github.waitingForReviewLabel,
                                              requestedReviewers: [Github.User(login: "z")],
                                              links: Github.Links(comments: Github.Link(href: commentLink)))
         let request = Github.Payload(action: .labeled,
                                      pullRequest: pullRequest,
+                                     label: Github.waitingForReviewLabel,
                                      installation: Github.Installation(id: 1))
         let response = try GithubToGithub.run(request,
                                               context(),
@@ -99,12 +99,12 @@ class RouterGithubToGithubTests: XCTestCase {
                                              title: "x",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
-                                             label: Github.waitingForReviewLabel,
                                              assignees: [],
                                              requestedReviewers: [],
                                              links: Github.Links(comments: Github.Link(href: commentLink)))
         let request = Github.Payload(action: .labeled,
                                      pullRequest: pullRequest,
+                                     label: Github.waitingForReviewLabel,
                                      installation: Github.Installation(id: 1))
         let response = try GithubToYoutrack.run(request,
                                                 context(),

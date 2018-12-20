@@ -1,9 +1,37 @@
-# create tests for linux
+# checks
+ifndef slackToken
+  $(error slackToken is not set)
+endif
+ifndef circleCiTokens
+  $(error circleCiTokens is not set)
+endif
+ifndef circleCiVcs
+  $(error circleCiVcs is not set)
+endif
+ifndef circleCiProjects
+  $(error circleCiProjects is not set)
+endif
+ifndef circleCiCompany
+  $(error circleCiCompany is not set)
+endif
+ifndef youtrackToken
+  $(error youtrackToken is not set)
+endif
+ifndef youtrackURL
+  $(error youtrackURL is not set)
+endif
+ifndef githubSecret
+  $(error githubSecret is not set)
+endif
+ifndef githubAppId
+  $(error githubAppId is not set)
+endif
+ifndef githubPrivateKey
+  $(error githubPrivateKey is not set)
+endif
 
+# create tests for linux
 imports = @testable import APIConnectTests; @testable import AppTests
-hasImages = $$(${SUDO} docker images | awk '{print $1}' | grep "cci" | wc -l)
-hasRunningContainer = $$(${SUDO} docker ps | awk '{print $2}' | grep "cci" | wc -l)
-hasContainer = $$(${SUDO} docker ps -a | awk '{print $2}' | grep "cci" | wc -l)
 
 linux-main:
 	sourcery \
@@ -55,6 +83,10 @@ import-image:
 
 
 # docker container
+
+hasImages = $$(${SUDO} docker images | awk '{print $1}' | grep "cci" | wc -l)
+hasRunningContainer = $$(${SUDO} docker ps | awk '{print $2}' | grep "cci" | wc -l)
+hasContainer = $$(${SUDO} docker ps -a | awk '{print $2}' | grep "cci" | wc -l)
 
 run-app:
 	@echo "Container starting..."
@@ -130,7 +162,7 @@ deploy:
 
 build-export-scp-deploy: build-image export-image scp deploy
 
-build-export-restart: build-image export-image restart
+build-local-deploy: stop-app remove-app remove-image build-image run-app
 
 .PHONY: sourcery \
         build-swift \
@@ -150,4 +182,4 @@ build-export-restart: build-image export-image restart
 	scp \
 	deploy \
 	build-export-scp-deploy \
-	build-export-restart
+	build-local-deploy

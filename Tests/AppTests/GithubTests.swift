@@ -49,9 +49,8 @@ class GithubTests: XCTestCase {
                                              title: title,
                                              head: Github.Branch(ref: "feature"),
                                              base: Github.Branch(ref: "dev"),
-                                             label: Github.waitingForReviewLabel,
                                              links: Github.Links(comments: Github.Link(href: "")))
-        
+
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
         let branchType = branchRequest.type(headers: branchHeaders)
@@ -73,7 +72,9 @@ class GithubTests: XCTestCase {
         XCTAssertEqual(closedType?.0, .pullRequestClosed)
         XCTAssertEqual(closedType?.1, title)
         
-        let labeledRequest = Github.Payload(action: .labeled, pullRequest: pullRequest)
+        let labeledRequest = Github.Payload(action: .labeled,
+                                            pullRequest: pullRequest,
+                                            label: Github.waitingForReviewLabel)
         let labeledType = labeledRequest.type(headers: pullRequestHeaders)
         XCTAssertNotNil(labeledType)
         XCTAssertEqual(labeledType?.0, .pullRequestLabeled)
@@ -131,12 +132,12 @@ class GithubTests: XCTestCase {
                                              title: "x",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
-                                             label: Github.waitingForReviewLabel,
                                              requestedReviewers: [reviewer],
                                              links: Github.Links(comments: Github.Link(href: commentLink)))
         
         let response = Github.githubRequest(Github.Payload(action: .labeled,
                                                            pullRequest: pullRequest,
+                                                           label: Github.waitingForReviewLabel,
                                                            installation: Github.Installation(id: 1)),
                                             pullRequestHeaders)
         
@@ -157,12 +158,12 @@ class GithubTests: XCTestCase {
                                              title: "x",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
-                                             label: Github.waitingForReviewLabel,
                                              requestedReviewers: [],
                                              links: Github.Links(comments: Github.Link(href: commentLink)))
         
         let response = Github.githubRequest(Github.Payload(action: .labeled,
                                                            pullRequest: pullRequest,
+                                                           label: Github.waitingForReviewLabel,
                                                            installation: Github.Installation(id: 1)),
                                             pullRequestHeaders)
         

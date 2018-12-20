@@ -93,7 +93,7 @@ extension Payload: RequestModel {
 extension Payload {
     func type(headers: Headers?) -> (Github.RequestType, String)? {
         let event = headers?.get(Github.eventHeaderName).flatMap(Event.init)
-        switch (event, action, pullRequest?.label, pullRequest?.title, ref, refType) {
+        switch (event, action, label, pullRequest?.title, ref, refType) {
             
         case let (.some(.pullRequest), .some(.closed), _, .some(title), _, _):
             return (.pullRequestClosed, title)

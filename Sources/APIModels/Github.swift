@@ -9,17 +9,20 @@ public enum Github {
     public struct Payload: Equatable, Codable {
         public let action: Action?
         public let pullRequest: PullRequest?
+        public let label: Label?
         public let ref: String?
         public let refType: RefType?
         public let installation: Installation?
         
         public init(action: Action? = nil,
                     pullRequest: PullRequest? = nil,
+                    label: Label? = nil,
                     ref: String? = nil,
                     refType: RefType? = nil,
                     installation: Installation? = nil) {
             self.action = action
             self.pullRequest = pullRequest
+            self.label = label
             self.ref = ref
             self.refType = refType
             self.installation = installation
@@ -28,6 +31,7 @@ public enum Github {
         enum CodingKeys: String, CodingKey {
             case action
             case pullRequest = "pull_request"
+            case label
             case ref
             case refType = "ref_type"
             case installation
@@ -39,7 +43,6 @@ public enum Github {
         public let title: String
         public let head: Branch
         public let base: Branch
-        public let label: Label?
         public let assignees: [User]
         public let requestedReviewers: [User]
         public let links: Links
@@ -48,7 +51,6 @@ public enum Github {
                     title: String,
                     head: Branch,
                     base: Branch,
-                    label: Label? = nil,
                     assignees: [User] = [],
                     requestedReviewers: [User] = [],
                     links: Links) {
@@ -56,7 +58,6 @@ public enum Github {
             self.title = title
             self.head = head
             self.base = base
-            self.label = label
             self.assignees = assignees
             self.requestedReviewers = requestedReviewers
             self.links = links
@@ -67,7 +68,6 @@ public enum Github {
             case title
             case head
             case base
-            case label
             case assignees
             case requestedReviewers = "requested_reviewers"
             case links = "_links"
