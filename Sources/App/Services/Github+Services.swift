@@ -150,18 +150,19 @@ extension Github {
     // app
     static func jwt(date: Date = Date()) throws -> String {
         guard let appId = Environment.get(APIRequest.Config.githubAppId),
-            let privateKey = Environment.get(APIRequest.Config.githubPrivateKey) else {
+            let privateKey = Environment.get(APIRequest.Config.githubPrivateKey)?
+                .replacingOccurrences(of: "\\n", with: "\n") else {
             throw Error.jwt
         }
         struct PayloadData: JWTPayload {
-            let iat: Date
-            let exp: ExpirationClaim
+            let iat: Int
+            let exp: Int
             let iss: String
             
-            func verify(using signer: JWTSigner) throws { try exp.verifyNotExpired() }
+            func verify(using signer: JWTSigner) throws {  }
         }
-        let iat = date
-        let exp = ExpirationClaim(value: iat.addingTimeInterval(10 * 60))
+        let iat = Int(date.timeIntervalSince1970)
+        let exp = Int(date.addingTimeInterval(10 * 60).timeIntervalSince1970)
         let signer = try JWTSigner.rs256(key: RSAKey.private(pem: privateKey))
         let jwt = JWT<PayloadData>(payload: PayloadData(iat: iat, exp: exp, iss: appId))
         let data = try jwt.sign(using: signer)
@@ -173,11 +174,13 @@ extension Github {
         let api = Environment.api("api.github.com", nil)
         var request = HTTPRequest()
         request.method = .POST
-        request.urlString = "app/installations/\(installationId)/access_tokens"
+        request.urlString = "/app/installations/\(installationId)/access_tokens"
         request.headers = HTTPHeaders([
             ("Authorization", "Bearer \(jwtToken)"),
-            ("Accept", "application/vnd.github.machine-man-preview+json")
+            ("Accept", "application/vnd.github.machine-man-preview+json"),
+            ("User-Agent", "cci-imind")
         ])
+        request.body = HTTPBody(string: "")
         struct TokenResponse: Decodable {
             let token: String
         }
@@ -249,10 +252,10 @@ extension Github {
     }
     
     static func reviewText(_ reviewers: [User]) -> String {
-        let current = reviewers
+        let list = reviewers
             .map { user in return "@\(user.login)" }
             .joined(separator: ", ")
-        return "\(current) please review this pr"
+        return "\(list) please review this pr"
     }
 
     private static func fetch(_ context: Context) -> (APIRequest)
@@ -271,7 +274,8 @@ extension Github {
                     let api = Environment.api(host, request.url.port)
                     let headers = HTTPHeaders([
                         ("Authorization", "token \(accessToken)"),
-                        ("Accept", "application/vnd.github.machine-man-preview+json")
+                        ("Accept", "application/vnd.github.machine-man-preview+json"),
+                        ("User-Agent", "cci-imind")
                     ])
                     let httpRequest = HTTPRequest(method: .POST,
                                                   url: request.url.path,
