@@ -50,8 +50,6 @@ public extension Github {
         public let body: Data
     }
     
-    public struct APIResponse: Equatable, Codable {}
-
     public enum RequestType {
         case branchCreated
         case pullRequestOpened
@@ -128,23 +126,23 @@ extension APIRequest: RequestModel {
 extension Github {
     
     // MARK: webhook
-    static func verify(payload: String?, secret: String?, signature: String?) -> Bool {
-        guard let payload = payload,
+    static func verify(body: String?, secret: String?, signature: String?) -> Bool {
+        guard let body = body,
             let secret = secret,
             let signature = signature,
-            let digest = try? HMAC(algorithm: .sha1).authenticate(payload, key: secret) else {
+            let digest = try? HMAC(algorithm: .sha1).authenticate(body, key: secret) else {
             return false
         }
         return signature == "sha1=\(digest.hexEncodedString())"
     }
     
     static func check(_ from: Github.Payload,
-                      _ payload: String?,
+                      _ body: String?,
                       _ headers: Headers?) -> Github.PayloadResponse? {
         
         let secret = Environment.get(Payload.Config.githubSecret)
         let signature = headers?.get(Github.signatureHeaderName)
-        return verify(payload: payload, secret: secret, signature: signature)
+        return verify(body: body, secret: secret, signature: signature)
             ? nil
             : PayloadResponse(error: Github.Error.signature)
     }
@@ -235,7 +233,7 @@ extension Github {
     }
     
     static func responseToGithub(_ from: Github.APIResponse) -> Github.PayloadResponse {
-        return PayloadResponse()
+        return PayloadResponse(value: from.message.map { $0 + " (\(from.errors ?? []))" })
     }
     
     static func reduce(_ responses: [Github.PayloadResponse?]) -> Github.PayloadResponse? {
@@ -260,7 +258,7 @@ extension Github {
     private static func fetch(_ context: Context) -> (APIRequest)
         -> EitherIO<Github.PayloadResponse, Github.APIResponse> {
         
-        return { request in
+        return { request -> EitherIO<PayloadResponse, APIResponse> in
             do {
                 return accessToken(context: context,
                                    jwtToken: try jwt(),
@@ -281,7 +279,11 @@ extension Github {
                                                   headers: headers,
                                                   body: request.body)
                     return api(context, httpRequest)
-                        .flatMap { _ in return pure(.right(APIResponse()), context) }
+                        .decode(APIResponse.self)
+                        .map {
+                            let response = $0 ?? APIResponse()
+                            return Either<PayloadResponse, APIResponse>.right(response)
+                        }
                 }
             } catch {
                 return pure(.left(PayloadResponse(error: Github.Error.underlying(error))), context)

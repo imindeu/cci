@@ -19,7 +19,7 @@ extension Slack.Response: Content {}
 extension Github.Payload: Content {}
 extension Github.PayloadResponse: Content {}
 
-extension String {
+private extension String {
     init?(data: Data) {
         self.init(data: data, encoding: .utf8)
     }

@@ -10,7 +10,7 @@ import Foundation
 import HTTP
 import Core
 
-enum Youtrack {
+extension Youtrack {
     enum Error: LocalizedError {
         case decode(String)
         case missingToken
@@ -61,14 +61,6 @@ enum Youtrack {
     struct ResponseContainer: Equatable, Codable {
         let response: Youtrack.Response
         let data: Youtrack.Request.RequestData
-    }
-    
-    struct Response: Equatable, Codable {
-        let value: String?
-        
-        init (value: String? = nil) {
-            self.value = value
-        }
     }
 
 }

@@ -19,8 +19,8 @@ class GithubTests: XCTestCase {
     
     func testVerify() throws {
         let signature = "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"
-        XCTAssertTrue(Github.verify(payload: "y", secret: "x", signature: signature))
-        XCTAssertFalse(Github.verify(payload: "x", secret: "x", signature: signature))
+        XCTAssertTrue(Github.verify(body: "y", secret: "x", signature: signature))
+        XCTAssertFalse(Github.verify(body: "x", secret: "x", signature: signature))
     }
     
     func testCheck() {
@@ -191,7 +191,15 @@ class GithubTests: XCTestCase {
                         headers: HTTPHeaders([]),
                         body: "{\"token\": \"x\"}")
                     return pure(response, context)
+                } else if hostname == "test.com" {
+                    let response = HTTPResponse(
+                        status: .ok,
+                        version: HTTPVersion(major: 1, minor: 1),
+                        headers: HTTPHeaders([]),
+                        body: "{\"message\": \"y\"}")
+                    return pure(response, context)
                 } else {
+                    XCTFail("Shouldn't be more api calls")
                     return Environment.emptyApi(context)
                 }
             }
@@ -202,7 +210,7 @@ class GithubTests: XCTestCase {
                                         url: URL(string: "http://test.com/comment/link")!,
                                         body: body)
         let response = try Github.apiWithGithub(context())(.right(request)).wait()
-        XCTAssertEqual(response.right, Github.APIResponse())
+        XCTAssertEqual(response.right, Github.APIResponse(message: "y"))
         
         let wrongRequest = Github.APIRequest(installationId: 1,
                                              url: URL(string: "/comment/link")!,

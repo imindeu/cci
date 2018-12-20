@@ -15,7 +15,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
         case combined([APIConnectError])
     }
     
-    public let check: (_ from: From, _ payload: String?, _ headers: Headers?) -> From.ResponseModel?
+    public let check: (_ from: From, _ body: String?, _ headers: Headers?) -> From.ResponseModel?
     public let request: (_ from: From, _ headers: Headers?) -> Either<From.ResponseModel, To>
     public let toAPI: (_ context: Context)
         -> (Either<From.ResponseModel, To>)
@@ -27,7 +27,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
 
 public extension APIConnect {
     
-    public init(check: @escaping (_ from: From, _ payload: String?, _ headers: Headers?) -> From.ResponseModel?,
+    public init(check: @escaping (_ from: From, _ body: String?, _ headers: Headers?) -> From.ResponseModel?,
                 request: @escaping (_ from: From, _ headers: Headers?) -> Either<From.ResponseModel, To>,
                 toAPI: @escaping (_ context: Context)
                     -> (Either<From.ResponseModel, To>)
@@ -69,9 +69,9 @@ public extension APIConnect {
     
     public func run(_ from: From,
                     _ context: Context,
-                    _ payload: String?,
+                    _ body: String?,
                     _ headers: Headers?) -> IO<From.ResponseModel?> {
-        if let response = check(from, payload, headers) {
+        if let response = check(from, body, headers) {
             return pure(response, context)
         }
         return pure(request(from, headers), context)
@@ -84,7 +84,7 @@ public extension APIConnect {
 
 public extension APIConnect where From: DelayedRequestModel {
     
-    public init(check: @escaping (_ from: From, _ payload: String?, _ headers: Headers?) -> From.ResponseModel?,
+    public init(check: @escaping (_ from: From, _ body: String?, _ headers: Headers?) -> From.ResponseModel?,
                 request: @escaping (_ from: From, _ headers: Headers?) -> Either<From.ResponseModel, To>,
                 toAPI: @escaping (_ context: Context)
                     -> (Either<From.ResponseModel, To>)
@@ -106,9 +106,9 @@ public extension APIConnect where From: DelayedRequestModel {
 
     public func run(_ from: From,
                     _ context: Context,
-                    _ payload: String?,
+                    _ body: String?,
                     _ headers: Headers?) -> IO<From.ResponseModel?> {
-        if let response = check(from, payload, headers) {
+        if let response = check(from, body, headers) {
             return pure(response, context)
         }
         let run = pure(request(from, headers), context)

@@ -37,7 +37,7 @@ extension Slack.Request: DelayedRequestModel {
 }
 
 extension Slack.Request {
-    static func check(_ from: Slack.Request, _ payload: String? = nil, _ headers: Headers? = nil) -> Slack.Response? {
+    static func check(_ from: Slack.Request, _ body: String? = nil, _ headers: Headers? = nil) -> Slack.Response? {
         var errors: [Slack.Error] = []
         let token = Environment.get(Config.slackToken)
         if token == nil || from.token != token! {

@@ -52,12 +52,12 @@ extension APIConnect where From == Slack.Request {
 extension APIConnect where From == Github.Payload, To == Youtrack.Request {
     static func run(_ from: Github.Payload,
                     _ context: Context,
-                    _ payload: String?,
+                    _ body: String?,
                     _ headers: Headers?) -> IO<Github.PayloadResponse?> {
         return GithubToYoutrack(request: Youtrack.githubRequest,
                                 toAPI: Youtrack.apiWithGithub,
                                 response: Youtrack.responseToGithub)
-            .run(from, context, payload, headers)
+            .run(from, context, body, headers)
     }
 }
 
@@ -65,12 +65,12 @@ extension APIConnect where From == Github.Payload, To == Youtrack.Request {
 extension APIConnect where From == Github.Payload, To == Github.APIRequest {
     static func run(_ from: Github.Payload,
                     _ context: Context,
-                    _ payload: String?,
+                    _ body: String?,
                     _ headers: Headers?) -> IO<Github.PayloadResponse?> {
         return GithubToGithub(request: Github.githubRequest,
                               toAPI: Github.apiWithGithub,
                               response: Github.responseToGithub)
-            .run(from, context, payload, headers)
+            .run(from, context, body, headers)
     }
 }
 

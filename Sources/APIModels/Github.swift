@@ -132,9 +132,29 @@ public enum Github {
 
     public enum Action: String, Equatable, Codable {
         case opened
+        case edited
         case closed
+        case reopened
         case labeled
         case unlabeled
+        case assigned
+        case unassigned
+        case reviewRequested = "review_requested"
+        case reviewRequestRemoved = "review_request_removed"
+        case created
+        case deleted
+        case rerequested
+        case rerequestedAction = "requested_action"
+        case completed
+        case requested
+        case added
+        case removed
+        case transferred
+        case pinned
+        case unpinned
+        case milestoned
+        case demilestoned
+        // ...
     }
     
     public enum RefType: String, Equatable, Codable {
@@ -145,4 +165,38 @@ public enum Github {
         case create
         case pullRequest = "pull_request"
     }
+    
+}
+
+public extension Github {
+    
+    public enum APIErrorCode: String, Equatable, Codable {
+        case missing
+        case missingField = "missing_field"
+        case invalid
+        case alreadyExists = "already_exists"
+    }
+    
+    public struct APIError: Equatable, Codable {
+        public let resource: String?
+        public let field: String?
+        public let code: APIErrorCode?
+        
+        public init(resource: String? = nil, field: String? = nil, code: APIErrorCode? = nil) {
+            self.resource = resource
+            self.field = field
+            self.code = code
+        }
+    }
+    
+    public struct APIResponse: Equatable, Codable {
+        public let message: String?
+        public let errors: [APIError]?
+        
+        public init(message: String? = nil, errors: [APIError]? = nil) {
+            self.message = message
+            self.errors = errors
+        }
+    }
+
 }
