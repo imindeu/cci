@@ -1,33 +1,36 @@
 # checks
-ifndef slackToken
-  $(error slackToken is not set)
+ifndef PORT
+  $(error PORT is not set)
 endif
-ifndef circleCiTokens
-  $(error circleCiTokens is not set)
+ifndef SLACKTOKEN
+  $(error SLACKTOKEN is not set)
 endif
-ifndef circleCiVcs
-  $(error circleCiVcs is not set)
+ifndef CIRCLECITOKENS
+  $(error CIRCLECITOKENS is not set)
 endif
-ifndef circleCiProjects
-  $(error circleCiProjects is not set)
+ifndef CIRCLECIVCS
+  $(error CIRCLECIVCS is not set)
 endif
-ifndef circleCiCompany
-  $(error circleCiCompany is not set)
+ifndef CIRCLECIPROJECTS
+  $(error CIRCLECIPROJECTS is not set)
 endif
-ifndef youtrackToken
-  $(error youtrackToken is not set)
+ifndef CIRCLECICOMPANY
+  $(error CIRCLECICOMPANY is not set)
 endif
-ifndef youtrackURL
-  $(error youtrackURL is not set)
+ifndef YOUTRACKTOKEN
+  $(error YOUTRACKTOKEN is not set)
 endif
-ifndef githubSecret
-  $(error githubSecret is not set)
+ifndef YOUTRACKURL
+  $(error YOUTRACKURL is not set)
 endif
-ifndef githubAppId
-  $(error githubAppId is not set)
+ifndef GITHUBSECRET
+  $(error GITHUBSECRET is not set)
 endif
-ifndef githubPrivateKey
-  $(error githubPrivateKey is not set)
+ifndef GITHUBAPPID
+  $(error GITHUBAPPID is not set)
+endif
+ifndef GITHUBPRIVATEKEY
+  $(error GITHUBPRIVATEKEY is not set)
 endif
 
 # create tests for linux
@@ -65,28 +68,28 @@ run-swift:
 # docker image
 
 build-image: 
+	@echo "Building container..."
 	docker build -t cci .
+	@echo "Built."
 
-ifeq ($(hasImages),1)
+hasImage = $$(${SUDO} docker images | awk '{print $1}' | grep "cci" | wc -l | tr -d '[:space:]')
 remove-image: 
-	${SUDO} docker rmi cci
-else
-remove-image:
-	@echo "No image, skipping remove"
-endif
+	@if [ $(hasImage) -eq 1 ]; then \
+	  echo "Removing image..."; \
+	  ${SUDO} docker rmi cci; \
+	  echo "Removed."; \
+	  else echo "No image, skipping remove ($(hasImage))"; \
+	  fi
 
 export-image:
 	docker save -o cci-image cci
 
 import-image:
+	@echo "Importing image..."
 	${SUDO} docker load -i cci-image
 
 
 # docker container
-
-hasImages = $$(${SUDO} docker images | awk '{print $1}' | grep "cci" | wc -l)
-hasRunningContainer = $$(${SUDO} docker ps | awk '{print $2}' | grep "cci" | wc -l)
-hasContainer = $$(${SUDO} docker ps -a | awk '{print $2}' | grep "cci" | wc -l)
 
 run-app:
 	@echo "Container starting..."
@@ -105,21 +108,22 @@ run-app:
 	  --restart unless-stopped cci
 	@echo "Started."
 
-ifeq ($(hasRunningContainer),1)
+hasRunningContainer = $$(${SUDO} docker ps | awk '{print $2}' | grep "cci" | wc -l | tr -d '[:space:]')
 stop-app:
-	${SUDO} docker stop cci
-else
-stop-app:
-	@echo "No running container, skipping stop"
-endif
+	@if [ $(hasRunningContainer) -eq 1 ]; then \
+	  echo "Stopping container..."; \
+	  ${SUDO} docker stop cci; \
+	  echo "Stopped."; \
+	  else echo "No running container, skipping stop ($(hasRunningContainer))"; \
+	  fi
 
-ifeq ($(hasContainer),1)
+hasContainer = $$(${SUDO} docker ps -a | awk '{print $2}' | grep "cci" | wc -l | tr -d '[:space:]')
 remove-app:
-	${SUDO} docker rm cci
-else
-remove-app:
-	@echo "No container, skipping remove"
-endif
+	@if [ $(hasContainer) -eq 1 ]; then \
+	  echo "Removing container..."; \
+	  ${SUDO} docker rm cci; \
+	  echo "Removed."; \
+	  else echo "No container, skipping remove ($(hasContainer))"; fi
 
 connect:
 	${SUDO} docker exec -it cci /bin/bash
@@ -183,3 +187,4 @@ build-local-deploy: stop-app remove-app remove-image build-image run-app
 	deploy \
 	build-export-scp-deploy \
 	build-local-deploy
+

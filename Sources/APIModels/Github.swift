@@ -159,6 +159,8 @@ public enum Github {
     
     public enum RefType: String, Equatable, Codable {
         case branch
+        case tag
+        case repository
     }
     
     public enum Event: String, Equatable, Codable {
