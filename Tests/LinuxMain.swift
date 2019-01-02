@@ -22,7 +22,10 @@ extension CircleCiTests {
     ("testSlackRequest", testSlackRequest),
     ("testApiWithSlack", testApiWithSlack),
     ("testApiWithSlackMessage", testApiWithSlackMessage),
-    ("testResponseToSlack", testResponseToSlack)
+    ("testResponseToSlack", testResponseToSlack),
+    ("testGithubRequest", testGithubRequest),
+    ("testApiWithGithub", testApiWithGithub),
+    ("testResponseToGithub", testResponseToGithub)
   ]
 }
 
@@ -44,7 +47,14 @@ extension GithubTests {
     ("testVerify", testVerify),
     ("testCheck", testCheck),
     ("testCheckFailure", testCheckFailure),
-    ("testType", testType)
+    ("testType", testType),
+    ("testJwt", testJwt),
+    ("testAccessToken", testAccessToken),
+    ("testReviewText", testReviewText),
+    ("testGithubRequest", testGithubRequest),
+    ("testGithubRequestEmptyReviewer", testGithubRequestEmptyReviewer),
+    ("testApiWithGithub", testApiWithGithub),
+    ("testResponseToGithub", testResponseToGithub)
   ]
 }
 
@@ -52,6 +62,24 @@ extension IOTests {
   static var allTests: [(String, (IOTests) -> () throws -> Void)] = [
     ("testPure", testPure),
     ("testMapEither", testMapEither)
+  ]
+}
+
+extension RouterGithubToCircleCiTests {
+  static var allTests: [(String, (RouterGithubToCircleCiTests) -> () throws -> Void)] = [
+    ("testCheckConfigsFail", testCheckConfigsFail),
+    ("testCheckConfigs", testCheckConfigs),
+    ("testFullRun", testFullRun),
+    ("testEmptyRun", testEmptyRun)
+  ]
+}
+
+extension RouterGithubToGithubTests {
+  static var allTests: [(String, (RouterGithubToGithubTests) -> () throws -> Void)] = [
+    ("testCheckConfigsFail", testCheckConfigsFail),
+    ("testCheckConfigs", testCheckConfigs),
+    ("testFullRun", testFullRun),
+    ("testEmptyRun", testEmptyRun)
   ]
 }
 
@@ -96,6 +124,8 @@ XCTMain([
   testCase(EitherTests.allTests),
   testCase(GithubTests.allTests),
   testCase(IOTests.allTests),
+  testCase(RouterGithubToCircleCiTests.allTests),
+  testCase(RouterGithubToGithubTests.allTests),
   testCase(RouterGithubToYoutrackTests.allTests),
   testCase(RouterSlackToCircleCiTests.allTests),
   testCase(SlackTests.allTests),

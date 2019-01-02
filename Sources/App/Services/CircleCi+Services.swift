@@ -259,6 +259,7 @@ extension CircleCi {
         return response
     }
     
+    // MARK: Slack
     static func slackRequest(_ from: Slack.Request,
                              _ headers: Headers? = nil) -> Either<Slack.Response, JobRequest> {
         let projects: [String] = Environment.getArray(JobRequest.Config.projects)
@@ -361,6 +362,78 @@ extension CircleCi {
             fields: fields)
         return Slack.Response(responseType: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
     }
+
+    // MARK: Github
+    static func githubRequest(_ from: Github.Payload,
+                              _ headers: Headers?) -> Either<Github.PayloadResponse, CircleCi.JobRequest> {
+        let defaultResponse: Either<Github.PayloadResponse, CircleCi.JobRequest> = .left(Github.PayloadResponse())
+        guard let type = from.type(headers: headers), let repo = from.repository?.name else {
+            return defaultResponse
+        }
+        switch type {
+        case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base):
+            do {
+                var options: [String] = []
+                if [Github.masterBranch, Github.releaseBranch].contains(base) {
+                    options.append("restrict_fixme_comments:true")
+                }
+                return try CircleCiTestJob.parse(project: repo,
+                                                 parameters: [head.ref],
+                                                 options: options,
+                                                 username: "cci")
+                    .either({ _ in return defaultResponse }, { .right(JobRequest(job: $0)) })
+            } catch {
+                return defaultResponse
+            }
+        default: return defaultResponse
+        }
+    }
+    
+    static func apiWithGithub(_ context: Context)
+        -> (Either<Github.PayloadResponse, CircleCi.JobRequest>)
+        -> EitherIO<Github.PayloadResponse, CircleCi.BuildResponse> {
+            
+            let instantResponse: (Github.PayloadResponse) -> EitherIO<Github.PayloadResponse, BuildResponse> = {
+                pure(.left($0), context)
+            }
+            return {
+                return $0.either(instantResponse) { jobRequest -> EitherIO<Github.PayloadResponse, BuildResponse> in
+                    let job = jobRequest.job
+                    var request = HTTPRequest()
+                    request.method = .POST
+                    
+                    request.urlString = CircleCi.path(job.project, job.urlEncodedBranch)
+                    
+                    do {
+                        let body = try JSONEncoder().encode(["build_parameters": job.buildParameters])
+                        request.body = HTTPBody(data: body)
+                        request.headers = HTTPHeaders([
+                            ("Accept", "application/json"),
+                            ("Content-Type", "application/json")
+                        ])
+                        return Environment.api("circleci.com", nil)(context, request)
+                            .decode(CircleCi.Response.self)
+                            .map { response in
+                                guard let response = response else {
+                                    throw CircleCi.Error.decode
+                                }
+                                return .right(BuildResponse(response: response, job: job))
+                            }
+                            .catchMap {
+                                return .left(Github.PayloadResponse(error: CircleCi.Error.underlying($0)))
+                            }
+                    } catch {
+                        return instantResponse(Github.PayloadResponse(error: CircleCi.Error.underlying(error)))
+                    }
+                }
+            }
+    }
+    
+    static func responseToGithub(_ from: CircleCi.BuildResponse) -> Github.PayloadResponse {
+        return Github.PayloadResponse(value: "buildURL: \(from.response.buildURL ?? ""), "
+            + "buildNum: \(from.response.buildNum ?? -1)")
+    }
+
 }
 
 private extension Collection {

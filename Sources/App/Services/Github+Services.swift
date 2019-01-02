@@ -54,7 +54,7 @@ public extension Github {
         case branchCreated(title: String)
         case pullRequestOpened(title: String)
         case pullRequestClosed(title: String)
-        case pullRequestLabeled
+        case pullRequestLabeled(label: Label, head: Branch, base: Branch)
         
         var title: String? {
             switch self {
@@ -102,19 +102,22 @@ extension Payload: RequestModel {
 extension Payload {
     func type(headers: Headers?) -> Github.RequestType? {
         let event = headers?.get(Github.eventHeaderName).flatMap(Event.init)
-        switch (event, action, label, pullRequest?.title, ref, refType) {
+        switch (event, action, label, pullRequest?.title, pullRequest?.head, pullRequest?.base, ref, refType) {
             
-        case let (.some(.pullRequest), .some(.closed), _, .some(title), _, _):
+        case let (.some(.pullRequest), .some(.closed), _, .some(title), _, _, _, _):
             return .pullRequestClosed(title: title)
             
-        case let (.some(.pullRequest), .some(.opened), _, .some(title), _, _):
+        case let (.some(.pullRequest), .some(.opened), _, .some(title), _, _, _, _):
             return .pullRequestOpened(title: title)
-            
-        case let (.some(.create), _, _, _, .some(title), .some(.branch)):
+
+        case let (.some(.pullRequest), .some(.reopened), _, .some(title), _, _, _, _):
+            return .pullRequestOpened(title: title)
+
+        case let (.some(.create), _, _, _, _, _, .some(title), .some(.branch)):
             return .branchCreated(title: title)
             
-        case (.some(.pullRequest), .some(.labeled), .some(Github.waitingForReviewLabel), _, _, _):
-            return .pullRequestLabeled
+        case let (.some(.pullRequest), .some(.labeled), .some(label), _, .some(head), .some(base), _, _):
+            return .pullRequestLabeled(label: label, head: head, base: base)
             
         default:
             return nil
@@ -211,7 +214,7 @@ extension Github {
             return defaultResponse
         }
         switch type {
-        case .pullRequestLabeled:
+        case .pullRequestLabeled(label: waitingForReviewLabel, head: _, base: _):
             guard let installationId = from.installation?.id,
                 let comments = from.pullRequest?.links.comments.href,
                 let url = URL(string: comments) else {

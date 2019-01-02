@@ -176,6 +176,7 @@ class CircleCiTests: XCTestCase {
                                          type: type))
     }
     
+    // MARK: Slack
     func testApiWithSlack() throws {
         let api = CircleCi.apiWithSlack(context())
 
@@ -296,4 +297,89 @@ class CircleCiTests: XCTestCase {
 
     }
 
+    // MARK: Github
+    func testGithubRequest() {
+        let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
+        let devPullRequest = Github.PullRequest(id: 0,
+                                                title: "test",
+                                                head: Github.Branch(ref: branch),
+                                                base: Github.devBranch,
+                                                links: Github.Links(comments: Github.Link(href: "")))
+        let labeledDevRequest = Github.Payload(action: .labeled,
+                                               pullRequest: devPullRequest,
+                                               label: Github.waitingForReviewLabel,
+                                               repository: Github.Repository(name: project))
+        
+        let testDevRequest = CircleCi.githubRequest(labeledDevRequest, pullRequestHeaders)
+        XCTAssertEqual(testDevRequest.right?.job as? CircleCiTestJob,
+                       CircleCiTestJob(project: project,
+                                       branch: branch,
+                                       options: [],
+                                       username: "cci"))
+
+        let masterPullRequest = Github.PullRequest(id: 0,
+                                                   title: "test",
+                                                   head: Github.Branch(ref: branch),
+                                                   base: Github.masterBranch,
+                                                   links: Github.Links(comments: Github.Link(href: "")))
+        let labeledMasterRequest = Github.Payload(action: .labeled,
+                                                  pullRequest: masterPullRequest,
+                                                  label: Github.waitingForReviewLabel,
+                                                  repository: Github.Repository(name: project))
+        
+        let testMasterRequest = CircleCi.githubRequest(labeledMasterRequest, pullRequestHeaders)
+        XCTAssertEqual(testMasterRequest.right?.job as? CircleCiTestJob,
+                       CircleCiTestJob(project: project,
+                                       branch: branch,
+                                       options: ["restrict_fixme_comments:true"],
+                                       username: "cci"))
+
+        let emptyRequest = Github.Payload()
+        let testEmptyRequest = CircleCi.githubRequest(emptyRequest, nil)
+        XCTAssertEqual(testEmptyRequest.left, Github.PayloadResponse())
+
+    }
+    
+    func testApiWithGithub() throws {
+        let api = CircleCi.apiWithGithub(context())
+        
+        // passthrough
+        let passthrough: Either<Github.PayloadResponse, CircleCi.JobRequest> = .left(Github.PayloadResponse())
+        XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
+        
+        // build response
+        let job = CircleCiTestJob(project: project,
+                                  branch: branch,
+                                  options: options,
+                                  username: username)
+        let request: Either<Github.PayloadResponse, CircleCi.JobRequest> = .right(CircleCi.JobRequest(job: job))
+        let expected = CircleCi.Response(buildURL: "buildURL",
+                                         buildNum: 10)
+        let response = try api(request).wait().right
+        XCTAssertEqual(response?.job as? CircleCiTestJob, job)
+        XCTAssertEqual(response?.response, expected)
+
+    }
+    
+    func testResponseToGithub() {
+        // test
+        let testResponse = CircleCi.BuildResponse(response: CircleCi.Response(buildURL: "buildURL",
+                                                                              buildNum: 10),
+                                                  job: CircleCiTestJob(project: project,
+                                                                       branch: branch,
+                                                                       options: options,
+                                                                       username: username))
+        let testGithubResponse = CircleCi.responseToGithub(testResponse)
+        let expectedTestGithubResponse = Github.PayloadResponse(value: "buildURL: buildURL, buildNum: 10")
+        XCTAssertEqual(testGithubResponse, expectedTestGithubResponse)
+        
+        let messageResponse = CircleCi.BuildResponse(response: CircleCi.Response(message: "x"),
+                                                     job: CircleCiTestJob(project: project,
+                                                                          branch: branch,
+                                                                          options: options,
+                                                                          username: username))
+        let messageGithubResponse = CircleCi.responseToGithub(messageResponse)
+        XCTAssertEqual(messageGithubResponse, Github.PayloadResponse(value: "buildURL: , buildNum: -1"))
+    }
+    
 }

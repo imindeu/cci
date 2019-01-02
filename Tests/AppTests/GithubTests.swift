@@ -45,10 +45,11 @@ class GithubTests: XCTestCase {
         let title = "test 4DM-2001, 4DM-2002"
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
+        let featureBranch = Github.Branch(ref: "feature")
         let pullRequest = Github.PullRequest(id: 0,
                                              title: title,
-                                             head: Github.Branch(ref: "feature"),
-                                             base: Github.Branch(ref: "dev"),
+                                             head: featureBranch,
+                                             base: Github.devBranch,
                                              links: Github.Links(comments: Github.Link(href: "")))
 
         let branchRequest = Github.Payload(ref: title,
@@ -70,7 +71,9 @@ class GithubTests: XCTestCase {
                                             pullRequest: pullRequest,
                                             label: Github.waitingForReviewLabel)
         let labeledType = labeledRequest.type(headers: pullRequestHeaders)
-        XCTAssertEqual(labeledType, .pullRequestLabeled)
+        XCTAssertEqual(labeledType, .pullRequestLabeled(label: Github.waitingForReviewLabel,
+                                                        head: featureBranch,
+                                                        base: Github.devBranch))
 
         let wrongRequest = Github.Payload()
         XCTAssertNil(wrongRequest.type(headers: branchHeaders) ?? wrongRequest.type(headers: pullRequestHeaders))

@@ -38,8 +38,8 @@ class RouterSlackToCircleCiTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Environment.env = [
-            CircleCi.JobRequest.Config.tokens.rawValue: CircleCi.JobRequest.Config.tokens.rawValue,
             Slack.Request.Config.slackToken.rawValue: Slack.Request.Config.slackToken.rawValue,
+            CircleCi.JobRequest.Config.tokens.rawValue: CircleCi.JobRequest.Config.tokens.rawValue,
             CircleCi.JobRequest.Config.company.rawValue: CircleCi.JobRequest.Config.company.rawValue,
             CircleCi.JobRequest.Config.vcs.rawValue: CircleCi.JobRequest.Config.vcs.rawValue,
             CircleCi.JobRequest.Config.projects.rawValue: project,
@@ -49,8 +49,8 @@ class RouterSlackToCircleCiTests: XCTestCase {
                 Environment.env[hostname] = hostname
                 if hostname == "slack.com" {
                     self.assert(body: request.body.data)
-                }
-                if hostname == "circleci.com" {
+                    return Environment.emptyApi(context)
+                } else if hostname == "circleci.com" {
                     let response = HTTPResponse(
                         status: .ok,
                         version: HTTPVersion(major: 1, minor: 1),
@@ -58,6 +58,7 @@ class RouterSlackToCircleCiTests: XCTestCase {
                         body: "{\"build_url\":\"buildURL\",\"build_num\":10}")
                     return pure(response, context)
                 } else {
+                    XCTFail("Shouldn't have an api for anything else: \(hostname)")
                     return Environment.emptyApi(context)
                 }
             }

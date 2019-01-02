@@ -36,6 +36,7 @@
 		110E8E9921C7AD09000C899A /* APIConnect+Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110E8E9721C7AC76000C899A /* APIConnect+Services.swift */; };
 		114FBC7321CA731C00E43560 /* RouterGithubToGithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */; };
 		114FBC7521CBC08400E43560 /* Youtrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114FBC7421CBC08400E43560 /* Youtrack.swift */; };
+		1169480C21DCEFCC00590493 /* RouterGithubToCircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */; };
 		OBJ_1013 /* CircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* CircleCiTests.swift */; };
 		OBJ_1014 /* GithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* GithubTests.swift */; };
 		OBJ_1015 /* RouterGithubToYoutrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* RouterGithubToYoutrackTests.swift */; };
@@ -4698,6 +4699,7 @@
 		110E8E9721C7AC76000C899A /* APIConnect+Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIConnect+Services.swift"; sourceTree = "<group>"; };
 		114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterGithubToGithubTests.swift; sourceTree = "<group>"; };
 		114FBC7421CBC08400E43560 /* Youtrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Youtrack.swift; sourceTree = "<group>"; };
+		1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterGithubToCircleCiTests.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIModels::Product" /* APIModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIModels.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -6758,6 +6760,7 @@
 			children = (
 				OBJ_34 /* CircleCiTests.swift */,
 				OBJ_35 /* GithubTests.swift */,
+				1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */,
 				114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */,
 				OBJ_36 /* RouterGithubToYoutrackTests.swift */,
 				OBJ_37 /* RouterSlackToCircleCiTests.swift */,
@@ -9798,6 +9801,7 @@
 				OBJ_1017 /* SlackTests.swift in Sources */,
 				OBJ_1018 /* Templates.swift in Sources */,
 				OBJ_1019 /* YoutrackTests.swift in Sources */,
+				1169480C21DCEFCC00590493 /* RouterGithubToCircleCiTests.swift in Sources */,
 				114FBC7321CA731C00E43560 /* RouterGithubToGithubTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

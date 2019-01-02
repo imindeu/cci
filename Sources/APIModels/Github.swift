@@ -13,19 +13,22 @@ public enum Github {
         public let ref: String?
         public let refType: RefType?
         public let installation: Installation?
+        public let repository: Repository?
         
         public init(action: Action? = nil,
                     pullRequest: PullRequest? = nil,
                     label: Label? = nil,
                     ref: String? = nil,
                     refType: RefType? = nil,
-                    installation: Installation? = nil) {
+                    installation: Installation? = nil,
+                    repository: Repository? = nil) {
             self.action = action
             self.pullRequest = pullRequest
             self.label = label
             self.ref = ref
             self.refType = refType
             self.installation = installation
+            self.repository = repository
         }
         
         enum CodingKeys: String, CodingKey {
@@ -35,6 +38,7 @@ public enum Github {
             case ref
             case refType = "ref_type"
             case installation
+            case repository
         }
     }
     
@@ -71,6 +75,14 @@ public enum Github {
             case assignees
             case requestedReviewers = "requested_reviewers"
             case links = "_links"
+        }
+    }
+    
+    public struct Repository: Equatable, Codable {
+        public let name: String
+        
+        public init(name: String) {
+            self.name = name
         }
     }
     
@@ -166,6 +178,7 @@ public enum Github {
     public enum Event: String, Equatable, Codable {
         case create
         case pullRequest = "pull_request"
+        case status
     }
     
 }
