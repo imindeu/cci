@@ -48,7 +48,6 @@ extension GithubTests {
     ("testCheck", testCheck),
     ("testCheckFailure", testCheckFailure),
     ("testType", testType),
-    ("testJwt", testJwt),
     ("testAccessToken", testAccessToken),
     ("testReviewText", testReviewText),
     ("testGithubRequest", testGithubRequest),
