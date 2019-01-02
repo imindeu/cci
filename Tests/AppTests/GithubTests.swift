@@ -54,26 +54,22 @@ class GithubTests: XCTestCase {
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
         let branchType = branchRequest.type(headers: branchHeaders)
-        XCTAssertNotNil(branchType)
         XCTAssertEqual(branchType, .branchCreated(title: title))
         
         let openedRequest = Github.Payload(action: Github.Action.opened,
                                            pullRequest: pullRequest)
         let openedType = openedRequest.type(headers: pullRequestHeaders)
-        XCTAssertNotNil(openedType)
         XCTAssertEqual(openedType, .pullRequestOpened(title: title))
         
         let closedRequest = Github.Payload(action: Github.Action.closed,
                                            pullRequest: pullRequest)
         let closedType = closedRequest.type(headers: pullRequestHeaders)
-        XCTAssertNotNil(closedType)
         XCTAssertEqual(closedType, .pullRequestClosed(title: title))
         
         let labeledRequest = Github.Payload(action: .labeled,
                                             pullRequest: pullRequest,
                                             label: Github.waitingForReviewLabel)
         let labeledType = labeledRequest.type(headers: pullRequestHeaders)
-        XCTAssertNotNil(labeledType)
         XCTAssertEqual(labeledType, .pullRequestLabeled)
 
         let wrongRequest = Github.Payload()
