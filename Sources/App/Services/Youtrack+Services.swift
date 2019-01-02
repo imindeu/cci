@@ -140,8 +140,9 @@ extension Youtrack {
     }
     
     private static func commandAndTitle(_ request: Github.Payload, _ headers: Headers?) -> (Command, String)? {
-        guard let (githubWebhookType, title) = request.type(headers: headers),
-            let command = Command(githubWebhookType) else { return nil }
+        guard let type = request.type(headers: headers),
+            let command = Command(type),
+            let title = type.title else { return nil }
         return (command, title)
     }
     

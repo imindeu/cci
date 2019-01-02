@@ -55,29 +55,26 @@ class GithubTests: XCTestCase {
                                            refType: Github.RefType.branch)
         let branchType = branchRequest.type(headers: branchHeaders)
         XCTAssertNotNil(branchType)
-        XCTAssertEqual(branchType?.0, .branchCreated)
-        XCTAssertEqual(branchType?.1, title)
+        XCTAssertEqual(branchType, .branchCreated(title: title))
         
         let openedRequest = Github.Payload(action: Github.Action.opened,
                                            pullRequest: pullRequest)
         let openedType = openedRequest.type(headers: pullRequestHeaders)
         XCTAssertNotNil(openedType)
-        XCTAssertEqual(openedType?.0, .pullRequestOpened)
-        XCTAssertEqual(openedType?.1, title)
+        XCTAssertEqual(openedType, .pullRequestOpened(title: title))
         
         let closedRequest = Github.Payload(action: Github.Action.closed,
                                            pullRequest: pullRequest)
         let closedType = closedRequest.type(headers: pullRequestHeaders)
         XCTAssertNotNil(closedType)
-        XCTAssertEqual(closedType?.0, .pullRequestClosed)
-        XCTAssertEqual(closedType?.1, title)
+        XCTAssertEqual(closedType, .pullRequestClosed(title: title))
         
         let labeledRequest = Github.Payload(action: .labeled,
                                             pullRequest: pullRequest,
                                             label: Github.waitingForReviewLabel)
         let labeledType = labeledRequest.type(headers: pullRequestHeaders)
         XCTAssertNotNil(labeledType)
-        XCTAssertEqual(labeledType?.0, .pullRequestLabeled)
+        XCTAssertEqual(labeledType, .pullRequestLabeled)
 
         let wrongRequest = Github.Payload()
         XCTAssertNil(wrongRequest.type(headers: branchHeaders) ?? wrongRequest.type(headers: pullRequestHeaders))

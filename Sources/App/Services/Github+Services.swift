@@ -50,11 +50,20 @@ public extension Github {
         public let body: Data
     }
     
-    public enum RequestType {
-        case branchCreated
-        case pullRequestOpened
-        case pullRequestClosed
+    public enum RequestType: Equatable {
+        case branchCreated(title: String)
+        case pullRequestOpened(title: String)
+        case pullRequestClosed(title: String)
         case pullRequestLabeled
+        
+        var title: String? {
+            switch self {
+            case .branchCreated(let t), .pullRequestClosed(let t), .pullRequestOpened(let t):
+                return t
+            default:
+                return nil
+            }
+        }
     }
     
     public enum Error: LocalizedError {
@@ -91,22 +100,22 @@ extension Payload: RequestModel {
 }
 
 extension Payload {
-    func type(headers: Headers?) -> (Github.RequestType, String)? {
+    func type(headers: Headers?) -> Github.RequestType? {
         let event = headers?.get(Github.eventHeaderName).flatMap(Event.init)
         switch (event, action, label, pullRequest?.title, ref, refType) {
             
         case let (.some(.pullRequest), .some(.closed), _, .some(title), _, _):
-            return (.pullRequestClosed, title)
+            return .pullRequestClosed(title: title)
             
         case let (.some(.pullRequest), .some(.opened), _, .some(title), _, _):
-            return (.pullRequestOpened, title)
+            return .pullRequestOpened(title: title)
             
         case let (.some(.create), _, _, _, .some(title), .some(.branch)):
-            return (.branchCreated, title)
+            return .branchCreated(title: title)
             
-        case let (.some(.pullRequest), .some(.labeled), .some(Github.waitingForReviewLabel), .some(title), _, _):
-            return (.pullRequestLabeled, title)
-
+        case (.some(.pullRequest), .some(.labeled), .some(Github.waitingForReviewLabel), _, _, _):
+            return .pullRequestLabeled
+            
         default:
             return nil
         }
@@ -198,7 +207,7 @@ extension Github {
     static func githubRequest(_ from: Github.Payload,
                               _ headers: Headers?) -> Either<Github.PayloadResponse, Github.APIRequest> {
         let defaultResponse: Either<Github.PayloadResponse, Github.APIRequest> = .left(PayloadResponse())
-        guard let (type, _) = from.type(headers: headers) else {
+        guard let type = from.type(headers: headers) else {
             return defaultResponse
         }
         switch type {
