@@ -59,8 +59,8 @@ extension Youtrack {
     }
 
     struct ResponseContainer: Equatable, Codable {
-        let response: Youtrack.Response
-        let data: Youtrack.Request.RequestData
+        let response: Response
+        let data: Request.RequestData
     }
 
 }
@@ -85,7 +85,7 @@ private typealias ResponseContainer = Youtrack.ResponseContainer
 extension Youtrack {
     static func githubRequest(_ from: Github.Payload,
                               _ headers: Headers?) -> Either<Github.PayloadResponse, Youtrack.Request> {
-        guard let (command, title) = Youtrack.commandAndTitle(from, headers) else {
+        guard let (command, title) = commandAndTitle(from, headers) else {
             return .left(Github.PayloadResponse())
         }
         do {
@@ -102,28 +102,24 @@ extension Youtrack {
     static func apiWithGithub(_ context: Context)
         -> (Either<Github.PayloadResponse, Youtrack.Request>)
         -> EitherIO<Github.PayloadResponse, [Youtrack.ResponseContainer]> {
-            let instantResponse: (Github.PayloadResponse)
-                -> EitherIO<Github.PayloadResponse, [ResponseContainer]> = {
-                pure(.left($0), context)
-            }
             return {
-                return $0.either(instantResponse) {
+                return $0.either(leftIO(context)) {
                     request -> EitherIO<Github.PayloadResponse, [ResponseContainer]> in
                     
                     guard let token = Environment.get(Config.youtrackToken) else {
-                        return instantResponse(Github.PayloadResponse(error: Youtrack.Error.missingToken))
+                        return leftIO(context)(Github.PayloadResponse(error: Error.missingToken))
                     }
                     guard let string = Environment.get(Config.youtrackURL),
                         let url = URL(string: string),
                         let host = url.host else {
-                            return instantResponse(Github.PayloadResponse(error: Youtrack.Error.badURL))
+                            return leftIO(context)(Github.PayloadResponse(error: Error.badURL))
                     }
                     return request.data
-                        .map(Youtrack.fetch(context, url, host, token))
+                        .map(fetch(context, url, host, token))
                         .flatten(on: context)
                         .map { results -> Either<Github.PayloadResponse, [ResponseContainer]> in
                             let initial: Either<Github.PayloadResponse, [ResponseContainer]> = .right([])
-                            return results.reduce(initial, Youtrack.flatten)
+                            return results.reduce(initial, flatten)
                         }
                 }
             }
@@ -132,7 +128,7 @@ extension Youtrack {
     static func responseToGithub(_ from: [Youtrack.ResponseContainer]) -> Github.PayloadResponse {
         let value: String
         if from.isEmpty {
-            value = Youtrack.Error.noIssue.localizedDescription
+            value = Error.noIssue.localizedDescription
         } else {
             value = from.compactMap { $0.response.value }.joined(separator: "\n")
         }
@@ -158,16 +154,17 @@ extension Youtrack {
         -> EitherIO<Github.PayloadResponse, ResponseContainer> {
             
         return { requestData in
-            var httpRequest = HTTPRequest()
-            httpRequest.method = .POST
-            httpRequest.urlString = Youtrack.path(base: url.path,
-                                                  issue: requestData.issue,
-                                                  command: requestData.command)
-            httpRequest.headers = HTTPHeaders([
+            let headers = HTTPHeaders([
                 ("Accept", "application/json"),
                 ("Content-Type", "application/json"),
                 ("Authorization", "Bearer \(token)")
             ])
+
+            let httpRequest = HTTPRequest(method: .POST,
+                                          url: path(base: url.path,
+                                                    issue: requestData.issue,
+                                                    command: requestData.command),
+                                          headers: headers)
             return Environment.api(host, url.port)(context, httpRequest)
                 .decode(Response.self)
                 .map { response in
@@ -178,7 +175,7 @@ extension Youtrack {
                     return .left(
                         Github.PayloadResponse(
                             value: "issue: \(requestData.issue): " +
-                                "\(Youtrack.Error.underlying($0).localizedDescription)"))
+                                "\(Error.underlying($0).localizedDescription)"))
                 }
         }
     }

@@ -233,6 +233,7 @@ extension CircleCiDeployJob {
 }
 
 extension CircleCi {
+    
     static var path: (String, String) -> String = { project, branch in
         let projects: [String] = Environment.getArray(JobRequest.Config.projects)
         let circleCiTokens = Environment.getArray(JobRequest.Config.tokens)
@@ -265,13 +266,13 @@ extension CircleCi {
         let projects: [String] = Environment.getArray(JobRequest.Config.projects)
         
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
-            return .left(Slack.Response.error(CircleCi.Error.noChannel(from.channelName)))
+            return .left(Slack.Response.error(Error.noChannel(from.channelName)))
         }
         let project = projects[index]
         
         var parameters = from.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
         guard !parameters.isEmpty else {
-            return .left(Slack.Response.error(CircleCi.Error.unknownCommand(from.text)))
+            return .left(Slack.Response.error(Error.unknownCommand(from.text)))
         }
         let command = parameters[0]
         parameters.removeFirst()
@@ -289,60 +290,39 @@ extension CircleCi {
                            username: from.userName)
                     .map { JobRequest(job: $0) }
             } catch {
-                return .left(Slack.Response.error(CircleCi.Error.underlying(error),
+                return .left(Slack.Response.error(Error.underlying(error),
                                                   helpResponse: job.type.helpResponse))
             }
         } else if command == "help" {
             return .left(helpResponse)
         } else {
-            return .left(Slack.Response.error(CircleCi.Error.unknownCommand(from.text)))
+            return .left(Slack.Response.error(Error.unknownCommand(from.text)))
         }
     }
     
     static func apiWithSlack(_ context: Context)
         -> (Either<Slack.Response, JobRequest>)
         -> EitherIO<Slack.Response, BuildResponse> {
-            
-            let instantResponse: (Slack.Response) -> EitherIO<Slack.Response, BuildResponse> = {
-                pure(.left($0), context)
-            }
             return {
-                return $0.either(instantResponse) { jobRequest -> EitherIO<Slack.Response, BuildResponse> in
-                    let job = jobRequest.job
-                    var request = HTTPRequest()
-                    request.method = .POST
-                    
-                    request.urlString = CircleCi.path(job.project, job.urlEncodedBranch)
+                return $0.either(leftIO(context)) {
+                    jobRequest -> EitherIO<Slack.Response, BuildResponse> in
                     
                     do {
-                        let body = try JSONEncoder().encode(["build_parameters": job.buildParameters])
-                        request.body = HTTPBody(data: body)
-                        request.headers = HTTPHeaders([
-                            ("Accept", "application/json"),
-                            ("Content-Type", "application/json")
-                        ])
-                        return Environment.api("circleci.com", nil)(context, request)
-                            .decode(CircleCi.Response.self)
-                            .map { response in
-                                guard let response = response else {
-                                    throw CircleCi.Error.decode
-                                }
-                                return .right(BuildResponse(response: response, job: job))
-                            }
-                            .catchMap {
-                                return .left(Slack.Response.error(CircleCi.Error.underlying($0),
-                                                                  helpResponse: CircleCi.helpResponse))
-                            }
-                    } catch let error {
-                        return instantResponse(Slack.Response.error(CircleCi.Error.underlying(error),
-                                                                    helpResponse: CircleCi.helpResponse))
+                        return try fetch(job: jobRequest.job, context: context)
+                            .map { .right($0) }
+                    } catch {
+                        return leftIO(context)(
+                            Slack.Response.error(Error.underlying(error),
+                                                 helpResponse: helpResponse))
+
                     }
                 }
             }
     }
+    
     static func responseToSlack(_ from: BuildResponse) -> Slack.Response {
         guard let buildURL = from.response.buildURL, let buildNum = from.response.buildNum else {
-            return Slack.Response.error(CircleCi.Error.badResponse(from.response.message))
+            return Slack.Response.error(Error.badResponse(from.response.message))
         }
         let job = from.job
         let fallback = "Job '\(job.name)' has started at <\(buildURL)|#\(buildNum)>. " +
@@ -366,7 +346,7 @@ extension CircleCi {
     // MARK: Github
     static func githubRequest(_ from: Github.Payload,
                               _ headers: Headers?) -> Either<Github.PayloadResponse, CircleCi.JobRequest> {
-        let defaultResponse: Either<Github.PayloadResponse, CircleCi.JobRequest> = .left(Github.PayloadResponse())
+        let defaultResponse: Either<Github.PayloadResponse, JobRequest> = .left(Github.PayloadResponse())
         guard let type = from.type(headers: headers), let repo = from.repository?.name else {
             return defaultResponse
         }
@@ -392,38 +372,15 @@ extension CircleCi {
     static func apiWithGithub(_ context: Context)
         -> (Either<Github.PayloadResponse, CircleCi.JobRequest>)
         -> EitherIO<Github.PayloadResponse, CircleCi.BuildResponse> {
-            
-            let instantResponse: (Github.PayloadResponse) -> EitherIO<Github.PayloadResponse, BuildResponse> = {
-                pure(.left($0), context)
-            }
             return {
-                return $0.either(instantResponse) { jobRequest -> EitherIO<Github.PayloadResponse, BuildResponse> in
-                    let job = jobRequest.job
-                    var request = HTTPRequest()
-                    request.method = .POST
-                    
-                    request.urlString = CircleCi.path(job.project, job.urlEncodedBranch)
+                return $0.either(leftIO(context)) {
+                    jobRequest -> EitherIO<Github.PayloadResponse, BuildResponse> in
                     
                     do {
-                        let body = try JSONEncoder().encode(["build_parameters": job.buildParameters])
-                        request.body = HTTPBody(data: body)
-                        request.headers = HTTPHeaders([
-                            ("Accept", "application/json"),
-                            ("Content-Type", "application/json")
-                        ])
-                        return Environment.api("circleci.com", nil)(context, request)
-                            .decode(CircleCi.Response.self)
-                            .map { response in
-                                guard let response = response else {
-                                    throw CircleCi.Error.decode
-                                }
-                                return .right(BuildResponse(response: response, job: job))
-                            }
-                            .catchMap {
-                                return .left(Github.PayloadResponse(error: CircleCi.Error.underlying($0)))
-                            }
+                        return try fetch(job: jobRequest.job, context: context)
+                            .map { .right($0) }
                     } catch {
-                        return instantResponse(Github.PayloadResponse(error: CircleCi.Error.underlying(error)))
+                        return leftIO(context)(Github.PayloadResponse(error: Error.underlying(error)))
                     }
                 }
             }
@@ -432,6 +389,26 @@ extension CircleCi {
     static func responseToGithub(_ from: CircleCi.BuildResponse) -> Github.PayloadResponse {
         return Github.PayloadResponse(value: "buildURL: \(from.response.buildURL ?? ""), "
             + "buildNum: \(from.response.buildNum ?? -1)")
+    }
+    
+    private static func fetch(job: CircleCiJob, context: Context) throws -> IO<BuildResponse> {
+        let body = try JSONEncoder().encode(["build_parameters": job.buildParameters])
+        let headers = HTTPHeaders([
+            ("Accept", "application/json"),
+            ("Content-Type", "application/json")
+        ])
+        let httpRequest = HTTPRequest(method: .POST,
+                                      url: path(job.project, job.urlEncodedBranch),
+                                      headers: headers,
+                                      body: body)
+        return Environment.api("circleci.com", nil)(context, httpRequest)
+            .decode(Response.self)
+            .map { response in
+                guard let response = response else {
+                    throw Error.decode
+                }
+                return BuildResponse(response: response, job: job)
+            }
     }
 
 }

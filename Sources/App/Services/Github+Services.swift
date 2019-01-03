@@ -174,10 +174,10 @@ extension Github {
                       _ headers: Headers?) -> Github.PayloadResponse? {
         
         let secret = Environment.get(Payload.Config.githubSecret)
-        let signature = headers?.get(Github.signatureHeaderName)
+        let signature = headers?.get(signatureHeaderName)
         return verify(body: body, secret: secret, signature: signature)
             ? nil
-            : PayloadResponse(error: Github.Error.signature)
+            : PayloadResponse(error: Error.signature)
     }
     
     // app
@@ -213,7 +213,7 @@ extension Github {
         let request = HTTPRequest(method: .POST,
                                   url: "/app/installations/\(installationId)/access_tokens",
                                   headers: headers,
-                                  body: HTTPBody(string: ""))
+                                  body: "")
         struct TokenResponse: Decodable {
             let token: String
         }
@@ -222,7 +222,7 @@ extension Github {
             .decode(TokenResponse.self)
             .map { response in
                 guard let response = response else {
-                    throw Github.Error.accessToken
+                    throw Error.accessToken
                 }
                 return response.token
             }
@@ -230,26 +230,12 @@ extension Github {
     
     static func githubRequest(_ from: Github.Payload,
                               _ headers: Headers?) -> Either<Github.PayloadResponse, Github.APIRequest> {
-        let defaultResponse: Either<Github.PayloadResponse, Github.APIRequest> = .left(PayloadResponse())
+        let defaultResponse: Either<PayloadResponse, APIRequest> = .left(PayloadResponse())
         guard let type = from.type(headers: headers),
             let installationId = from.installation?.id else {
             return defaultResponse
         }
         switch type {
-//        case .pullRequestLabeled(label: waitingForReviewLabel, head: _, base: _):
-//            guard let comments = from.pullRequest?.links.comments.href,
-//                let url = URL(string: comments) else {
-//                return defaultResponse
-//            }
-//            guard let reviewers = from.pullRequest?.requestedReviewers, !reviewers.isEmpty else {
-//                return defaultResponse
-//            }
-//            
-//            do {
-//                return .right(try APIRequest(installationId: installationId,
-//                                             url: url,
-//                                             encodable: Github.IssueComment(body: reviewText(reviewers))))
-//            } catch { return defaultResponse }
         case .changesRequested:
             guard let comments = from.pullRequest?.links.comments.href,
                 var url = URL(string: comments) else {
@@ -268,13 +254,8 @@ extension Github {
     static func apiWithGithub(_ context: Context)
         -> (Either<Github.PayloadResponse, Github.APIRequest>)
         -> EitherIO<Github.PayloadResponse, Github.APIResponse> {
-            
-            let instantResponse: (Github.PayloadResponse)
-                -> EitherIO<Github.PayloadResponse, APIResponse> = {
-                    pure(.left($0), context)
-            }
             return {
-                return $0.either(instantResponse, fetch(context))
+                return $0.either(leftIO(context), fetch(context))
             }
     }
     
@@ -282,14 +263,14 @@ extension Github {
         return PayloadResponse(value: from.message.map { $0 + " (\(from.errors ?? []))" })
     }
     
-    static func reduce(_ responses: [Github.PayloadResponse?]) -> Github.PayloadResponse? {
+    static func reduce(_ responses: [PayloadResponse?]) -> PayloadResponse? {
         return responses
-            .reduce(Github.PayloadResponse()) { next, result in
+            .reduce(PayloadResponse()) { next, result in
                 guard let value = next.value else {
-                    return result ?? Github.PayloadResponse()
+                    return result ?? PayloadResponse()
                 }
                 let response = (result?.value.map { $0 + "\n" } ?? "") + value
-                return Github.PayloadResponse(value: response)
+                return PayloadResponse(value: response)
             }
 
     }
@@ -302,7 +283,7 @@ extension Github {
     }
 
     private static func fetch(_ context: Context) -> (APIRequest)
-        -> EitherIO<Github.PayloadResponse, Github.APIResponse> {
+        -> EitherIO<PayloadResponse, APIResponse> {
         
         return { request -> EitherIO<PayloadResponse, APIResponse> in
             do {
@@ -313,7 +294,7 @@ extension Github {
                         let path = request.url.path
                             .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed) else {
                         return pure(
-                            .left(PayloadResponse(error: Github.Error.badUrl(request.url.absoluteString))),
+                            .left(PayloadResponse(error: Error.badUrl(request.url.absoluteString))),
                             context)
                     }
                     let api = Environment.api(host, request.url.port)
@@ -343,7 +324,7 @@ extension Github {
                         }
                 }
             } catch {
-                return pure(.left(PayloadResponse(error: Github.Error.underlying(error))), context)
+                return pure(.left(PayloadResponse(error: Error.underlying(error))), context)
             }
         }
     }
