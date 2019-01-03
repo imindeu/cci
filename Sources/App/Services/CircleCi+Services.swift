@@ -343,7 +343,7 @@ extension CircleCi {
 
     // MARK: Github
     static func githubRequest(_ from: Github.Payload,
-                              _ headers: Headers?) -> Either<Github.PayloadResponse, CircleCi.JobRequest> {
+                              _ headers: Headers?) -> Either<Github.PayloadResponse, JobRequest> {
         let defaultResponse: Either<Github.PayloadResponse, JobRequest> = .left(Github.PayloadResponse())
         guard let type = from.type(headers: headers), let repo = from.repository?.name else {
             return defaultResponse
@@ -368,8 +368,8 @@ extension CircleCi {
     }
     
     static func apiWithGithub(_ context: Context)
-        -> (CircleCi.JobRequest)
-        -> EitherIO<Github.PayloadResponse, CircleCi.BuildResponse> {
+        -> (JobRequest)
+        -> EitherIO<Github.PayloadResponse, BuildResponse> {
             return { jobRequest -> EitherIO<Github.PayloadResponse, BuildResponse> in
                 do {
                     return try fetch(job: jobRequest.job, context: context)
@@ -381,7 +381,7 @@ extension CircleCi {
             }
     }
     
-    static func responseToGithub(_ from: CircleCi.BuildResponse) -> Github.PayloadResponse {
+    static func responseToGithub(_ from: BuildResponse) -> Github.PayloadResponse {
         return Github.PayloadResponse(value: "buildURL: \(from.response.buildURL ?? ""), "
             + "buildNum: \(from.response.buildNum ?? -1)")
     }

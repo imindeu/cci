@@ -84,7 +84,7 @@ private typealias ResponseContainer = Youtrack.ResponseContainer
 
 extension Youtrack {
     static func githubRequest(_ from: Github.Payload,
-                              _ headers: Headers?) -> Either<Github.PayloadResponse, Youtrack.Request> {
+                              _ headers: Headers?) -> Either<Github.PayloadResponse, Request> {
         guard let type = from.type(headers: headers),
             let command = Command(type),
             let title = type.title else {
@@ -102,8 +102,8 @@ extension Youtrack {
     }
     
     static func apiWithGithub(_ context: Context)
-        -> (Youtrack.Request)
-        -> EitherIO<Github.PayloadResponse, [Youtrack.ResponseContainer]> {
+        -> (Request)
+        -> EitherIO<Github.PayloadResponse, [ResponseContainer]> {
             return { request -> EitherIO<Github.PayloadResponse, [ResponseContainer]> in
                 guard let token = Environment.get(Config.youtrackToken) else {
                     return leftIO(context)(Github.PayloadResponse(error: Error.missingToken))
@@ -123,7 +123,7 @@ extension Youtrack {
             }
     }
     
-    static func responseToGithub(_ from: [Youtrack.ResponseContainer]) -> Github.PayloadResponse {
+    static func responseToGithub(_ from: [ResponseContainer]) -> Github.PayloadResponse {
         let value: String
         if from.isEmpty {
             value = Error.noIssue.localizedDescription

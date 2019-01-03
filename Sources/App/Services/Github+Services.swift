@@ -228,8 +228,8 @@ extension Github {
             }
     }
     
-    static func githubRequest(_ from: Github.Payload,
-                              _ headers: Headers?) -> Either<Github.PayloadResponse, Github.APIRequest> {
+    static func githubRequest(_ from: Payload,
+                              _ headers: Headers?) -> Either<PayloadResponse, APIRequest> {
         let defaultResponse: Either<PayloadResponse, APIRequest> = .left(PayloadResponse())
         guard let type = from.type(headers: headers),
             let installationId = from.installation?.id else {
@@ -252,20 +252,20 @@ extension Github {
     }
     
     static func apiWithGithub(_ context: Context)
-        -> (Github.APIRequest)
-        -> EitherIO<Github.PayloadResponse, Github.APIResponse> {
-            return { request -> EitherIO<Github.PayloadResponse, Github.APIResponse> in
+        -> (APIRequest)
+        -> EitherIO<PayloadResponse, APIResponse> {
+            return { request -> EitherIO<PayloadResponse, APIResponse> in
                 do {
                     return try fetch(request, context)
                         .map { .right($0) }
-                        .catchMap { .left(Github.PayloadResponse(error: Error.underlying($0))) }
+                        .catchMap { .left(PayloadResponse(error: Error.underlying($0))) }
                 } catch {
-                    return leftIO(context)(Github.PayloadResponse(error: Error.underlying(error)))
+                    return leftIO(context)(PayloadResponse(error: Error.underlying(error)))
                 }
             }
     }
     
-    static func responseToGithub(_ from: Github.APIResponse) -> Github.PayloadResponse {
+    static func responseToGithub(_ from: APIResponse) -> PayloadResponse {
         return PayloadResponse(value: from.message.map { $0 + " (\(from.errors ?? []))" })
     }
     
