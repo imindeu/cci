@@ -50,8 +50,9 @@ extension GithubTests {
     ("testType", testType),
     ("testAccessToken", testAccessToken),
     ("testReviewText", testReviewText),
-    ("testGithubRequest", testGithubRequest),
-    ("testGithubRequestEmptyReviewer", testGithubRequestEmptyReviewer),
+    ("testGithubRequestLabeled", testGithubRequestLabeled),
+    ("testGithubRequestLabeledEmptyReviewer", testGithubRequestLabeledEmptyReviewer),
+    ("testGithubRequestChangesRequested", testGithubRequestChangesRequested),
     ("testApiWithGithub", testApiWithGithub),
     ("testResponseToGithub", testResponseToGithub)
   ]
