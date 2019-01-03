@@ -88,16 +88,13 @@ class YoutrackTests: XCTestCase {
     func testApiWithGithub() throws {
         let api = Youtrack.apiWithGithub(context())
         
-        let passthrough: Either<Github.PayloadResponse, Youtrack.Request> = .left(Github.PayloadResponse(value: "x"))
-        XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
-        
         let data = issues.map { Youtrack.Request.RequestData(issue: $0, command: .inProgress) }
-        let request: Either<Github.PayloadResponse, Youtrack.Request> = .right(Youtrack.Request(data: data))
+        let request = Youtrack.Request(data: data)
         let expected = data.map { Youtrack.ResponseContainer(response: Youtrack.Response(), data: $0) }
         let response = try api(request).wait().right
         XCTAssertEqual(response, expected)
         
-        let emptyRequest: Either<Github.PayloadResponse, Youtrack.Request> = .right(Youtrack.Request(data: []))
+        let emptyRequest: Youtrack.Request = Youtrack.Request(data: [])
         let emptyExpected: [Youtrack.ResponseContainer] = []
         let emptyResponse = try api(emptyRequest).wait().right
         XCTAssertEqual(emptyResponse, emptyExpected)
@@ -107,7 +104,7 @@ class YoutrackTests: XCTestCase {
         let api = Youtrack.apiWithGithub(context())
         Environment.env[Youtrack.Request.Config.youtrackURL.rawValue] = "x"
         let data = issues.map { Youtrack.Request.RequestData(issue: $0, command: .inProgress) }
-        let request: Either<Github.PayloadResponse, Youtrack.Request> = .right(Youtrack.Request(data: data))
+        let request: Youtrack.Request = Youtrack.Request(data: data)
         let badUrlExpected = Github.PayloadResponse(error: Youtrack.Error.badURL)
         let badUrlResponse = try api(request).wait().left
         XCTAssertEqual(badUrlResponse, badUrlExpected)

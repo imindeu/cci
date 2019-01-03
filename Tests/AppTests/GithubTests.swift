@@ -199,11 +199,8 @@ class GithubTests: XCTestCase {
     }
 
     func testApiWithGithub() throws {
-        let payloadResponse: Either<Github.PayloadResponse, Github.APIRequest> = .left(Github.PayloadResponse())
         let api = Github.apiWithGithub(context())
         
-        XCTAssertEqual(try api(payloadResponse).wait().left, payloadResponse.left)
-
         Environment.env = [
             Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
             Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
@@ -237,14 +234,14 @@ class GithubTests: XCTestCase {
                                             url: URL(string: "http://test.com/comment/link")!,
                                             encodable: comment,
                                             method: .POST)
-        let response = try Github.apiWithGithub(context())(.right(request)).wait()
+        let response = try api(request).wait()
         XCTAssertEqual(response.right, Github.APIResponse(message: "y"))
         
         let wrongRequest = try Github.APIRequest(installationId: 1,
                                                  url: URL(string: "/comment/link")!,
                                                  encodable: comment,
                                                  method: .POST)
-        let wrongResponse = try Github.apiWithGithub(context())(.right(wrongRequest)).wait()
+        let wrongResponse = try api(wrongRequest).wait()
         XCTAssertEqual(wrongResponse.left, Github.PayloadResponse(error: Github.Error.badUrl("/comment/link")))
     }
     

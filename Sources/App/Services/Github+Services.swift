@@ -252,10 +252,16 @@ extension Github {
     }
     
     static func apiWithGithub(_ context: Context)
-        -> (Either<Github.PayloadResponse, Github.APIRequest>)
+        -> (Github.APIRequest)
         -> EitherIO<Github.PayloadResponse, Github.APIResponse> {
-            return {
-                return $0.either(leftIO(context), fetch(context))
+            return { request -> EitherIO<Github.PayloadResponse, Github.APIResponse> in
+                do {
+                    return try fetch(request, context)
+                        .map { .right($0) }
+                        .catchMap { .left(Github.PayloadResponse(error: Error.underlying($0))) }
+                } catch {
+                    return leftIO(context)(Github.PayloadResponse(error: Error.underlying(error)))
+                }
             }
     }
     
@@ -282,50 +288,41 @@ extension Github {
         return "\(list) please review this pr"
     }
 
-    private static func fetch(_ context: Context) -> (APIRequest)
-        -> EitherIO<PayloadResponse, APIResponse> {
-        
-        return { request -> EitherIO<PayloadResponse, APIResponse> in
-            do {
-                return accessToken(context: context,
-                                   jwtToken: try jwt(),
-                                   installationId: request.installationId).flatMap { accessToken in
-                    guard let host = request.url.host,
-                        let path = request.url.path
-                            .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed) else {
-                        return pure(
-                            .left(PayloadResponse(error: Error.badUrl(request.url.absoluteString))),
-                            context)
-                    }
-                    let api = Environment.api(host, request.url.port)
-                    let headers = HTTPHeaders([
-                        ("Authorization", "token \(accessToken)"),
-                        ("Accept", "application/vnd.github.machine-man-preview+json"),
-                        ("User-Agent", "cci-imind")
-                    ])
-                        
-                    let httpRequest = HTTPRequest(method: request.method,
-                                                  url: path,
-                                                  headers: headers,
-                                                  body: request.body ?? HTTPBody())
-                                    
-                    return api(context, httpRequest)
-                        .decode(APIResponse.self)
-                        .catchMap {
-                            if case DecodingError.typeMismatch = $0 {
-                                return nil
-                            } else {
-                                throw $0
-                            }
-                        }
-                        .map {
-                            let response = $0 ?? APIResponse()
-                            return Either<PayloadResponse, APIResponse>.right(response)
-                        }
+    private static func fetch(_ request: APIRequest, _ context: Context) throws -> IO<APIResponse> {
+        return accessToken(context: context,
+                           jwtToken: try jwt(),
+                           installationId: request.installationId)
+            .flatMap { accessToken in
+                guard let host = request.url.host,
+                    let path = request.url.path
+                        .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed) else {
+                            throw Error.badUrl(request.url.absoluteString)
                 }
-            } catch {
-                return pure(.left(PayloadResponse(error: Error.underlying(error))), context)
-            }
+                let api = Environment.api(host, request.url.port)
+                let headers = HTTPHeaders([
+                    ("Authorization", "token \(accessToken)"),
+                    ("Accept", "application/vnd.github.machine-man-preview+json"),
+                    ("User-Agent", "cci-imind")
+                    ])
+                
+                let httpRequest = HTTPRequest(method: request.method,
+                                              url: path,
+                                              headers: headers,
+                                              body: request.body ?? HTTPBody())
+                
+                return api(context, httpRequest)
+                    .decode(APIResponse.self)
+                    .catchMap {
+                        if case DecodingError.typeMismatch = $0 {
+                            return nil
+                        } else {
+                            throw $0
+                        }
+                    }
+                    .map {
+                        let response = $0 ?? APIResponse()
+                        return response
+                }
         }
     }
 }

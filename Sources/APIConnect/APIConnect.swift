@@ -18,7 +18,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
     public let check: (_ from: From, _ body: String?, _ headers: Headers?) -> From.ResponseModel?
     public let request: (_ from: From, _ headers: Headers?) -> Either<From.ResponseModel, To>
     public let toAPI: (_ context: Context)
-        -> (Either<From.ResponseModel, To>)
+        -> (To)
         -> EitherIO<From.ResponseModel, To.ResponseModel>
     public let response: (_ from: To.ResponseModel) -> From.ResponseModel
     public let fromAPI: ((_ request: From, _ context: Context) -> (From.ResponseModel) -> IO<Void>)?
@@ -30,7 +30,7 @@ public extension APIConnect {
     public init(check: @escaping (_ from: From, _ body: String?, _ headers: Headers?) -> From.ResponseModel?,
                 request: @escaping (_ from: From, _ headers: Headers?) -> Either<From.ResponseModel, To>,
                 toAPI: @escaping (_ context: Context)
-                    -> (Either<From.ResponseModel, To>)
+                    -> (To)
                     -> EitherIO<From.ResponseModel, To.ResponseModel>,
                 response: @escaping (_ with: To.ResponseModel) -> From.ResponseModel) {
         
@@ -75,11 +75,19 @@ public extension APIConnect {
             return pure(response, context)
         }
         return pure(request(from, headers), context)
-            .flatMap(toAPI(context))
+            .flatMap(to(context, toAPI))
             .mapEither(id, response)
             .map(Optional.some)
     }
 
+    private func to(_ context: Context,
+                    _ right: @escaping (Context)
+                        -> (To)
+                        -> EitherIO<From.ResponseModel, To.ResponseModel>)
+        -> (Either<From.ResponseModel, To>)
+        -> EitherIO<From.ResponseModel, To.ResponseModel> {
+            return { return $0.either(leftIO(context), right(context)) }
+    }
 }
 
 public extension APIConnect where From: DelayedRequestModel {
@@ -87,7 +95,7 @@ public extension APIConnect where From: DelayedRequestModel {
     public init(check: @escaping (_ from: From, _ body: String?, _ headers: Headers?) -> From.ResponseModel?,
                 request: @escaping (_ from: From, _ headers: Headers?) -> Either<From.ResponseModel, To>,
                 toAPI: @escaping (_ context: Context)
-                    -> (Either<From.ResponseModel, To>)
+                    -> (To)
                     -> EitherIO<From.ResponseModel, To.ResponseModel>,
                 response: @escaping (_ with: To.ResponseModel) -> From.ResponseModel,
                 fromAPI: @escaping (_ request: From, _ context: Context)
@@ -112,7 +120,7 @@ public extension APIConnect where From: DelayedRequestModel {
             return pure(response, context)
         }
         let run = pure(request(from, headers), context)
-            .flatMap(toAPI(context))
+            .flatMap(to(context, toAPI))
             .mapEither(id, response)
         guard from.responseURL != nil, let instant = instant, let fromAPI = fromAPI else {
             return run.map(Optional.some)

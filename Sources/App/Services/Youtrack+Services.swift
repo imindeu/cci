@@ -100,27 +100,23 @@ extension Youtrack {
     }
     
     static func apiWithGithub(_ context: Context)
-        -> (Either<Github.PayloadResponse, Youtrack.Request>)
+        -> (Youtrack.Request)
         -> EitherIO<Github.PayloadResponse, [Youtrack.ResponseContainer]> {
-            return {
-                return $0.either(leftIO(context)) {
-                    request -> EitherIO<Github.PayloadResponse, [ResponseContainer]> in
-                    
-                    guard let token = Environment.get(Config.youtrackToken) else {
-                        return leftIO(context)(Github.PayloadResponse(error: Error.missingToken))
-                    }
-                    guard let string = Environment.get(Config.youtrackURL),
-                        let url = URL(string: string),
-                        let host = url.host else {
-                            return leftIO(context)(Github.PayloadResponse(error: Error.badURL))
-                    }
-                    return request.data
-                        .map(fetch(context, url, host, token))
-                        .flatten(on: context)
-                        .map { results -> Either<Github.PayloadResponse, [ResponseContainer]> in
-                            let initial: Either<Github.PayloadResponse, [ResponseContainer]> = .right([])
-                            return results.reduce(initial, flatten)
-                        }
+            return { request -> EitherIO<Github.PayloadResponse, [ResponseContainer]> in
+                guard let token = Environment.get(Config.youtrackToken) else {
+                    return leftIO(context)(Github.PayloadResponse(error: Error.missingToken))
+                }
+                guard let string = Environment.get(Config.youtrackURL),
+                    let url = URL(string: string),
+                    let host = url.host else {
+                        return leftIO(context)(Github.PayloadResponse(error: Error.badURL))
+                }
+                return request.data
+                    .map(fetch(context, url, host, token))
+                    .flatten(on: context)
+                    .map { results -> Either<Github.PayloadResponse, [ResponseContainer]> in
+                        let initial: Either<Github.PayloadResponse, [ResponseContainer]> = .right([])
+                        return results.reduce(initial, flatten)
                 }
             }
     }

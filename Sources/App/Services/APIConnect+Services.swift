@@ -21,7 +21,7 @@ typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCi.JobRequest, Envir
 extension APIConnect where From == Github.Payload {
     init(request: @escaping (_ from: Github.Payload, _ headers: Headers?) -> Either<Github.PayloadResponse, To>,
          toAPI: @escaping (_ context: Context)
-        -> (Either<Github.PayloadResponse, To>)
+        -> (To)
         -> EitherIO<Github.PayloadResponse, To.ResponseModel>,
          response: @escaping (_ with: To.ResponseModel) -> Github.PayloadResponse) {
         self.init(check: Github.check,
@@ -35,7 +35,7 @@ extension APIConnect where From == Github.Payload {
 extension APIConnect where From == Slack.Request {
     init(request: @escaping (_ from: Slack.Request, _ headers: Headers?) -> Either<Slack.Response, To>,
          toAPI: @escaping (_ context: Context)
-        -> (Either<Slack.Response, To>)
+        -> (To)
         -> EitherIO<Slack.Response, To.ResponseModel>,
          response: @escaping (_ with: To.ResponseModel) -> Slack.Response) {
         self.init(check: Slack.Request.check,

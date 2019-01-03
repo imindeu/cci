@@ -179,20 +179,13 @@ class CircleCiTests: XCTestCase {
     // MARK: Slack
     func testApiWithSlack() throws {
         let api = CircleCi.apiWithSlack(context())
-
-        // passthrough
-        let passthrough: Either<Slack.Response, CircleCi.JobRequest> = .left(Slack.Response(responseType: .ephemeral,
-                                                                                            text: nil,
-                                                                                            attachments: [],
-                                                                                            mrkdwn: nil))
-        XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
         
         // build response
         let job = CircleCiTestJob(project: project,
                                   branch: branch,
                                   options: options,
                                   username: username)
-        let request: Either<Slack.Response, CircleCi.JobRequest> = .right(CircleCi.JobRequest(job: job))
+        let request: CircleCi.JobRequest = CircleCi.JobRequest(job: job)
         let expected = CircleCi.Response(buildURL: "buildURL",
                                          buildNum: 10)
         let response = try api(request).wait().right
@@ -221,7 +214,7 @@ class CircleCiTests: XCTestCase {
                                   branch: branch,
                                   options: options,
                                   username: username)
-        let request: Either<Slack.Response, CircleCi.JobRequest> = .right(CircleCi.JobRequest(job: job))
+        let request: CircleCi.JobRequest = CircleCi.JobRequest(job: job)
         let expected = CircleCi.Response(message: "x")
         let response = try api(request).wait().right
         XCTAssertEqual(response?.job as? CircleCiTestJob, job)
@@ -343,16 +336,12 @@ class CircleCiTests: XCTestCase {
     func testApiWithGithub() throws {
         let api = CircleCi.apiWithGithub(context())
         
-        // passthrough
-        let passthrough: Either<Github.PayloadResponse, CircleCi.JobRequest> = .left(Github.PayloadResponse())
-        XCTAssertEqual(try api(passthrough).wait().left, passthrough.left)
-        
         // build response
         let job = CircleCiTestJob(project: project,
                                   branch: branch,
                                   options: options,
                                   username: username)
-        let request: Either<Github.PayloadResponse, CircleCi.JobRequest> = .right(CircleCi.JobRequest(job: job))
+        let request: CircleCi.JobRequest = CircleCi.JobRequest(job: job)
         let expected = CircleCi.Response(buildURL: "buildURL",
                                          buildNum: 10)
         let response = try api(request).wait().right

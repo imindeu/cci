@@ -301,21 +301,19 @@ extension CircleCi {
     }
     
     static func apiWithSlack(_ context: Context)
-        -> (Either<Slack.Response, JobRequest>)
+        -> (JobRequest)
         -> EitherIO<Slack.Response, BuildResponse> {
-            return {
-                return $0.either(leftIO(context)) {
-                    jobRequest -> EitherIO<Slack.Response, BuildResponse> in
-                    
-                    do {
-                        return try fetch(job: jobRequest.job, context: context)
-                            .map { .right($0) }
-                    } catch {
-                        return leftIO(context)(
-                            Slack.Response.error(Error.underlying(error),
-                                                 helpResponse: helpResponse))
-
-                    }
+            return { jobRequest -> EitherIO<Slack.Response, BuildResponse> in
+                do {
+                    return try fetch(job: jobRequest.job, context: context)
+                        .map { .right($0) }
+                        .catchMap { .left(
+                            Slack.Response.error(Error.underlying($0),
+                                                 helpResponse: helpResponse)) }
+                } catch {
+                    return leftIO(context)(
+                        Slack.Response.error(Error.underlying(error),
+                                             helpResponse: helpResponse))
                 }
             }
     }
@@ -370,18 +368,15 @@ extension CircleCi {
     }
     
     static func apiWithGithub(_ context: Context)
-        -> (Either<Github.PayloadResponse, CircleCi.JobRequest>)
+        -> (CircleCi.JobRequest)
         -> EitherIO<Github.PayloadResponse, CircleCi.BuildResponse> {
-            return {
-                return $0.either(leftIO(context)) {
-                    jobRequest -> EitherIO<Github.PayloadResponse, BuildResponse> in
-                    
-                    do {
-                        return try fetch(job: jobRequest.job, context: context)
-                            .map { .right($0) }
-                    } catch {
-                        return leftIO(context)(Github.PayloadResponse(error: Error.underlying(error)))
-                    }
+            return { jobRequest -> EitherIO<Github.PayloadResponse, BuildResponse> in
+                do {
+                    return try fetch(job: jobRequest.job, context: context)
+                        .map { .right($0) }
+                        .catchMap { .left(Github.PayloadResponse(error: Error.underlying($0))) }
+                } catch {
+                    return leftIO(context)(Github.PayloadResponse(error: Error.underlying(error)))
                 }
             }
     }

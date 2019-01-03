@@ -69,12 +69,11 @@ struct ToRequest: RequestModel {
     var data: String
 }
 extension ToRequest {
-    static var toAPI: (Context) -> (Either<FromResponse, ToRequest>)
+    static var toAPI: (Context) -> (ToRequest)
         -> EitherIO<FromResponse, ToResponse> = { context in
-            
         return {
             pure(Either<FromResponse, ToResponse>
-                .right(ToResponse(data: $0.either({ $0.data }, { $0.data }))), context)
+                .right(ToResponse(data: $0.data )), context)
         }
     }
     static var response: (ToResponse) -> FromResponse = { FromResponse(data: $0.data, error: false) }
