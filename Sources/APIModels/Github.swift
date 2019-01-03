@@ -187,6 +187,7 @@ public enum Github {
         case demilestoned
         case submitted
         case dismissed
+        case synchronize
         // ...
     }
     
