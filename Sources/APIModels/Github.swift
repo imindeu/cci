@@ -8,6 +8,7 @@
 public enum Github {
     public struct Payload: Equatable, Codable {
         public let action: Action?
+        public let review: Review?
         public let pullRequest: PullRequest?
         public let label: Label?
         public let ref: String?
@@ -16,6 +17,7 @@ public enum Github {
         public let repository: Repository?
         
         public init(action: Action? = nil,
+                    review: Review? = nil,
                     pullRequest: PullRequest? = nil,
                     label: Label? = nil,
                     ref: String? = nil,
@@ -23,6 +25,7 @@ public enum Github {
                     installation: Installation? = nil,
                     repository: Repository? = nil) {
             self.action = action
+            self.review = review
             self.pullRequest = pullRequest
             self.label = label
             self.ref = ref
@@ -33,6 +36,7 @@ public enum Github {
         
         enum CodingKeys: String, CodingKey {
             case action
+            case review
             case pullRequest = "pull_request"
             case label
             case ref
@@ -141,6 +145,21 @@ public enum Github {
             self.id = id
         }
     }
+    
+    public enum ReviewState: String, Equatable, Codable {
+        case commented
+        case changesRequested = "changes_requested"
+        case approved
+        case dismissed
+    }
+    
+    public struct Review: Equatable, Codable {
+        public let state: ReviewState
+        
+        public init(state: ReviewState) {
+            self.state = state
+        }
+    }
 
     public enum Action: String, Equatable, Codable {
         case opened
@@ -156,7 +175,7 @@ public enum Github {
         case created
         case deleted
         case rerequested
-        case rerequestedAction = "requested_action"
+        case requestedAction = "requested_action"
         case completed
         case requested
         case added
@@ -166,6 +185,8 @@ public enum Github {
         case unpinned
         case milestoned
         case demilestoned
+        case submitted
+        case dismissed
         // ...
     }
     
@@ -179,6 +200,7 @@ public enum Github {
         case create
         case pullRequest = "pull_request"
         case status
+        case pullRequestReview = "pull_request_review"
     }
     
 }

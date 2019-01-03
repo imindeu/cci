@@ -93,7 +93,7 @@ import-image:
 
 run-app:
 	@echo "Container starting..."
-	@${SUDO} docker run --name cci -i -d -t -p ${PORT}:${PORT} \
+	@${SUDO} docker run --name cci -i -d -t -p ${PORT}:8081 \
 	  -e port=${PORT} \
 	  -e slackToken=${SLACKTOKEN} \
 	  -e circleCiTokens=${CIRCLECITOKENS} \

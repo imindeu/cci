@@ -45,7 +45,7 @@ extension Youtrack {
                 case .branchCreated: self = .inProgress
                 case .pullRequestOpened: self = .inReview
                 case .pullRequestClosed: self = .waitingForDeploy
-                case .pullRequestLabeled: return nil
+                default: return nil
                 }
             }
         }

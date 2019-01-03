@@ -44,10 +44,25 @@ public extension Github {
         }
     }
     
-    public struct APIRequest: Equatable, Codable {
+    public struct APIRequest: Equatable {
         public let installationId: Int
         public let url: URL
-        public let body: Data
+        public let body: Data?
+        public let method: HTTPMethod
+        
+        public init(installationId: Int, url: URL, method: HTTPMethod = .POST) {
+            self.installationId = installationId
+            self.url = url
+            self.body = nil
+            self.method = method
+        }
+        
+        public init<A: Encodable>(installationId: Int, url: URL, encodable: A, method: HTTPMethod = .POST) throws {
+            self.installationId = installationId
+            self.url = url
+            self.body = try JSONEncoder().encode(encodable)
+            self.method = method
+        }
     }
     
     public enum RequestType: Equatable {
@@ -55,6 +70,7 @@ public extension Github {
         case pullRequestOpened(title: String)
         case pullRequestClosed(title: String)
         case pullRequestLabeled(label: Label, head: Branch, base: Branch)
+        case changesRequested
         
         var title: String? {
             switch self {
@@ -102,23 +118,28 @@ extension Payload: RequestModel {
 extension Payload {
     func type(headers: Headers?) -> Github.RequestType? {
         let event = headers?.get(Github.eventHeaderName).flatMap(Event.init)
-        switch (event, action, label, pullRequest?.title, pullRequest?.head, pullRequest?.base, ref, refType) {
+        switch (event, action,
+                label, review?.state,
+                pullRequest?.title, pullRequest?.head, pullRequest?.base,
+                ref, refType) {
             
-        case let (.some(.pullRequest), .some(.closed), _, .some(title), _, _, _, _):
+        case let (.some(.pullRequest), .some(.closed), _, _, .some(title), _, _, _, _):
             return .pullRequestClosed(title: title)
             
-        case let (.some(.pullRequest), .some(.opened), _, .some(title), _, _, _, _):
+        case let (.some(.pullRequest), .some(.opened), _, _, .some(title), _, _, _, _):
             return .pullRequestOpened(title: title)
 
-        case let (.some(.pullRequest), .some(.reopened), _, .some(title), _, _, _, _):
+        case let (.some(.pullRequest), .some(.reopened), _, _, .some(title), _, _, _, _):
             return .pullRequestOpened(title: title)
 
-        case let (.some(.create), _, _, _, _, _, .some(title), .some(.branch)):
+        case let (.some(.create), _, _, _, _, _, _, .some(title), .some(.branch)):
             return .branchCreated(title: title)
             
-        case let (.some(.pullRequest), .some(.labeled), .some(label), _, .some(head), .some(base), _, _):
+        case let (.some(.pullRequest), .some(.labeled), .some(label), _, _, .some(head), .some(base), _, _):
             return .pullRequestLabeled(label: label, head: head, base: base)
             
+        case (.some(.pullRequestReview), .some(.submitted), _, .some(.changesRequested), _, _, _, _, _):
+            return .changesRequested
         default:
             return nil
         }
@@ -184,15 +205,15 @@ extension Github {
     
     static func accessToken(context: Context, jwtToken: String, installationId: Int) -> IO<String> {
         let api = Environment.api("api.github.com", nil)
-        var request = HTTPRequest()
-        request.method = .POST
-        request.urlString = "/app/installations/\(installationId)/access_tokens"
-        request.headers = HTTPHeaders([
+        let headers = HTTPHeaders([
             ("Authorization", "Bearer \(jwtToken)"),
             ("Accept", "application/vnd.github.machine-man-preview+json"),
             ("User-Agent", "cci-imind")
         ])
-        request.body = HTTPBody(string: "")
+        let request = HTTPRequest(method: .POST,
+                                  url: "/app/installations/\(installationId)/access_tokens",
+                                  headers: headers,
+                                  body: HTTPBody(string: ""))
         struct TokenResponse: Decodable {
             let token: String
         }
@@ -210,13 +231,13 @@ extension Github {
     static func githubRequest(_ from: Github.Payload,
                               _ headers: Headers?) -> Either<Github.PayloadResponse, Github.APIRequest> {
         let defaultResponse: Either<Github.PayloadResponse, Github.APIRequest> = .left(PayloadResponse())
-        guard let type = from.type(headers: headers) else {
+        guard let type = from.type(headers: headers),
+            let installationId = from.installation?.id else {
             return defaultResponse
         }
         switch type {
         case .pullRequestLabeled(label: waitingForReviewLabel, head: _, base: _):
-            guard let installationId = from.installation?.id,
-                let comments = from.pullRequest?.links.comments.href,
+            guard let comments = from.pullRequest?.links.comments.href,
                 let url = URL(string: comments) else {
                 return defaultResponse
             }
@@ -225,11 +246,21 @@ extension Github {
             }
             
             do {
-                let body = try JSONEncoder().encode(Github.IssueComment(body: reviewText(reviewers)))
-                return .right(APIRequest(installationId: installationId, url: url, body: body))
-            } catch {
-                return defaultResponse
+                return .right(try APIRequest(installationId: installationId,
+                                             url: url,
+                                             encodable: Github.IssueComment(body: reviewText(reviewers))))
+            } catch { return defaultResponse }
+        case .changesRequested:
+            guard let comments = from.pullRequest?.links.comments.href,
+                var url = URL(string: comments) else {
+                    return defaultResponse
             }
+            url.deleteLastPathComponent()
+            url.appendPathComponent("labels")
+            url.appendPathComponent(waitingForReviewLabel.name)
+            return .right(APIRequest(installationId: installationId,
+                                     url: url,
+                                     method: .DELETE))
         default: return defaultResponse
         }
     }
@@ -278,7 +309,9 @@ extension Github {
                 return accessToken(context: context,
                                    jwtToken: try jwt(),
                                    installationId: request.installationId).flatMap { accessToken in
-                    guard let host = request.url.host else {
+                    guard let host = request.url.host,
+                        let path = request.url.path
+                            .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed) else {
                         return pure(
                             .left(PayloadResponse(error: Github.Error.badUrl(request.url.absoluteString))),
                             context)
@@ -289,13 +322,21 @@ extension Github {
                         ("Accept", "application/vnd.github.machine-man-preview+json"),
                         ("User-Agent", "cci-imind")
                     ])
-                    let httpRequest = HTTPRequest(method: .POST,
-                                                  url: request.url.path,
-                                                  version: HTTPVersion(major: 1, minor: 1),
+                        
+                    let httpRequest = HTTPRequest(method: request.method,
+                                                  url: path,
                                                   headers: headers,
-                                                  body: request.body)
+                                                  body: request.body ?? HTTPBody())
+                                    
                     return api(context, httpRequest)
                         .decode(APIResponse.self)
+                        .catchMap {
+                            if case DecodingError.typeMismatch = $0 {
+                                return nil
+                            } else {
+                                throw $0
+                            }
+                        }
                         .map {
                             let response = $0 ?? APIResponse()
                             return Either<PayloadResponse, APIResponse>.right(response)
