@@ -85,8 +85,10 @@ private typealias ResponseContainer = Youtrack.ResponseContainer
 extension Youtrack {
     static func githubRequest(_ from: Github.Payload,
                               _ headers: Headers?) -> Either<Github.PayloadResponse, Youtrack.Request> {
-        guard let (command, title) = commandAndTitle(from, headers) else {
-            return .left(Github.PayloadResponse())
+        guard let type = from.type(headers: headers),
+            let command = Command(type),
+            let title = type.title else {
+                return .left(Github.PayloadResponse())
         }
         do {
             let regex = try NSRegularExpression(pattern: "4DM-[0-9]+")
@@ -129,13 +131,6 @@ extension Youtrack {
             value = from.compactMap { $0.response.value }.joined(separator: "\n")
         }
         return Github.PayloadResponse(value: value)
-    }
-    
-    private static func commandAndTitle(_ request: Github.Payload, _ headers: Headers?) -> (Command, String)? {
-        guard let type = request.type(headers: headers),
-            let command = Command(type),
-            let title = type.title else { return nil }
-        return (command, title)
     }
     
     private static func path(base: String, issue: String, command: Command) -> String {
