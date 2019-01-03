@@ -77,14 +77,15 @@ class RouterGithubToGithubTests: XCTestCase {
                                              base: Github.masterBranch,
                                              requestedReviewers: [Github.User(login: "z")],
                                              links: Github.Links(comments: Github.Link(href: commentLink)))
-        let request = Github.Payload(action: .labeled,
+        let request = Github.Payload(action: .submitted,
+                                     review: Github.Review(state: .changesRequested),
                                      pullRequest: pullRequest,
                                      label: Github.waitingForReviewLabel,
                                      installation: Github.Installation(id: 1))
         let response = try GithubToGithub.run(request,
                                               context(),
                                               "y",
-                                              [Github.eventHeaderName: "pull_request",
+                                              [Github.eventHeaderName: Github.Event.pullRequestReview.rawValue,
                                                Github.signatureHeaderName:
                                                 "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()
@@ -109,7 +110,7 @@ class RouterGithubToGithubTests: XCTestCase {
         let response = try GithubToYoutrack.run(request,
                                                 context(),
                                                 "y",
-                                                [Github.eventHeaderName: "pull_request",
+                                                [Github.eventHeaderName: Github.Event.pullRequest.rawValue,
                                                  Github.signatureHeaderName:
                                                     "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
             .wait()

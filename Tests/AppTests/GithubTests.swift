@@ -121,52 +121,52 @@ class GithubTests: XCTestCase {
         XCTAssertEqual(Github.reviewText(single), "@z please review this pr")
     }
     
-    func testGithubRequestLabeled() throws {
-        let commentLink = "http://test.com/comment/link"
-        let reviewer = Github.User(login: "y")
-        let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
-        let pullRequest = Github.PullRequest(id: 1,
-                                             title: "x",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch,
-                                             requestedReviewers: [reviewer],
-                                             links: Github.Links(comments: Github.Link(href: commentLink)))
-        
-        let response = Github.githubRequest(Github.Payload(action: .labeled,
-                                                           pullRequest: pullRequest,
-                                                           label: Github.waitingForReviewLabel,
-                                                           installation: Github.Installation(id: 1)),
-                                            pullRequestHeaders)
-        
-        let expectedBody =
-            try JSONEncoder().encode(Github.IssueComment(body: Github.reviewText([reviewer])))
-        
-        XCTAssertEqual(response.right?.url, URL(string: commentLink))
-        XCTAssertEqual(response.right?.installationId, 1)
-        XCTAssertEqual(response.right?.body, expectedBody)
-        XCTAssertEqual(response.right?.method, .POST)
-        
-    }
-
-    func testGithubRequestLabeledEmptyReviewer() {
-        let commentLink = "http://test.com/comment/link"
-        let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
-        let pullRequest = Github.PullRequest(id: 1,
-                                             title: "x",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch,
-                                             requestedReviewers: [],
-                                             links: Github.Links(comments: Github.Link(href: commentLink)))
-        
-        let response = Github.githubRequest(Github.Payload(action: .labeled,
-                                                           pullRequest: pullRequest,
-                                                           label: Github.waitingForReviewLabel,
-                                                           installation: Github.Installation(id: 1)),
-                                            pullRequestHeaders)
-        
-        XCTAssertEqual(response.left, Github.PayloadResponse())
-        
-    }
+//    func testGithubRequestLabeled() throws {
+//        let commentLink = "http://test.com/comment/link"
+//        let reviewer = Github.User(login: "y")
+//        let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
+//        let pullRequest = Github.PullRequest(id: 1,
+//                                             title: "x",
+//                                             head: Github.devBranch,
+//                                             base: Github.masterBranch,
+//                                             requestedReviewers: [reviewer],
+//                                             links: Github.Links(comments: Github.Link(href: commentLink)))
+//        
+//        let response = Github.githubRequest(Github.Payload(action: .labeled,
+//                                                           pullRequest: pullRequest,
+//                                                           label: Github.waitingForReviewLabel,
+//                                                           installation: Github.Installation(id: 1)),
+//                                            pullRequestHeaders)
+//        
+//        let expectedBody =
+//            try JSONEncoder().encode(Github.IssueComment(body: Github.reviewText([reviewer])))
+//        
+//        XCTAssertEqual(response.right?.url, URL(string: commentLink))
+//        XCTAssertEqual(response.right?.installationId, 1)
+//        XCTAssertEqual(response.right?.body, expectedBody)
+//        XCTAssertEqual(response.right?.method, .POST)
+//        
+//    }
+//
+//    func testGithubRequestLabeledEmptyReviewer() {
+//        let commentLink = "http://test.com/comment/link"
+//        let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
+//        let pullRequest = Github.PullRequest(id: 1,
+//                                             title: "x",
+//                                             head: Github.devBranch,
+//                                             base: Github.masterBranch,
+//                                             requestedReviewers: [],
+//                                             links: Github.Links(comments: Github.Link(href: commentLink)))
+//        
+//        let response = Github.githubRequest(Github.Payload(action: .labeled,
+//                                                           pullRequest: pullRequest,
+//                                                           label: Github.waitingForReviewLabel,
+//                                                           installation: Github.Installation(id: 1)),
+//                                            pullRequestHeaders)
+//        
+//        XCTAssertEqual(response.left, Github.PayloadResponse())
+//        
+//    }
     
     func testGithubRequestChangesRequested() throws {
         let commentLink = "http://test.com/comment/link"

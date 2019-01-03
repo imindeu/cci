@@ -236,20 +236,20 @@ extension Github {
             return defaultResponse
         }
         switch type {
-        case .pullRequestLabeled(label: waitingForReviewLabel, head: _, base: _):
-            guard let comments = from.pullRequest?.links.comments.href,
-                let url = URL(string: comments) else {
-                return defaultResponse
-            }
-            guard let reviewers = from.pullRequest?.requestedReviewers, !reviewers.isEmpty else {
-                return defaultResponse
-            }
-            
-            do {
-                return .right(try APIRequest(installationId: installationId,
-                                             url: url,
-                                             encodable: Github.IssueComment(body: reviewText(reviewers))))
-            } catch { return defaultResponse }
+//        case .pullRequestLabeled(label: waitingForReviewLabel, head: _, base: _):
+//            guard let comments = from.pullRequest?.links.comments.href,
+//                let url = URL(string: comments) else {
+//                return defaultResponse
+//            }
+//            guard let reviewers = from.pullRequest?.requestedReviewers, !reviewers.isEmpty else {
+//                return defaultResponse
+//            }
+//            
+//            do {
+//                return .right(try APIRequest(installationId: installationId,
+//                                             url: url,
+//                                             encodable: Github.IssueComment(body: reviewText(reviewers))))
+//            } catch { return defaultResponse }
         case .changesRequested:
             guard let comments = from.pullRequest?.links.comments.href,
                 var url = URL(string: comments) else {
