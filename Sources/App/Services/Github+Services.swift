@@ -284,10 +284,10 @@ extension Github {
                 do {
                     switch request.type {
                     case .changesRequested:
-                        return try fetch(request, APIResponse.self, nil, context)
+                        return try fetch(request, APIResponse.self, context)
                             .clean()
                     case .failedStatus:
-                        return try fetch(request, APISearchResponse<IssueResult>.self, nil, context)
+                        return try fetch(request, APISearchResponse<IssueResult>.self, context)
                             .mapTokened { result -> String? in
                                 return result?.items?
                                     .compactMap { item -> String? in
@@ -295,19 +295,8 @@ extension Github {
                                     }
                                     .first
                             }
-                            .mapTokened { url -> APIRequest? in
-                                return url.map {
-                                    APIRequest(installationId: installationId, type: .getPullRequest(url: $0))
-                                }
-                            }
-                            .flatMapTokened(context, PullRequest.self)
-                            .mapTokened { pullRequest -> APIRequest? in
-                                return pullRequest.map {
-                                    APIRequest(installationId: installationId,
-                                               type: RequestType.changesRequested(url: $0.url))
-                                }
-                            }
-                            .flatMapTokened(context, APIResponse.self)
+                            .fetch(context, PullRequest.self, installationId) { .getPullRequest(url: $0 ) }
+                            .fetch(context, APIResponse.self, installationId) { .changesRequested(url: $0.url) }
                             .clean()
                     default:
                         return leftIO(context)(PayloadResponse())
@@ -342,9 +331,9 @@ extension Github {
     }
     
     fileprivate static func fetch<A: Decodable>(_ request: APIRequest,
-                                            _ responseType: A.Type,
-                                            _ token: String?,
-                                            _ context: Context) throws -> IO<Tokened<A?>> {
+                                                _ responseType: A.Type,
+                                                _ context: Context,
+                                                _ token: String? = nil) throws -> IO<Tokened<A?>> {
         guard let method = request.type.method else {
             throw Error.noMethod
         }
@@ -405,11 +394,25 @@ private extension IO {
         return map { tokened in return Github.Tokened(tokened.token, try callback(tokened.value)) }
     }
     
-    func flatMapTokened<A: Decodable>(_ context: Context, _ returnType: A.Type) -> IO<Github.Tokened<A?>> where T == Github.Tokened<APIRequest?> {
+    private func fetchTokened<A: Decodable>(_ context: Context, _ returnType: A.Type)
+        -> IO<Github.Tokened<A?>> where T == Github.Tokened<APIRequest?> {
+            
         return self.flatMap { tokened in
             guard let value = tokened.value else { return pure(Github.Tokened<A?>(tokened.token, nil), context) }
-//            return try callback(Github.Tokened(tokened.token, value))
-            return try Github.fetch(value, returnType, tokened.token, context)
+            return try Github.fetch(value, returnType, context, tokened.token)
         }
+    }
+    
+    func fetch<A, B: Decodable>(_ context: Context,
+                                _ returnType: B.Type,
+                                _ installationId: Int,
+                                _ type: @escaping (A) -> Github.RequestType)
+        -> IO<Github.Tokened<B?>> where T == Github.Tokened<A?> {
+        
+        return mapTokened { value -> APIRequest? in
+            return value.map {
+                APIRequest(installationId: installationId, type: type($0))
+            }
+        }.fetchTokened(context, returnType)
     }
 }
