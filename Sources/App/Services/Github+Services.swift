@@ -295,8 +295,8 @@ extension Github {
                                     }
                                     .first
                             }
-                            .fetch(context, PullRequest.self, installationId) { .getPullRequest(url: $0 ) }
-                            .fetch(context, APIResponse.self, installationId) { .changesRequested(url: $0.url) }
+                            .fetchTokened(context, PullRequest.self, installationId) { .getPullRequest(url: $0 ) }
+                            .fetchTokened(context, APIResponse.self, installationId) { .changesRequested(url: $0.url) }
                             .clean()
                     default:
                         return leftIO(context)(PayloadResponse())
@@ -394,7 +394,7 @@ private extension IO {
         return map { tokened in return Github.Tokened(tokened.token, try callback(tokened.value)) }
     }
     
-    private func fetchTokened<A: Decodable>(_ context: Context, _ returnType: A.Type)
+    private func fetch<A: Decodable>(_ context: Context, _ returnType: A.Type)
         -> IO<Github.Tokened<A?>> where T == Github.Tokened<APIRequest?> {
             
         return self.flatMap { tokened in
@@ -403,7 +403,7 @@ private extension IO {
         }
     }
     
-    func fetch<A, B: Decodable>(_ context: Context,
+    func fetchTokened<A, B: Decodable>(_ context: Context,
                                 _ returnType: B.Type,
                                 _ installationId: Int,
                                 _ type: @escaping (A) -> Github.RequestType)
@@ -413,6 +413,6 @@ private extension IO {
             return value.map {
                 APIRequest(installationId: installationId, type: type($0))
             }
-        }.fetchTokened(context, returnType)
+        }.fetch(context, returnType)
     }
 }
