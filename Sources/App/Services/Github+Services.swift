@@ -184,6 +184,16 @@ extension APIRequest: RequestModel {
 
 extension Github {
     
+    fileprivate struct Tokened<A> {
+        let token: String
+        let value: A
+        
+        init(_ token: String, _ value: A) {
+            self.token = token
+            self.value = value
+        }
+    }
+    
     // MARK: webhook
     static func verify(body: String?, secret: String?, signature: String?) -> Bool {
         guard let body = body,
@@ -278,32 +288,26 @@ extension Github {
                             .clean()
                     case .failedStatus:
                         return try fetch(request, APISearchResponse<IssueResult>.self, nil, context)
-                            .map { token, result -> (String, String?) in
-                                return (token, result?.items?
+                            .mapTokened { result -> String? in
+                                return result?.items?
                                     .compactMap { item -> String? in
                                         return item.pullRequest?.url
                                     }
-                                    .first)
+                                    .first
                             }
-                            .map { token, url -> (String, APIRequest?) in
-                                return (token, url.map {
+                            .mapTokened { url -> APIRequest? in
+                                return url.map {
                                     APIRequest(installationId: installationId, type: .getPullRequest(url: $0))
-                                })
+                                }
                             }
-                            .flatMap { token, request -> IO<(String, PullRequest?)> in
-                                guard let request = request else { return pure((token, nil), context) }
-                                return try fetch(request, PullRequest.self, token, context)
-                            }
-                            .map { token, pullRequest -> (String, APIRequest?) in
-                                return (token, pullRequest.map {
+                            .flatMapTokened(context, PullRequest.self)
+                            .mapTokened { pullRequest -> APIRequest? in
+                                return pullRequest.map {
                                     APIRequest(installationId: installationId,
                                                type: RequestType.changesRequested(url: $0.url))
-                                })
+                                }
                             }
-                            .flatMap { token, request -> IO<(String, APIResponse?)> in
-                                guard let request = request else { return pure((token, nil), context) }
-                                return try fetch(request, APIResponse.self, token, context)
-                            }
+                            .flatMapTokened(context, APIResponse.self)
                             .clean()
                     default:
                         return leftIO(context)(PayloadResponse())
@@ -337,10 +341,10 @@ extension Github {
         return "\(list) please review this pr"
     }
     
-    private static func fetch<A: Decodable>(_ request: APIRequest,
+    fileprivate static func fetch<A: Decodable>(_ request: APIRequest,
                                             _ responseType: A.Type,
                                             _ token: String?,
-                                            _ context: Context) throws -> IO<(String, A?)> {
+                                            _ context: Context) throws -> IO<Tokened<A?>> {
         guard let method = request.type.method else {
             throw Error.noMethod
         }
@@ -371,14 +375,14 @@ extension Github {
                 
                 return api(context, httpRequest)
                     .decode(responseType)
-                    .map { (accessToken, $0) }
+                    .map { Tokened(accessToken, $0) }
             }
     }
 }
 
-extension IO where T == (String, APIResponse?) {
+private extension IO where T == Github.Tokened<APIResponse?> {
     func clean() -> EitherIO<Github.PayloadResponse, APIResponse> {
-        return map { $0.1 }
+        return map { $0.value }
             .catchMap {
                 if case DecodingError.typeMismatch = $0 {
                     return nil
@@ -392,6 +396,20 @@ extension IO where T == (String, APIResponse?) {
             }
             .map { .right($0) }
             .catchMap { .left(Github.PayloadResponse(error: Github.Error.underlying($0))) }
-        
+    }
+    
+}
+
+private extension IO {
+    func mapTokened<A, B>(_ callback: @escaping (A) throws -> B) -> IO<Github.Tokened<B>> where T == Github.Tokened<A> {
+        return map { tokened in return Github.Tokened(tokened.token, try callback(tokened.value)) }
+    }
+    
+    func flatMapTokened<A: Decodable>(_ context: Context, _ returnType: A.Type) -> IO<Github.Tokened<A?>> where T == Github.Tokened<APIRequest?> {
+        return self.flatMap { tokened in
+            guard let value = tokened.value else { return pure(Github.Tokened<A?>(tokened.token, nil), context) }
+//            return try callback(Github.Tokened(tokened.token, value))
+            return try Github.fetch(value, returnType, tokened.token, context)
+        }
     }
 }
