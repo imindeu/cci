@@ -309,7 +309,8 @@ extension CircleCi {
                         .map { .right($0) }
                         .catchMap { .left(
                             Slack.Response.error(Error.underlying($0),
-                                                 helpResponse: helpResponse)) }
+                                                 helpResponse: helpResponse))
+                        }
                 } catch {
                     return leftIO(context)(
                         Slack.Response.error(Error.underlying(error),

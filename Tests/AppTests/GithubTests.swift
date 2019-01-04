@@ -46,11 +46,11 @@ class GithubTests: XCTestCase {
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
         let featureBranch = Github.Branch(ref: "feature")
-        let pullRequest = Github.PullRequest(id: 0,
+        let pullRequest = Github.PullRequest(url: "",
+                                             id: 0,
                                              title: title,
                                              head: featureBranch,
-                                             base: Github.devBranch,
-                                             links: Github.Links(comments: Github.Link(href: "")))
+                                             base: Github.devBranch)
 
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
@@ -115,7 +115,7 @@ class GithubTests: XCTestCase {
                 return pure(response, context)
             }
         }
-        XCTAssertEqual(try Github.accessToken(context: context(), jwtToken: "a", installationId: 1).wait(), token)
+        XCTAssertEqual(try Github.accessToken(context: context(), jwtToken: "a", installationId: 1)().wait(), token)
     }
     
     func testReviewText() {
@@ -173,16 +173,15 @@ class GithubTests: XCTestCase {
 //    }
     
     func testGithubRequestChangesRequested() throws {
-        let commentLink = "http://test.com/comment/link"
-        let labelPath = "/comment/labels/waiting for review"
+        let labelPath = "/pulls/labels/waiting for review"
         let reviewer = Github.User(login: "y")
         let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequestReview.rawValue]
-        let pullRequest = Github.PullRequest(id: 1,
+        let pullRequest = Github.PullRequest(url: "http://test.com/pulls",
+                                             id: 1,
                                              title: "x",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
-                                             requestedReviewers: [reviewer],
-                                             links: Github.Links(comments: Github.Link(href: commentLink)))
+                                             requestedReviewers: [reviewer])
         
         let response = Github.githubRequest(Github.Payload(action: .submitted,
                                                            review: Github.Review(state: .changesRequested),
@@ -190,22 +189,21 @@ class GithubTests: XCTestCase {
                                                            installation: Github.Installation(id: 1)),
                                             pullRequestHeaders)
         
-        XCTAssertEqual(response.right?.url.host, "test.com")
-        XCTAssertEqual(response.right?.url.path, labelPath)
+        XCTAssertEqual(response.right?.type.url?.host, "test.com")
+        XCTAssertEqual(response.right?.type.url?.path, labelPath)
         XCTAssertEqual(response.right?.installationId, 1)
-        XCTAssertNil(response.right?.body)
-        XCTAssertEqual(response.right?.method, .DELETE)
+        XCTAssertEqual(response.right?.type.method, .DELETE)
 
     }
 
     func testApiWithGithub() throws {
         let api = Github.apiWithGithub(context())
-        
+
         Environment.env = [
             Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
             Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
         ]
-        
+
         Environment.api = { hostname, _ in
             return { context, _ in
                 if hostname == "api.github.com" {
@@ -229,20 +227,14 @@ class GithubTests: XCTestCase {
             }
         }
 
-        let comment = Github.IssueComment(body: Github.reviewText([Github.User(login: "x")]))
-        let request = try Github.APIRequest(installationId: 1,
-                                            url: URL(string: "http://test.com/comment/link")!,
-                                            encodable: comment,
-                                            method: .POST)
+        let request = Github.APIRequest(installationId: 1, type: .changesRequested(url: "http://test.com/pulls"))
         let response = try api(request).wait()
         XCTAssertEqual(response.right, Github.APIResponse(message: "y"))
-        
-        let wrongRequest = try Github.APIRequest(installationId: 1,
-                                                 url: URL(string: "/comment/link")!,
-                                                 encodable: comment,
-                                                 method: .POST)
+
+        let wrongRequest = Github.APIRequest(installationId: 1, type: .changesRequested(url: "/pulls"))
         let wrongResponse = try api(wrongRequest).wait()
-        XCTAssertEqual(wrongResponse.left, Github.PayloadResponse(error: Github.Error.badUrl("/comment/link")))
+        XCTAssertEqual(wrongResponse.left,
+                       Github.PayloadResponse(error: Github.Error.badUrl("/pulls/labels/waiting%20for%20review")))
     }
     
     func testResponseToGithub() {

@@ -69,11 +69,11 @@ class RouterGithubToCircleCiTests: XCTestCase {
     }
 
     func testFullRun() throws {
-        let pullRequest = Github.PullRequest(id: 1,
+        let pullRequest = Github.PullRequest(url: "",
+                                             id: 1,
                                              title: "x",
                                              head: Github.devBranch,
-                                             base: Github.masterBranch,
-                                             links: Github.Links(comments: Github.Link(href: "")))
+                                             base: Github.masterBranch)
         let request = Github.Payload(action: .labeled,
                                      pullRequest: pullRequest,
                                      label: Github.waitingForReviewLabel,
@@ -91,11 +91,11 @@ class RouterGithubToCircleCiTests: XCTestCase {
     }
 
     func testEmptyRun() throws {
-        let pullRequest = Github.PullRequest(id: 1,
+        let pullRequest = Github.PullRequest(url: "",
+                                             id: 1,
                                              title: "x",
                                              head: Github.devBranch,
-                                             base: Github.masterBranch,
-                                             links: Github.Links(comments: Github.Link(href: "")))
+                                             base: Github.masterBranch)
         let request = Github.Payload(action: .unlabeled,
                                      pullRequest: pullRequest,
                                      label: Github.waitingForReviewLabel,
