@@ -333,7 +333,7 @@ extension Github {
     fileprivate static func fetch<A: Decodable>(_ request: APIRequest,
                                                 _ responseType: A.Type,
                                                 _ context: Context,
-                                                _ token: String? = nil) throws -> IO<Tokened<A?>> {
+                                                _ token: String? = nil) throws -> TokenedIO<A?> {
         guard let method = request.type.method else {
             throw Error.noMethod
         }
@@ -389,13 +389,15 @@ private extension IO where T == Github.Tokened<APIResponse?> {
     
 }
 
-private extension IO {
-    func mapTokened<A, B>(_ callback: @escaping (A) throws -> B) -> IO<Github.Tokened<B>> where T == Github.Tokened<A> {
+fileprivate typealias TokenedIO<A> = IO<Github.Tokened<A>>
+
+private extension TokenedIO {
+    func mapTokened<A, B>(_ callback: @escaping (A) throws -> B) -> TokenedIO<B> where T == Github.Tokened<A> {
         return map { tokened in return Github.Tokened(tokened.token, try callback(tokened.value)) }
     }
     
     private func fetch<A: Decodable>(_ context: Context, _ returnType: A.Type)
-        -> IO<Github.Tokened<A?>> where T == Github.Tokened<APIRequest?> {
+        -> TokenedIO<A?> where T == Github.Tokened<APIRequest?> {
             
         return self.flatMap { tokened in
             guard let value = tokened.value else { return pure(Github.Tokened<A?>(tokened.token, nil), context) }
@@ -407,7 +409,7 @@ private extension IO {
                                 _ returnType: B.Type,
                                 _ installationId: Int,
                                 _ type: @escaping (A) -> Github.RequestType)
-        -> IO<Github.Tokened<B?>> where T == Github.Tokened<A?> {
+        -> TokenedIO<B?> where T == Github.Tokened<A?> {
         
         return mapTokened { value -> APIRequest? in
             return value.map {
