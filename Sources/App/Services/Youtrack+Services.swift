@@ -119,7 +119,7 @@ extension Youtrack {
                     .map { results -> Either<Github.PayloadResponse, [ResponseContainer]> in
                         let initial: Either<Github.PayloadResponse, [ResponseContainer]> = .right([])
                         return results.reduce(initial, flatten)
-                }
+                    }
             }
     }
     

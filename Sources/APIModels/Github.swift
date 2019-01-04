@@ -15,6 +15,8 @@ public enum Github {
         public let refType: RefType?
         public let installation: Installation?
         public let repository: Repository?
+        public let commit: Commit?
+        public let state: State?
         
         public init(action: Action? = nil,
                     review: Review? = nil,
@@ -23,7 +25,9 @@ public enum Github {
                     ref: String? = nil,
                     refType: RefType? = nil,
                     installation: Installation? = nil,
-                    repository: Repository? = nil) {
+                    repository: Repository? = nil,
+                    commit: Commit? = nil,
+                    state: State? = nil) {
             self.action = action
             self.review = review
             self.pullRequest = pullRequest
@@ -32,53 +36,45 @@ public enum Github {
             self.refType = refType
             self.installation = installation
             self.repository = repository
+            self.commit = commit
+            self.state = state
         }
         
         enum CodingKeys: String, CodingKey {
-            case action
-            case review
+            case action, review, label, ref, installation, repository, commit, state
             case pullRequest = "pull_request"
-            case label
-            case ref
             case refType = "ref_type"
-            case installation
-            case repository
         }
     }
     
     public struct PullRequest: Equatable, Codable {
+        public let url: String
         public let id: Int
         public let title: String
         public let head: Branch
         public let base: Branch
         public let assignees: [User]
         public let requestedReviewers: [User]
-        public let links: Links
 
-        public init(id: Int,
+        public init(url: String,
+                    id: Int,
                     title: String,
                     head: Branch,
                     base: Branch,
                     assignees: [User] = [],
-                    requestedReviewers: [User] = [],
-                    links: Links) {
+                    requestedReviewers: [User] = []) {
+            self.url = url
             self.id = id
             self.title = title
             self.head = head
             self.base = base
             self.assignees = assignees
             self.requestedReviewers = requestedReviewers
-            self.links = links
         }
         
         enum CodingKeys: String, CodingKey {
-            case id
-            case title
-            case head
-            case base
-            case assignees
+            case url, id, title, head, base, assignees
             case requestedReviewers = "requested_reviewers"
-            case links = "_links"
         }
     }
     
@@ -111,6 +107,14 @@ public enum Github {
         
         public init(name: String) {
             self.name = name
+        }
+    }
+    
+    public struct Commit: Equatable, Codable {
+        public let sha: String
+        
+        public init(sha: String) {
+            self.sha = sha
         }
     }
     
@@ -191,6 +195,13 @@ public enum Github {
         // ...
     }
     
+    public enum State: String, Equatable, Codable {
+        case pending
+        case error
+        case failure
+        case success
+    }
+    
     public enum RefType: String, Equatable, Codable {
         case branch
         case tag
@@ -237,4 +248,32 @@ public extension Github {
         }
     }
 
+}
+
+public extension Github {
+    public struct APISearchResponse<A: Codable & Equatable>: Equatable, Codable {
+        public let message: String?
+        public let errors: [APIError]?
+        public let items: [A]?
+        public let totalCount: Int?
+        public let incompleteResults: Bool?
+        
+        enum CodingKeys: String, CodingKey {
+            case message, errors, items
+            case totalCount = "total_count"
+            case incompleteResults = "incomplete_results"
+        }
+    }
+    
+    public struct IssueResult: Equatable, Codable {
+        public struct IssuePullRequestResult: Equatable, Codable {
+            public let url: String?
+        }
+        
+        public let pullRequest: IssuePullRequestResult?
+        
+        enum CodingKeys: String, CodingKey {
+            case pullRequest = "pull_request"
+        }
+    }
 }

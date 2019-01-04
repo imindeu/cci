@@ -293,11 +293,11 @@ class CircleCiTests: XCTestCase {
     // MARK: Github
     func testGithubRequest() {
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
-        let devPullRequest = Github.PullRequest(id: 0,
+        let devPullRequest = Github.PullRequest(url: "",
+                                                id: 0,
                                                 title: "test",
                                                 head: Github.Branch(ref: branch),
-                                                base: Github.devBranch,
-                                                links: Github.Links(comments: Github.Link(href: "")))
+                                                base: Github.devBranch)
         let labeledDevRequest = Github.Payload(action: .labeled,
                                                pullRequest: devPullRequest,
                                                label: Github.waitingForReviewLabel,
@@ -310,11 +310,11 @@ class CircleCiTests: XCTestCase {
                                        options: [],
                                        username: "cci"))
 
-        let masterPullRequest = Github.PullRequest(id: 0,
+        let masterPullRequest = Github.PullRequest(url: "",
+                                                   id: 0,
                                                    title: "test",
                                                    head: Github.Branch(ref: branch),
-                                                   base: Github.masterBranch,
-                                                   links: Github.Links(comments: Github.Link(href: "")))
+                                                   base: Github.masterBranch)
         let labeledMasterRequest = Github.Payload(action: .labeled,
                                                   pullRequest: masterPullRequest,
                                                   label: Github.waitingForReviewLabel,

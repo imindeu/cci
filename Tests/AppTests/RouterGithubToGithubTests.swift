@@ -70,13 +70,12 @@ class RouterGithubToGithubTests: XCTestCase {
     }
     
     func testFullRun() throws {
-        let commentLink = "http://test.com/comment/link"
-        let pullRequest = Github.PullRequest(id: 1,
+        let pullRequest = Github.PullRequest(url: "http://test.com/pull",
+                                             id: 1,
                                              title: "x",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
-                                             requestedReviewers: [Github.User(login: "z")],
-                                             links: Github.Links(comments: Github.Link(href: commentLink)))
+                                             requestedReviewers: [Github.User(login: "z")])
         let request = Github.Payload(action: .submitted,
                                      review: Github.Review(state: .changesRequested),
                                      pullRequest: pullRequest,
@@ -95,14 +94,13 @@ class RouterGithubToGithubTests: XCTestCase {
     }
 
     func testEmptyRun() throws {
-        let commentLink = "http://test.com/comment/link"
-        let pullRequest = Github.PullRequest(id: 1,
+        let pullRequest = Github.PullRequest(url: "http://test.com/pull",
+                                             id: 1,
                                              title: "x",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
                                              assignees: [],
-                                             requestedReviewers: [],
-                                             links: Github.Links(comments: Github.Link(href: commentLink)))
+                                             requestedReviewers: [])
         let request = Github.Payload(action: .labeled,
                                      pullRequest: pullRequest,
                                      label: Github.waitingForReviewLabel,

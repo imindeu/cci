@@ -41,11 +41,11 @@ class YoutrackTests: XCTestCase {
         let title = "test \(issues.joined(separator: ", "))"
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
-        let pullRequest = Github.PullRequest(id: 0,
+        let pullRequest = Github.PullRequest(url: "",
+                                             id: 0,
                                              title: title,
                                              head: Github.Branch(ref: "feature"),
-                                             base: Github.Branch(ref: "dev"),
-                                             links: Github.Links(comments: Github.Link(href: "")))
+                                             base: Github.Branch(ref: "dev"))
 
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
