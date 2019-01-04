@@ -369,7 +369,9 @@ extension Github {
     }
 }
 
-private extension IO where T == Github.Tokened<APIResponse?> {
+private typealias TokenedIO<A> = IO<Github.Tokened<A>>
+
+private extension TokenedIO where T == Github.Tokened<APIResponse?> {
     func clean() -> EitherIO<Github.PayloadResponse, APIResponse> {
         return map { $0.value }
             .catchMap {
@@ -388,8 +390,6 @@ private extension IO where T == Github.Tokened<APIResponse?> {
     }
     
 }
-
-fileprivate typealias TokenedIO<A> = IO<Github.Tokened<A>>
 
 private extension TokenedIO {
     func mapTokened<A, B>(_ callback: @escaping (A) throws -> B) -> TokenedIO<B> where T == Github.Tokened<A> {
