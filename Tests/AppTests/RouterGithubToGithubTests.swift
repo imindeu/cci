@@ -26,19 +26,9 @@ class RouterGithubToGithubTests: XCTestCase {
                 Environment.env[hostname] = hostname
                 if hostname == "test.com" {
                     let command = request.url.query ?? ""
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{\"value\": \"\(command)\"}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{\"value\": \"\(command)\"}"), context)
                 } else if hostname == "api.github.com" {
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{\"token\":\"x\"}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{\"token\":\"x\"}"), context)
                 } else {
                     XCTFail("Shouldn't have an api for anything else")
                     return Environment.emptyApi(context)

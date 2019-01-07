@@ -107,12 +107,7 @@ class GithubTests: XCTestCase {
         let token = "x"
         Environment.api = { hostname, _ in
             return { context, _ in
-                let response = HTTPResponse(
-                    status: .ok,
-                    version: HTTPVersion(major: 1, minor: 1),
-                    headers: HTTPHeaders([]),
-                    body: "{\"token\":\"\(token)\"}")
-                return pure(response, context)
+                return pure(HTTPResponse(body: "{\"token\":\"\(token)\"}"), context)
             }
         }
         XCTAssertEqual(try Github.accessToken(context: context(), jwtToken: "a", installationId: 1)().wait(), token)
@@ -125,52 +120,6 @@ class GithubTests: XCTestCase {
         XCTAssertEqual(Github.reviewText(single), "@z please review this pr")
     }
     
-//    func testGithubRequestLabeled() throws {
-//        let commentLink = "http://test.com/comment/link"
-//        let reviewer = Github.User(login: "y")
-//        let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
-//        let pullRequest = Github.PullRequest(id: 1,
-//                                             title: "x",
-//                                             head: Github.devBranch,
-//                                             base: Github.masterBranch,
-//                                             requestedReviewers: [reviewer],
-//                                             links: Github.Links(comments: Github.Link(href: commentLink)))
-//        
-//        let response = Github.githubRequest(Github.Payload(action: .labeled,
-//                                                           pullRequest: pullRequest,
-//                                                           label: Github.waitingForReviewLabel,
-//                                                           installation: Github.Installation(id: 1)),
-//                                            pullRequestHeaders)
-//        
-//        let expectedBody =
-//            try JSONEncoder().encode(Github.IssueComment(body: Github.reviewText([reviewer])))
-//        
-//        XCTAssertEqual(response.right?.url, URL(string: commentLink))
-//        XCTAssertEqual(response.right?.installationId, 1)
-//        XCTAssertEqual(response.right?.body, expectedBody)
-//        XCTAssertEqual(response.right?.method, .POST)
-//        
-//    }
-//
-//    func testGithubRequestLabeledEmptyReviewer() {
-//        let commentLink = "http://test.com/comment/link"
-//        let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
-//        let pullRequest = Github.PullRequest(id: 1,
-//                                             title: "x",
-//                                             head: Github.devBranch,
-//                                             base: Github.masterBranch,
-//                                             requestedReviewers: [],
-//                                             links: Github.Links(comments: Github.Link(href: commentLink)))
-//        
-//        let response = Github.githubRequest(Github.Payload(action: .labeled,
-//                                                           pullRequest: pullRequest,
-//                                                           label: Github.waitingForReviewLabel,
-//                                                           installation: Github.Installation(id: 1)),
-//                                            pullRequestHeaders)
-//        
-//        XCTAssertEqual(response.left, Github.PayloadResponse())
-//        
-//    }
     
     func testGithubRequestChangesRequested() throws {
         let labelPath = "/pulls/labels/waiting for review"
@@ -195,8 +144,24 @@ class GithubTests: XCTestCase {
         XCTAssertEqual(response.right?.type.method, .DELETE)
 
     }
+    
+    func testFailedStatus() {
+        let headers = [Github.eventHeaderName: Github.Event.status.rawValue]
+        
+        let response = Github.githubRequest(Github.Payload(installation: Github.Installation(id: 1),
+                                                           commit: Github.Commit(sha: "shaxyz"),
+                                                           state: .some(.error)),
+                                            headers)
+        
+        let query = "shaxyz+label:\"\(Github.waitingForReviewLabel.name)\"+state:open"
+        XCTAssertNil(response.left)
+        XCTAssertEqual(response.right?.type.url?.host, "api.github.com")
+        XCTAssertEqual(response.right?.type.url?.path, "/search/issues?q=\(query)")
+        XCTAssertEqual(response.right?.installationId, 1)
+        XCTAssertEqual(response.right?.type.method, .GET)
+    }
 
-    func testApiWithGithub() throws {
+    func testApiChangesRequested() throws {
         let api = Github.apiWithGithub(context())
 
         Environment.env = [
@@ -205,21 +170,12 @@ class GithubTests: XCTestCase {
         ]
 
         Environment.api = { hostname, _ in
+            Environment.env[hostname] = hostname
             return { context, _ in
                 if hostname == "api.github.com" {
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{\"token\": \"x\"}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{\"token\": \"x\"}"), context)
                 } else if hostname == "test.com" {
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{\"message\": \"y\"}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{\"message\": \"y\"}"), context)
                 } else {
                     XCTFail("Shouldn't be more api calls")
                     return Environment.emptyApi(context)
@@ -235,6 +191,55 @@ class GithubTests: XCTestCase {
         let wrongResponse = try api(wrongRequest).wait()
         XCTAssertEqual(wrongResponse.left,
                        Github.PayloadResponse(error: Github.Error.badUrl("/pulls/labels/waiting%20for%20review")))
+    }
+    
+    func testApiFailedStatus() throws {
+        let api = Github.apiWithGithub(context())
+        
+        Environment.env = [
+            Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
+            Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
+        ]
+        
+        Environment.api = { hostname, _ in
+            return { context, request in
+                Environment.env[hostname] = hostname
+                if hostname == "api.github.com" {
+                    if request.urlString.contains("/app/installations") {
+                        return pure(HTTPResponse(body: "{\"token\": \"x\"}"), context)
+                    } else if request.urlString.contains("/search/issues") {
+                        let response = Github.SearchResponse(
+                            items: [Github.SearchIssue(pullRequest: .init(url: "https://pr.com/1"))])
+                        let data = try? JSONEncoder().encode(response)
+                        return pure(HTTPResponse(body: data ?? Data()), context)
+                    } else {
+                        XCTFail("Shouldn't be more api calls")
+                        return Environment.emptyApi(context)
+                    }
+                } else if hostname == "pr.com" {
+                    let data = try? JSONEncoder().encode(Github.PullRequest(url: "https://test.com/pull/1",
+                                                                            id: 1,
+                                                                            title: "title",
+                                                                            head: Github.devBranch,
+                                                                            base: Github.masterBranch))
+                    return pure(HTTPResponse(body: data ?? Data()), context)
+                } else if hostname == "test.com" {
+                    return pure(HTTPResponse(body: "{\"message\": \"y\"}"), context)
+                } else {
+                    XCTFail("Shouldn't be more api calls")
+                    return Environment.emptyApi(context)
+                }
+            }
+        }
+        
+        let request = Github.APIRequest(installationId: 1, type: .failedStatus(sha: "shaxyz"))
+        let response = try api(request).wait()
+        
+        XCTAssertNil(response.left)
+        XCTAssertEqual(response.right, Github.APIResponse(message: "y"))
+        XCTAssertEqual(Environment.env["api.github.com"], "api.github.com")
+        XCTAssertEqual(Environment.env["pr.com"], "pr.com")
+        XCTAssertEqual(Environment.env["test.com"], "test.com")
     }
     
     func testResponseToGithub() {

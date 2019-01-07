@@ -34,12 +34,7 @@ class CircleCiTests: XCTestCase {
         Environment.api = { hostname, _ in
             return { context, _ in
                 if hostname == "circleci.com" {
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{\"build_url\":\"buildURL\",\"build_num\":10}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{\"build_url\":\"buildURL\",\"build_num\":10}"), context)
                 } else {
                     return Environment.emptyApi(context)
                 }
@@ -197,12 +192,7 @@ class CircleCiTests: XCTestCase {
         Environment.api = { hostname, _ in
             return { context, _ in
                 if hostname == "circleci.com" {
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{\"message\":\"x\"}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{\"message\":\"x\"}"), context)
                 } else {
                     return Environment.emptyApi(context)
                 }

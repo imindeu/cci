@@ -51,12 +51,7 @@ class RouterSlackToCircleCiTests: XCTestCase {
                     self.assert(body: request.body.data)
                     return Environment.emptyApi(context)
                 } else if hostname == "circleci.com" {
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{\"build_url\":\"buildURL\",\"build_num\":10}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{\"build_url\":\"buildURL\",\"build_num\":10}"), context)
                 } else {
                     XCTFail("Shouldn't have an api for anything else: \(hostname)")
                     return Environment.emptyApi(context)
