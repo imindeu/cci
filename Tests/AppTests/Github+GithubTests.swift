@@ -92,13 +92,6 @@ class Github_GithubTests: XCTestCase {
         
     }
     
-    func testReviewText() {
-        let multi = [Github.User(login: "x"), Github.User(login: "y")]
-        XCTAssertEqual(Github.reviewText(multi), "@x, @y please review this pr")
-        let single = [Github.User(login: "z")]
-        XCTAssertEqual(Github.reviewText(single), "@z please review this pr")
-    }
-    
     func testGithubRequestChangesRequested() throws {
         let labelPath = "/issues/1/labels/waiting for review"
         let reviewer = Github.User(login: "y")
