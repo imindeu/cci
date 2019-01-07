@@ -52,11 +52,57 @@ public extension Github {
             self.installationId = installationId
             self.type = type
         }
+        
+        var url: URL? {
+            let waitingForReview = Github.waitingForReviewLabel.name
+            switch self.type {
+            case let .changesRequested(url: url):
+                return URL(string: url.replacingOccurrences(of: "/pulls", with: "/issues"))?
+                    .appendingPathComponent("labels")
+                    .appendingPathComponent(waitingForReview)
+            case let .failedStatus(sha: sha):
+                let query = "issues?q=\(sha)+label:\"\(waitingForReview)\"+state:open"
+                return URL(string: "https://api.github.com/search/")?.appendingPathComponent(query)
+            case let .pullRequestOpened(_, url: url, _),
+                 let .pullRequestEdited(_, url: url, _),
+                 let .getPullRequest(url: url):
+                return URL(string: url)
+            default: return nil
+            }
+        }
+        
+        var method: HTTPMethod? {
+            switch self.type {
+            case .pullRequestOpened, .pullRequestEdited: return .PATCH
+            case .changesRequested: return .DELETE
+            case .failedStatus, .getPullRequest: return .GET
+            default: return nil
+            }
+        }
+        
+        var body: Data? {
+            switch self.type {
+            case let .pullRequestOpened(title: title, _, body: body),
+                 let .pullRequestEdited(title: title, _, body: body):
+                let issues = (try? Youtrack.issueURLs(from: title)
+                    .filter { !body.contains($0) }
+                    .map { "- \($0)" }) ?? []
+                if !issues.isEmpty {
+                    let new = issues.joined(separator: "\n") + "\n\n" + body
+                    struct Body: Encodable { let body: String }
+                    return try? JSONEncoder().encode(Body(body: new))
+                } else {
+                    return nil
+                }
+            default: return nil
+            }
+        }
     }
     
     public enum RequestType: Equatable {
         case branchCreated(title: String)
-        case pullRequestOpened(title: String)
+        case pullRequestOpened(title: String, url: String, body: String)
+        case pullRequestEdited(title: String, url: String, body: String)
         case pullRequestClosed(title: String)
         case pullRequestLabeled(label: Label, head: Branch, base: Branch)
         case changesRequested(url: String)
@@ -65,36 +111,13 @@ public extension Github {
         
         var title: String? {
             switch self {
-            case .branchCreated(let t), .pullRequestClosed(let t), .pullRequestOpened(let t):
+            case .branchCreated(let t), .pullRequestClosed(let t), .pullRequestOpened(let t, _, _):
                 return t
             default:
                 return nil
             }
         }
-        
-        var url: URL? {
-            let waitingForReview = Github.waitingForReviewLabel.name
-            switch self {
-            case let .changesRequested(url: url):
-                return URL(string: url.replacingOccurrences(of: "/pulls", with: "/issues"))?
-                    .appendingPathComponent("labels")
-                    .appendingPathComponent(waitingForReview)
-            case let .failedStatus(sha: sha):
-                let query = "issues?q=\(sha)+label:\"\(waitingForReview)\"+state:open"
-                return URL(string: "https://api.github.com/search/")?.appendingPathComponent(query)
-            case let .getPullRequest(url: url):
-                return URL(string: url)
-            default: return nil
-            }
-        }
-        
-        var method: HTTPMethod? {
-            switch self {
-            case .changesRequested: return .DELETE
-            case .failedStatus, .getPullRequest: return .GET
-            default: return nil
-            }
-        }
+
     }
     
     public enum Error: LocalizedError {
@@ -146,9 +169,11 @@ extension Payload {
         case let (.some(.pullRequest), .some(.closed), _, _, .some(pr), _, _, _, _):
             return .pullRequestClosed(title: pr.title)
         case let (.some(.pullRequest), .some(.opened), _, _, .some(pr), _, _, _, _):
-            return .pullRequestOpened(title: pr.title)
+            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body)
         case let (.some(.pullRequest), .some(.reopened), _, _, .some(pr), _, _, _, _):
-            return .pullRequestOpened(title: pr.title)
+            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body)
+        case let (.some(.pullRequest), .some(.edited), _, _, .some(pr), _, _, _, _):
+            return .pullRequestEdited(title: pr.title, url: pr.url, body: pr.body)
 
         case let (.some(.create), _, _, _, _, .some(title), .some(.branch), _, _):
             return .branchCreated(title: title)
@@ -299,6 +324,13 @@ extension Github {
                             .fetchTokened(context, PullRequest.self, installationId) { .getPullRequest(url: $0 ) }
                             .fetchTokened(context, APIResponse.self, installationId) { .changesRequested(url: $0.url) }
                             .clean()
+                    case .pullRequestOpened, .pullRequestEdited:
+                        if request.body == nil {
+                            return leftIO(context)(PayloadResponse())
+                        } else {
+                            return try fetch(request, APIResponse.self, context)
+                                .clean()
+                        }
                     default:
                         return leftIO(context)(PayloadResponse())
                     }
@@ -335,10 +367,10 @@ extension Github {
                                                 _ responseType: A.Type,
                                                 _ context: Context,
                                                 _ token: String? = nil) throws -> TokenedIO<A?> {
-        guard let method = request.type.method else {
+        guard let method = request.method else {
             throw Error.noMethod
         }
-        guard let url = request.type.url else {
+        guard let url = request.url else {
             throw Error.noURL
         }
         guard let host = url.host,
@@ -361,7 +393,8 @@ extension Github {
                 
                 let httpRequest = HTTPRequest(method: method,
                                               url: path,
-                                              headers: headers)
+                                              headers: headers,
+                                              body: request.body ?? HTTPBody())
                 
                 return api(context, httpRequest)
                     .decode(responseType)

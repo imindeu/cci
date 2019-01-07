@@ -286,6 +286,7 @@ class CircleCiTests: XCTestCase {
         let devPullRequest = Github.PullRequest(url: "",
                                                 id: 0,
                                                 title: "test",
+                                                body: "",
                                                 head: Github.Branch(ref: branch),
                                                 base: Github.devBranch)
         let labeledDevRequest = Github.Payload(action: .labeled,
@@ -303,6 +304,7 @@ class CircleCiTests: XCTestCase {
         let masterPullRequest = Github.PullRequest(url: "",
                                                    id: 0,
                                                    title: "test",
+                                                   body: "",
                                                    head: Github.Branch(ref: branch),
                                                    base: Github.masterBranch)
         let labeledMasterRequest = Github.Payload(action: .labeled,

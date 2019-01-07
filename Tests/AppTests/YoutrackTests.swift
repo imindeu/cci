@@ -32,6 +32,16 @@ class YoutrackTests: XCTestCase {
         }
     }
     
+    func testIssues() throws {
+        XCTAssertEqual(try Youtrack.issues(from: "test \(issues.joined(separator: ", "))"), issues)
+        XCTAssertEqual(try Youtrack.issues(from: "test"), [])
+    }
+    
+    func testIssueURLs() throws {
+        let expected = [ "https://test.com/youtrack/issue/4DM-2001", "https://test.com/youtrack/issue/4DM-2002"]
+        XCTAssertEqual(try Youtrack.issueURLs(from: "test \(issues.joined(separator: ", "))"), expected)
+    }
+    
     func testGithubRequest() {
         let title = "test \(issues.joined(separator: ", "))"
         let branchHeaders = [Github.eventHeaderName: "create"]
@@ -39,6 +49,7 @@ class YoutrackTests: XCTestCase {
         let pullRequest = Github.PullRequest(url: "",
                                              id: 0,
                                              title: title,
+                                             body: "",
                                              head: Github.Branch(ref: "feature"),
                                              base: Github.Branch(ref: "dev"))
 

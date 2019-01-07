@@ -91,9 +91,7 @@ extension Youtrack {
                 return .left(Github.PayloadResponse())
         }
         do {
-            let regex = try NSRegularExpression(pattern: "4DM-[0-9]+")
-            let datas = regex.matches(in: title, options: [], range: NSRange(title.startIndex..., in: title))
-                .compactMap { Range($0.range, in: title).map { String(title[$0]) } }
+            let datas = try issues(from: title)
                 .map { RequestData(issue: $0, command: command) }
             return .right(Request(data: datas))
         } catch {
@@ -133,8 +131,28 @@ extension Youtrack {
         return Github.PayloadResponse(value: value)
     }
     
+    static func path(base: String, issue: String) -> String {
+        if base.hasSuffix("/") {
+            return "\(base)issue/\(issue)"
+        }
+        return "\(base)/issue/\(issue)"
+    }
+    
+    static func issues(from: String) throws -> [String] {
+        let regex = try NSRegularExpression(pattern: "4DM-[0-9]+")
+        return regex.matches(in: from, options: [], range: NSRange(from.startIndex..., in: from))
+            .compactMap { Range($0.range, in: from).map { String(from[$0]) } }
+    }
+    
+    static func issueURLs(from: String) throws -> [String] {
+        return try Environment.get(Config.youtrackURL)
+            .map { url in
+                try issues(from: from).map { path(base: url, issue: $0).replacingOccurrences(of: "/rest", with: "") }
+            } ?? []
+    }
+    
     private static func path(base: String, issue: String, command: Command) -> String {
-        return "\(base)/issue/\(issue)/execute?command=\(command.rawValue)"
+        return path(base: base, issue: issue) + "/execute?command=\(command.rawValue)"
     }
     
     private static func fetch(_ context: Context,

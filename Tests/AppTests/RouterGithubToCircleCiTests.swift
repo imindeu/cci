@@ -67,6 +67,7 @@ class RouterGithubToCircleCiTests: XCTestCase {
         let pullRequest = Github.PullRequest(url: "",
                                              id: 1,
                                              title: "x",
+                                             body: "",
                                              head: Github.devBranch,
                                              base: Github.masterBranch)
         let request = Github.Payload(action: .labeled,
@@ -89,6 +90,7 @@ class RouterGithubToCircleCiTests: XCTestCase {
         let pullRequest = Github.PullRequest(url: "",
                                              id: 1,
                                              title: "x",
+                                             body: "",
                                              head: Github.devBranch,
                                              base: Github.masterBranch)
         let request = Github.Payload(action: .unlabeled,
