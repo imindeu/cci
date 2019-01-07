@@ -46,7 +46,7 @@ class GithubServicesTests: XCTestCase {
         XCTAssertEqual(try Github.accessToken(context: context(),
                                               jwtToken: "a",
                                               installationId: 1,
-                                              api: api)().wait(),
+                                              api: api).wait(),
                        token)
     }
 
