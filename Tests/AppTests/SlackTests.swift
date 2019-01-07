@@ -14,6 +14,11 @@ import HTTP
 @testable import App
 
 class SlackTests: XCTestCase {
+    
+    override func setUp() {
+        super.setUp()
+        Environment.env = [:]
+    }
 
     func testCheck() {
         let token = "slackToken"

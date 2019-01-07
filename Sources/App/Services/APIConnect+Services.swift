@@ -1,5 +1,5 @@
 //
-//  APIConnect.swift
+//  APIConnect+Services.swift
 //  APIConnect
 //
 //  Created by Peter Geszten-Kovacs on 2018. 12. 17..
@@ -8,7 +8,10 @@
 import APIConnect
 import APIModels
 
+import HTTP
+
 // MARK: - Custom types
+public typealias API = (String, Int?) -> (Context, HTTPRequest) -> IO<HTTPResponse>
 
 typealias GithubToYoutrack = APIConnect<Github.Payload, Youtrack.Request, Environment>
 typealias GithubToGithub = APIConnect<Github.Payload, Github.APIRequest, Environment>

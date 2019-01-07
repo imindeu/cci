@@ -36,14 +36,19 @@
 		110E8E9921C7AD09000C899A /* APIConnect+Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110E8E9721C7AC76000C899A /* APIConnect+Services.swift */; };
 		114FBC7321CA731C00E43560 /* RouterGithubToGithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */; };
 		114FBC7521CBC08400E43560 /* Youtrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114FBC7421CBC08400E43560 /* Youtrack.swift */; };
+		115069E021E3760C00A1A48E /* Github+Github.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069DF21E3760C00A1A48E /* Github+Github.swift */; };
+		115069E321E378BF00A1A48E /* Github+ServicesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069E121E3781E00A1A48E /* Github+ServicesTests.swift */; };
+		115069F421E37AE500A1A48E /* Tokened.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069F321E37AE500A1A48E /* Tokened.swift */; };
+		115069F621E38DE500A1A48E /* Youtrack+Github.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069F521E38DE500A1A48E /* Youtrack+Github.swift */; };
+		115069F821E38F3E00A1A48E /* Youtrack+ServicesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069F721E38F3E00A1A48E /* Youtrack+ServicesTests.swift */; };
 		1169480C21DCEFCC00590493 /* RouterGithubToCircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */; };
 		OBJ_1013 /* CircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* CircleCiTests.swift */; };
-		OBJ_1014 /* GithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* GithubTests.swift */; };
+		OBJ_1014 /* Github+GithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* Github+GithubTests.swift */; };
 		OBJ_1015 /* RouterGithubToYoutrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* RouterGithubToYoutrackTests.swift */; };
 		OBJ_1016 /* RouterSlackToCircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_37 /* RouterSlackToCircleCiTests.swift */; };
 		OBJ_1017 /* SlackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* SlackTests.swift */; };
 		OBJ_1018 /* Templates.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Templates.swift */; };
-		OBJ_1019 /* YoutrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* YoutrackTests.swift */; };
+		OBJ_1019 /* Youtrack+GithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* Youtrack+GithubTests.swift */; };
 		OBJ_1021 /* App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Cci::App::Product" /* App.framework */; };
 		OBJ_1022 /* JWT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "JWT::JWT::Product" /* JWT.framework */; };
 		OBJ_1023 /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Vapor::Vapor::Product" /* Vapor.framework */; };
@@ -4699,6 +4704,11 @@
 		110E8E9721C7AC76000C899A /* APIConnect+Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIConnect+Services.swift"; sourceTree = "<group>"; };
 		114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterGithubToGithubTests.swift; sourceTree = "<group>"; };
 		114FBC7421CBC08400E43560 /* Youtrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Youtrack.swift; sourceTree = "<group>"; };
+		115069DF21E3760C00A1A48E /* Github+Github.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Github+Github.swift"; sourceTree = "<group>"; };
+		115069E121E3781E00A1A48E /* Github+ServicesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Github+ServicesTests.swift"; sourceTree = "<group>"; };
+		115069F321E37AE500A1A48E /* Tokened.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokened.swift; sourceTree = "<group>"; };
+		115069F521E38DE500A1A48E /* Youtrack+Github.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Youtrack+Github.swift"; sourceTree = "<group>"; };
+		115069F721E38F3E00A1A48E /* Youtrack+ServicesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Youtrack+ServicesTests.swift"; sourceTree = "<group>"; };
 		1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterGithubToCircleCiTests.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4937,7 +4947,7 @@
 		OBJ_345 /* LogSupporting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSupporting.swift; sourceTree = "<group>"; };
 		OBJ_346 /* PrintLogHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintLogHandler.swift; sourceTree = "<group>"; };
 		OBJ_348 /* DatabaseKitProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseKitProvider.swift; sourceTree = "<group>"; };
-		OBJ_35 /* GithubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GithubTests.swift; sourceTree = "<group>"; };
+		OBJ_35 /* Github+GithubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Github+GithubTests.swift"; sourceTree = "<group>"; };
 		OBJ_350 /* DatabaseKitError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseKitError.swift; sourceTree = "<group>"; };
 		OBJ_351 /* Deprecated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deprecated.swift; sourceTree = "<group>"; };
 		OBJ_352 /* Exports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exports.swift; sourceTree = "<group>"; };
@@ -4976,7 +4986,7 @@
 		OBJ_396 /* CryptoRandom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoRandom.swift; sourceTree = "<group>"; };
 		OBJ_398 /* Base32.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Base32.swift; sourceTree = "<group>"; };
 		OBJ_399 /* CryptoError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoError.swift; sourceTree = "<group>"; };
-		OBJ_40 /* YoutrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YoutrackTests.swift; sourceTree = "<group>"; };
+		OBJ_40 /* Youtrack+GithubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Youtrack+GithubTests.swift"; sourceTree = "<group>"; };
 		OBJ_400 /* Deprecated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deprecated.swift; sourceTree = "<group>"; };
 		OBJ_401 /* Exports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exports.swift; sourceTree = "<group>"; };
 		OBJ_402 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/szotyi/Development/projects/Cci/.build/checkouts/crypto.git-7980259129511365902/Package.swift"; sourceTree = "<group>"; };
@@ -6367,8 +6377,11 @@
 				110E8E9721C7AC76000C899A /* APIConnect+Services.swift */,
 				OBJ_20 /* CircleCi+Services.swift */,
 				OBJ_21 /* Environment.swift */,
+				115069DF21E3760C00A1A48E /* Github+Github.swift */,
 				OBJ_22 /* Github+Services.swift */,
 				OBJ_24 /* Slack+Services.swift */,
+				115069F321E37AE500A1A48E /* Tokened.swift */,
+				115069F521E38DE500A1A48E /* Youtrack+Github.swift */,
 				OBJ_26 /* Youtrack+Services.swift */,
 			);
 			path = Services;
@@ -6759,14 +6772,16 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_34 /* CircleCiTests.swift */,
-				OBJ_35 /* GithubTests.swift */,
+				OBJ_35 /* Github+GithubTests.swift */,
+				115069E121E3781E00A1A48E /* Github+ServicesTests.swift */,
 				1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */,
 				114FBC7221CA731C00E43560 /* RouterGithubToGithubTests.swift */,
 				OBJ_36 /* RouterGithubToYoutrackTests.swift */,
 				OBJ_37 /* RouterSlackToCircleCiTests.swift */,
 				OBJ_38 /* SlackTests.swift */,
 				OBJ_39 /* Templates.swift */,
-				OBJ_40 /* YoutrackTests.swift */,
+				OBJ_40 /* Youtrack+GithubTests.swift */,
+				115069F721E38F3E00A1A48E /* Youtrack+ServicesTests.swift */,
 			);
 			name = AppTests;
 			path = Tests/AppTests;
@@ -9795,13 +9810,15 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_1013 /* CircleCiTests.swift in Sources */,
-				OBJ_1014 /* GithubTests.swift in Sources */,
+				OBJ_1014 /* Github+GithubTests.swift in Sources */,
 				OBJ_1015 /* RouterGithubToYoutrackTests.swift in Sources */,
 				OBJ_1016 /* RouterSlackToCircleCiTests.swift in Sources */,
 				OBJ_1017 /* SlackTests.swift in Sources */,
 				OBJ_1018 /* Templates.swift in Sources */,
-				OBJ_1019 /* YoutrackTests.swift in Sources */,
+				115069F821E38F3E00A1A48E /* Youtrack+ServicesTests.swift in Sources */,
+				OBJ_1019 /* Youtrack+GithubTests.swift in Sources */,
 				1169480C21DCEFCC00590493 /* RouterGithubToCircleCiTests.swift in Sources */,
+				115069E321E378BF00A1A48E /* Github+ServicesTests.swift in Sources */,
 				114FBC7321CA731C00E43560 /* RouterGithubToGithubTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10751,13 +10768,16 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_896 /* CircleCi+Services.swift in Sources */,
+				115069E021E3760C00A1A48E /* Github+Github.swift in Sources */,
 				OBJ_897 /* Environment.swift in Sources */,
 				110E8E9921C7AD09000C899A /* APIConnect+Services.swift in Sources */,
 				OBJ_898 /* Github+Services.swift in Sources */,
 				OBJ_900 /* Slack+Services.swift in Sources */,
 				OBJ_902 /* Youtrack+Services.swift in Sources */,
 				OBJ_903 /* boot.swift in Sources */,
+				115069F621E38DE500A1A48E /* Youtrack+Github.swift in Sources */,
 				OBJ_904 /* configure.swift in Sources */,
+				115069F421E37AE500A1A48E /* Tokened.swift in Sources */,
 				OBJ_905 /* routes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
