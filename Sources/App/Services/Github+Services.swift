@@ -53,7 +53,10 @@ extension Github {
         return string
     }
     
-    static func accessToken(context: Context, jwtToken: String, installationId: Int, api: @escaping API) -> () -> IO<String> {
+    static func accessToken(context: Context,
+                            jwtToken: String,
+                            installationId: Int,
+                            api: @escaping API) -> () -> IO<String> {
         return {
             let headers = HTTPHeaders([
                 ("Authorization", "Bearer \(jwtToken)"),
@@ -100,7 +103,7 @@ extension Github {
             ("Authorization", "token \(token)"),
             ("Accept", "application/vnd.github.machine-man-preview+json"),
             ("User-Agent", "cci-imind")
-            ])
+        ])
         
         let httpRequest = HTTPRequest(method: method,
                                       url: path,

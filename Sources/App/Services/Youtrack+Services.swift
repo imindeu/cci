@@ -36,10 +36,10 @@ extension Youtrack {
     }
     
     static func fetch(_ context: Context,
-                              _ url: URL,
-                              _ host: String,
-                              _ token: String,
-                              _ api: @escaping API)
+                      _ url: URL,
+                      _ host: String,
+                      _ token: String,
+                      _ api: @escaping API)
         -> (Request.RequestData)
         -> EitherIO<Github.PayloadResponse, ResponseContainer> {
             

@@ -12,7 +12,7 @@ import HTTP
 
 @testable import App
 
-class Youtrack_GithubTests: XCTestCase {
+class YoutrackGithubTests: XCTestCase {
     let issues = ["4DM-2001", "4DM-2002"]
     
     override func setUp() {
