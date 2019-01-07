@@ -1,5 +1,5 @@
 //
-//  YoutrackTests.swift
+//  Youtrack+GithubTests.swift
 //  AppTests
 //
 //  Created by Peter Geszten-Kovacs on 2018. 12. 05..
@@ -12,7 +12,7 @@ import HTTP
 
 @testable import App
 
-class YoutrackTests: XCTestCase {
+class Youtrack_GithubTests: XCTestCase {
     let issues = ["4DM-2001", "4DM-2002"]
     
     override func setUp() {
@@ -30,16 +30,6 @@ class YoutrackTests: XCTestCase {
                 }
             }
         }
-    }
-    
-    func testIssues() throws {
-        XCTAssertEqual(try Youtrack.issues(from: "test \(issues.joined(separator: ", "))"), issues)
-        XCTAssertEqual(try Youtrack.issues(from: "test"), [])
-    }
-    
-    func testIssueURLs() throws {
-        let expected = [ "https://test.com/youtrack/issue/4DM-2001", "https://test.com/youtrack/issue/4DM-2002"]
-        XCTAssertEqual(try Youtrack.issueURLs(from: "test \(issues.joined(separator: ", "))"), expected)
     }
     
     func testGithubRequest() {

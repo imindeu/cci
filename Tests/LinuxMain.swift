@@ -42,14 +42,11 @@ extension EitherTests {
   ]
 }
 
-extension GithubTests {
-  static var allTests: [(String, (GithubTests) -> () throws -> Void)] = [
-    ("testVerify", testVerify),
+extension Github_GithubTests {
+  static var allTests: [(String, (Github_GithubTests) -> () throws -> Void)] = [
     ("testCheck", testCheck),
     ("testCheckFailure", testCheckFailure),
     ("testType", testType),
-    ("testJwt", testJwt),
-    ("testAccessToken", testAccessToken),
     ("testReviewText", testReviewText),
     ("testGithubRequestChangesRequested", testGithubRequestChangesRequested),
     ("testFailedStatus", testFailedStatus),
@@ -57,6 +54,14 @@ extension GithubTests {
     ("testApiChangesRequested", testApiChangesRequested),
     ("testApiFailedStatus", testApiFailedStatus),
     ("testResponseToGithub", testResponseToGithub)
+  ]
+}
+
+extension Github_ServicesTests {
+  static var allTests: [(String, (Github_ServicesTests) -> () throws -> Void)] = [
+    ("testVerify", testVerify),
+    ("testJwt", testJwt),
+    ("testAccessToken", testAccessToken)
   ]
 }
 
@@ -111,10 +116,8 @@ extension SlackTests {
   ]
 }
 
-extension YoutrackTests {
-  static var allTests: [(String, (YoutrackTests) -> () throws -> Void)] = [
-    ("testIssues", testIssues),
-    ("testIssueURLs", testIssueURLs),
+extension Youtrack_GithubTests {
+  static var allTests: [(String, (Youtrack_GithubTests) -> () throws -> Void)] = [
     ("testGithubRequest", testGithubRequest),
     ("testApiWithGithub", testApiWithGithub),
     ("testApiWithGithubFailure", testApiWithGithubFailure),
@@ -122,16 +125,25 @@ extension YoutrackTests {
   ]
 }
 
+extension Youtrack_ServicesTests {
+  static var allTests: [(String, (Youtrack_ServicesTests) -> () throws -> Void)] = [
+    ("testIssues", testIssues),
+    ("testIssueURLs", testIssueURLs)
+  ]
+}
+
 XCTMain([
   testCase(APIConnectTests.allTests),
   testCase(CircleCiTests.allTests),
   testCase(EitherTests.allTests),
-  testCase(GithubTests.allTests),
+  testCase(Github_GithubTests.allTests),
+  testCase(Github_ServicesTests.allTests),
   testCase(IOTests.allTests),
   testCase(RouterGithubToCircleCiTests.allTests),
   testCase(RouterGithubToGithubTests.allTests),
   testCase(RouterGithubToYoutrackTests.allTests),
   testCase(RouterSlackToCircleCiTests.allTests),
   testCase(SlackTests.allTests),
-  testCase(YoutrackTests.allTests),
+  testCase(Youtrack_GithubTests.allTests),
+  testCase(Youtrack_ServicesTests.allTests),
 ])

@@ -9,7 +9,7 @@ import APIConnect
 import HTTP
 
 public struct Environment: APIConnectEnvironment {
-    public static var api: (String, Int?) -> (Context, HTTPRequest) -> IO<HTTPResponse> = { hostname, port in
+    public static var api: API = { hostname, port in
         return { context, request in
             return HTTPClient
                 .connect(scheme: .https, hostname: hostname, port: port, on: context)
