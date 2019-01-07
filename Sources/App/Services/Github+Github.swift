@@ -288,12 +288,6 @@ extension Github {
         
     }
     
-    static func reviewText(_ reviewers: [User]) -> String {
-        let list = reviewers
-            .map { user in return "@\(user.login)" }
-            .joined(separator: ", ")
-        return "\(list) please review this pr"
-    }
 }
 
 extension TokenedIO where T == Tokened<Github.APIResponse?> {
