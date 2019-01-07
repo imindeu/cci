@@ -14,7 +14,7 @@ import HTTP
 
 @testable import App
 
-class GithubGithubTests: XCTestCase {
+class Github_GithubTests: XCTestCase {
     
     override func setUp() {
         super.setUp()

@@ -56,30 +56,23 @@ extension Github {
     static func accessToken(context: Context,
                             jwtToken: String,
                             installationId: Int,
-                            api: @escaping API) -> () -> IO<String> {
-        return {
-            let headers = HTTPHeaders([
-                ("Authorization", "Bearer \(jwtToken)"),
-                ("Accept", "application/vnd.github.machine-man-preview+json"),
-                ("User-Agent", "cci-imind")
+                            api: @escaping API) -> IO<String?> {
+        let headers = HTTPHeaders([
+            ("Authorization", "Bearer \(jwtToken)"),
+            ("Accept", "application/vnd.github.machine-man-preview+json"),
+            ("User-Agent", "cci-imind")
             ])
-            let request = HTTPRequest(method: .POST,
-                                      url: "/app/installations/\(installationId)/access_tokens",
-                                      headers: headers,
-                                      body: "")
-            struct TokenResponse: Decodable {
-                let token: String
-            }
-            
-            return api("api.github.com", nil)(context, request)
-                .decode(TokenResponse.self)
-                .map { response in
-                    guard let response = response else {
-                        throw Error.accessToken
-                    }
-                    return response.token
-                }
+        let request = HTTPRequest(method: .POST,
+                                  url: "/app/installations/\(installationId)/access_tokens",
+            headers: headers,
+            body: "")
+        struct TokenResponse: Decodable {
+            let token: String
         }
+        
+        return api("api.github.com", nil)(context, request)
+            .decode(TokenResponse.self)
+            .map { $0?.token }
     }
     
     static func fetch<A: Decodable>(_ request: HTTPRequestable,

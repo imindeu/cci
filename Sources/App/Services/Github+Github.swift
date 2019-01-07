@@ -237,7 +237,13 @@ extension Github {
                     return accessToken(context: context,
                                        jwtToken: try jwt(appId: appId, privateKey: privateKey),
                                        installationId: request.installationId,
-                                       api: Environment.api)()
+                                       api: Environment.api)
+                        .map { token in
+                            guard let token = token else {
+                                throw Error.accessToken
+                            }
+                            return token
+                        }
                         .flatMap {
                             try fetchRequest(installationId: request.installationId,
                                              token: $0,
@@ -259,6 +265,7 @@ extension Github {
                                      token: String,
                                      request: APIRequest,
                                      context: Context) throws -> TokenedIO<APIResponse?> {
+        let instant = pure(Tokened<APIResponse?>(token, nil), context)
         switch request.type {
         case .changesRequested:
             return try fetch(request, APIResponse.self, token, context, Environment.api)
@@ -275,12 +282,12 @@ extension Github {
                 .fetchTokened(context, APIResponse.self, installationId) { .changesRequested(url: $0.url) }
         case .pullRequestOpened, .pullRequestEdited:
             if request.body == nil {
-                return pure(Tokened<APIResponse?>(token, nil), context)
+                return instant
             } else {
                 return try fetch(request, APIResponse.self, token, context, Environment.api)
             }
         default:
-            return pure(Tokened<APIResponse?>(token, nil), context)
+            return instant
         }
     }
     
@@ -293,7 +300,6 @@ extension Github {
                 let response = (result?.value.map { $0 + "\n" } ?? "") + value
                 return PayloadResponse(value: response)
             }
-        
     }
     
 }
