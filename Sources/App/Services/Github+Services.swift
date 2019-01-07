@@ -76,7 +76,7 @@ public extension Github {
             let waitingForReview = Github.waitingForReviewLabel.name
             switch self {
             case let .changesRequested(url: url):
-                return URL(string: url)?
+                return URL(string: url.replacingOccurrences(of: "/pulls", with: "/issues"))?
                     .appendingPathComponent("labels")
                     .appendingPathComponent(waitingForReview)
             case let .failedStatus(sha: sha):
@@ -343,7 +343,7 @@ extension Github {
         }
         guard let host = url.host,
             let path = url.path
-                .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed) else {
+                .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed) else {
                     throw Error.badUrl(url.absoluteString)
         }
         
@@ -407,9 +407,9 @@ private extension TokenedIO {
     }
     
     func fetchTokened<A, B: Decodable>(_ context: Context,
-                                _ returnType: B.Type,
-                                _ installationId: Int,
-                                _ type: @escaping (A) -> Github.RequestType)
+                                       _ returnType: B.Type,
+                                       _ installationId: Int,
+                                       _ type: @escaping (A) -> Github.RequestType)
         -> TokenedIO<B?> where T == Github.Tokened<A?> {
         
         return mapTokened { value -> APIRequest? in
