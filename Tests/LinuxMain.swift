@@ -47,7 +47,6 @@ extension Github_GithubTests {
     ("testCheck", testCheck),
     ("testCheckFailure", testCheckFailure),
     ("testType", testType),
-    ("testReviewText", testReviewText),
     ("testGithubRequestChangesRequested", testGithubRequestChangesRequested),
     ("testFailedStatus", testFailedStatus),
     ("testPullRequestOpened", testPullRequestOpened),
