@@ -123,12 +123,11 @@ class GithubTests: XCTestCase {
         XCTAssertEqual(Github.reviewText(single), "@z please review this pr")
     }
     
-    
     func testGithubRequestChangesRequested() throws {
-        let labelPath = "/pulls/labels/waiting for review"
+        let labelPath = "/issues/1/labels/waiting for review"
         let reviewer = Github.User(login: "y")
         let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequestReview.rawValue]
-        let pullRequest = Github.PullRequest(url: "http://test.com/pulls",
+        let pullRequest = Github.PullRequest(url: "http://test.com/pulls/1",
                                              id: 1,
                                              title: "x",
                                              head: Github.devBranch,
@@ -186,14 +185,14 @@ class GithubTests: XCTestCase {
             }
         }
 
-        let request = Github.APIRequest(installationId: 1, type: .changesRequested(url: "http://test.com/pulls"))
+        let request = Github.APIRequest(installationId: 1, type: .changesRequested(url: "http://test.com/pulls/1"))
         let response = try api(request).wait()
         XCTAssertEqual(response.right, Github.APIResponse(message: "y"))
 
-        let wrongRequest = Github.APIRequest(installationId: 1, type: .changesRequested(url: "/pulls"))
+        let wrongRequest = Github.APIRequest(installationId: 1, type: .changesRequested(url: "/pulls/1"))
         let wrongResponse = try api(wrongRequest).wait()
         XCTAssertEqual(wrongResponse.left,
-                       Github.PayloadResponse(error: Github.Error.badUrl("/pulls/labels/waiting%20for%20review")))
+                       Github.PayloadResponse(error: Github.Error.badUrl("/issues/1/labels/waiting%20for%20review")))
     }
     
     func testApiFailedStatus() throws {
