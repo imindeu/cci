@@ -216,6 +216,14 @@ extension Github {
             : PayloadResponse(error: Error.signature)
     }
     
+    struct JWTPayloadData: JWTPayload {
+        let iat: Int
+        let exp: Int
+        let iss: String
+        
+        func verify(using signer: JWTSigner) throws {  }
+    }
+
     // app
     static func jwt(date: Date = Date()) throws -> String {
         guard let appId = Environment.get(APIRequest.Config.githubAppId),
@@ -223,17 +231,10 @@ extension Github {
                 .replacingOccurrences(of: "\\n", with: "\n") else {
             throw Error.jwt
         }
-        struct PayloadData: JWTPayload {
-            let iat: Int
-            let exp: Int
-            let iss: String
-            
-            func verify(using signer: JWTSigner) throws {  }
-        }
         let iat = Int(date.timeIntervalSince1970)
         let exp = Int(date.addingTimeInterval(10 * 60).timeIntervalSince1970)
         let signer = try JWTSigner.rs256(key: RSAKey.private(pem: privateKey))
-        let jwt = JWT<PayloadData>(payload: PayloadData(iat: iat, exp: exp, iss: appId))
+        let jwt = JWT<JWTPayloadData>(payload: JWTPayloadData(iat: iat, exp: exp, iss: appId))
         let data = try jwt.sign(using: signer)
         guard let string = String(data: data, encoding: .utf8) else { throw Error.signature }
         return string
