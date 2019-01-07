@@ -189,7 +189,9 @@ extension Github.APIRequest: HTTPRequestable {
                 .map { "- \($0)" }) ?? []
             if !issues.isEmpty {
                 let new = issues.joined(separator: "\n") + "\n\n" + body
+                
                 struct Body: Encodable { let body: String }
+                
                 return try? JSONEncoder().encode(Body(body: new))
             } else {
                 return nil
@@ -232,9 +234,15 @@ extension Github {
                             .replacingOccurrences(of: "\\n", with: "\n") else {
                                 throw Error.jwt
                     }
-                    return accessToken(context: context, jwtToken: try jwt(appId: appId, privateKey: privateKey), installationId: request.installationId, api: Environment.api)()
+                    return accessToken(context: context,
+                                       jwtToken: try jwt(appId: appId, privateKey: privateKey),
+                                       installationId: request.installationId,
+                                       api: Environment.api)()
                         .flatMap {
-                            try fetchRequest(installationId: request.installationId, token: $0, request: request, context: context)
+                            try fetchRequest(installationId: request.installationId,
+                                             token: $0,
+                                             request: request,
+                                             context: context)
                             .clean()
                         }
                 } catch {
@@ -284,7 +292,7 @@ extension Github {
                 }
                 let response = (result?.value.map { $0 + "\n" } ?? "") + value
                 return PayloadResponse(value: response)
-        }
+            }
         
     }
     
@@ -334,6 +342,6 @@ extension TokenedIO {
                 return value.map {
                     Github.APIRequest(installationId: installationId, type: type($0))
                 }
-                }.fetch(context, returnType)
+            }.fetch(context, returnType)
     }
 }

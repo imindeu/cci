@@ -11,7 +11,7 @@ import XCTest
 
 @testable import App
 
-class Youtrack_ServicesTests: XCTestCase {
+class YoutrackServicesTests: XCTestCase {
     let issues = ["4DM-2001", "4DM-2002"]
 
     func testIssues() throws {
@@ -21,7 +21,10 @@ class Youtrack_ServicesTests: XCTestCase {
     
     func testIssueURLs() throws {
         let expected = [ "https://test.com/youtrack/issue/4DM-2001", "https://test.com/youtrack/issue/4DM-2002"]
-        XCTAssertEqual(try Youtrack.issueURLs(from: "test \(issues.joined(separator: ", "))", url: "https://test.com/youtrack/rest/"), expected)
+        XCTAssertEqual(
+            try Youtrack.issueURLs(from: "test \(issues.joined(separator: ", "))",
+                                   url: "https://test.com/youtrack/rest/"),
+            expected)
     }
 
 }

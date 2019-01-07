@@ -14,7 +14,7 @@ import HTTP
 
 @testable import App
 
-class Github_GithubTests: XCTestCase {
+class GithubGithubTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
@@ -156,7 +156,9 @@ class Github_GithubTests: XCTestCase {
         XCTAssertEqual(response.right?.method, .PATCH)
         
         let new = "- " + (try Youtrack.issueURLs(from: title, url: "https://test.com")[0]) + "\n\n\(body)"
+        
         struct Body: Decodable, Equatable { let body: String }
+        
         XCTAssertEqual(try JSONDecoder().decode(Body.self, from: response.right?.body ?? Data()),
                        Body(body: new))
     }

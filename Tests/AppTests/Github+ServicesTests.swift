@@ -13,7 +13,7 @@ import HTTP
 
 @testable import App
 
-class Github_ServicesTests: XCTestCase {
+class GithubServicesTests: XCTestCase {
 
     func testVerify() throws {
         let signature = "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"
@@ -43,7 +43,11 @@ class Github_ServicesTests: XCTestCase {
                 return pure(HTTPResponse(body: "{\"token\":\"\(token)\"}"), context)
             }
         }
-        XCTAssertEqual(try Github.accessToken(context: context(), jwtToken: "a", installationId: 1, api: api)().wait(), token)
+        XCTAssertEqual(try Github.accessToken(context: context(),
+                                              jwtToken: "a",
+                                              installationId: 1,
+                                              api: api)().wait(),
+                       token)
     }
 
 }
