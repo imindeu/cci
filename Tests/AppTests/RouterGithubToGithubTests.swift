@@ -63,6 +63,7 @@ class RouterGithubToGithubTests: XCTestCase {
         let pullRequest = Github.PullRequest(url: "http://test.com/pull",
                                              id: 1,
                                              title: "x",
+                                             body: "",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
                                              requestedReviewers: [Github.User(login: "z")])
@@ -87,6 +88,7 @@ class RouterGithubToGithubTests: XCTestCase {
         let pullRequest = Github.PullRequest(url: "http://test.com/pull",
                                              id: 1,
                                              title: "x",
+                                             body: "",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
                                              assignees: [],

@@ -49,6 +49,7 @@ class GithubTests: XCTestCase {
         let pullRequest = Github.PullRequest(url: "",
                                              id: 0,
                                              title: title,
+                                             body: "",
                                              head: featureBranch,
                                              base: Github.devBranch)
 
@@ -60,8 +61,13 @@ class GithubTests: XCTestCase {
         let openedRequest = Github.Payload(action: Github.Action.opened,
                                            pullRequest: pullRequest)
         let openedType = openedRequest.type(headers: pullRequestHeaders)
-        XCTAssertEqual(openedType, .pullRequestOpened(title: title))
-        
+        XCTAssertEqual(openedType, .pullRequestOpened(title: title, url: "", body: ""))
+
+        let editedRequest = Github.Payload(action: Github.Action.edited,
+                                           pullRequest: pullRequest)
+        let editedType = editedRequest.type(headers: pullRequestHeaders)
+        XCTAssertEqual(editedType, .pullRequestEdited(title: title, url: "", body: ""))
+
         let closedRequest = Github.Payload(action: Github.Action.closed,
                                            pullRequest: pullRequest)
         let closedType = closedRequest.type(headers: pullRequestHeaders)
@@ -130,6 +136,7 @@ class GithubTests: XCTestCase {
         let pullRequest = Github.PullRequest(url: "http://test.com/pulls/1",
                                              id: 1,
                                              title: "x",
+                                             body: "",
                                              head: Github.devBranch,
                                              base: Github.masterBranch,
                                              requestedReviewers: [reviewer])
@@ -140,10 +147,10 @@ class GithubTests: XCTestCase {
                                                            installation: Github.Installation(id: 1)),
                                             pullRequestHeaders)
         
-        XCTAssertEqual(response.right?.type.url?.host, "test.com")
-        XCTAssertEqual(response.right?.type.url?.path, labelPath)
+        XCTAssertEqual(response.right?.url?.host, "test.com")
+        XCTAssertEqual(response.right?.url?.path, labelPath)
         XCTAssertEqual(response.right?.installationId, 1)
-        XCTAssertEqual(response.right?.type.method, .DELETE)
+        XCTAssertEqual(response.right?.method, .DELETE)
 
     }
     
@@ -157,10 +164,38 @@ class GithubTests: XCTestCase {
         
         let query = "shaxyz+label:\"\(Github.waitingForReviewLabel.name)\"+state:open"
         XCTAssertNil(response.left)
-        XCTAssertEqual(response.right?.type.url?.host, "api.github.com")
-        XCTAssertEqual(response.right?.type.url?.path, "/search/issues?q=\(query)")
+        XCTAssertEqual(response.right?.url?.host, "api.github.com")
+        XCTAssertEqual(response.right?.url?.path, "/search/issues?q=\(query)")
         XCTAssertEqual(response.right?.installationId, 1)
-        XCTAssertEqual(response.right?.type.method, .GET)
+        XCTAssertEqual(response.right?.method, .GET)
+    }
+    
+    func testPullRequestOpened() throws {
+        Environment.env[Youtrack.Request.Config.youtrackURL.rawValue] = "https://test.com"
+        let title = "#4DM-2001 test"
+        let body = "body"
+        let headers = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
+        let pullRequest = Github.PullRequest(url: "http://test.com/pulls/1",
+                                             id: 1,
+                                             title: title,
+                                             body: "body",
+                                             head: Github.devBranch,
+                                             base: Github.masterBranch)
+
+        let response = Github.githubRequest(Github.Payload(action: .opened,
+                                                           pullRequest: pullRequest,
+                                                           installation: Github.Installation(id: 1)),
+                                            headers)
+        XCTAssertNil(response.left)
+        XCTAssertEqual(response.right?.url?.host, "test.com")
+        XCTAssertEqual(response.right?.url?.path, "/pulls/1")
+        XCTAssertEqual(response.right?.installationId, 1)
+        XCTAssertEqual(response.right?.method, .PATCH)
+        
+        let new = "- " + (try Youtrack.issueURLs(from: title)[0]) + "\n\n\(body)"
+        struct Body: Decodable, Equatable { let body: String }
+        XCTAssertEqual(try JSONDecoder().decode(Body.self, from: response.right?.body ?? Data()),
+                       Body(body: new))
     }
 
     func testApiChangesRequested() throws {
@@ -222,6 +257,7 @@ class GithubTests: XCTestCase {
                     let data = try? JSONEncoder().encode(Github.PullRequest(url: "https://test.com/pull/1",
                                                                             id: 1,
                                                                             title: "title",
+                                                                            body: "",
                                                                             head: Github.devBranch,
                                                                             base: Github.masterBranch))
                     return pure(HTTPResponse(body: data ?? Data()), context)

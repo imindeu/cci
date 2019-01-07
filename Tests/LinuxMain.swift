@@ -53,6 +53,7 @@ extension GithubTests {
     ("testReviewText", testReviewText),
     ("testGithubRequestChangesRequested", testGithubRequestChangesRequested),
     ("testFailedStatus", testFailedStatus),
+    ("testPullRequestOpened", testPullRequestOpened),
     ("testApiChangesRequested", testApiChangesRequested),
     ("testApiFailedStatus", testApiFailedStatus),
     ("testResponseToGithub", testResponseToGithub)
@@ -112,6 +113,8 @@ extension SlackTests {
 
 extension YoutrackTests {
   static var allTests: [(String, (YoutrackTests) -> () throws -> Void)] = [
+    ("testIssues", testIssues),
+    ("testIssueURLs", testIssueURLs),
     ("testGithubRequest", testGithubRequest),
     ("testApiWithGithub", testApiWithGithub),
     ("testApiWithGithubFailure", testApiWithGithubFailure),
