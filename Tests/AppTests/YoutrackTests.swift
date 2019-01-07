@@ -24,12 +24,7 @@ class YoutrackTests: XCTestCase {
         Environment.api = { hostname, _ in
             return { context, _ in
                 if hostname == "test.com" {
-                    let response = HTTPResponse(
-                        status: .ok,
-                        version: HTTPVersion(major: 1, minor: 1),
-                        headers: HTTPHeaders([]),
-                        body: "{}")
-                    return pure(response, context)
+                    return pure(HTTPResponse(body: "{}"), context)
                 } else {
                     return Environment.emptyApi(context)
                 }

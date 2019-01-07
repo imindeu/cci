@@ -80,8 +80,8 @@ public extension Github {
                     .appendingPathComponent("labels")
                     .appendingPathComponent(waitingForReview)
             case let .failedStatus(sha: sha):
-                let query = "\(sha)+label:\"\(waitingForReview)\"+state:open"
-                return URL(string: "https://api.github.com/search/issues?q=\(query)")
+                let query = "issues?q=\(sha)+label:\"\(waitingForReview)\"+state:open"
+                return URL(string: "https://api.github.com/search/")?.appendingPathComponent(query)
             case let .getPullRequest(url: url):
                 return URL(string: url)
             default: return nil
@@ -287,7 +287,7 @@ extension Github {
                         return try fetch(request, APIResponse.self, context)
                             .clean()
                     case .failedStatus:
-                        return try fetch(request, APISearchResponse<IssueResult>.self, context)
+                        return try fetch(request, SearchResponse<SearchIssue>.self, context)
                             .mapTokened { result -> String? in
                                 return result?.items?
                                     .compactMap { item -> String? in

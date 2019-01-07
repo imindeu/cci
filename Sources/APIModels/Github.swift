@@ -251,26 +251,43 @@ public extension Github {
 }
 
 public extension Github {
-    public struct APISearchResponse<A: Codable & Equatable>: Equatable, Codable {
+    public struct SearchResponse<A: Codable & Equatable>: Equatable, Codable {
         public let message: String?
         public let errors: [APIError]?
         public let items: [A]?
         public let totalCount: Int?
         public let incompleteResults: Bool?
         
+        public init(items: [A]) {
+            self.items = items
+            self.message = nil
+            self.errors = nil
+            self.totalCount = nil
+            self.incompleteResults = nil
+        }
+        
         enum CodingKeys: String, CodingKey {
             case message, errors, items
             case totalCount = "total_count"
             case incompleteResults = "incomplete_results"
         }
+        
     }
-    
-    public struct IssueResult: Equatable, Codable {
-        public struct IssuePullRequestResult: Equatable, Codable {
+
+    public struct SearchIssue: Equatable, Codable {
+        public struct PullRequest: Equatable, Codable {
             public let url: String?
+            
+            public init(url: String) {
+                self.url = url
+            }
         }
         
-        public let pullRequest: IssuePullRequestResult?
+        public let pullRequest: PullRequest?
+        
+        public init(pullRequest: PullRequest) {
+            self.pullRequest = pullRequest
+        }
         
         enum CodingKeys: String, CodingKey {
             case pullRequest = "pull_request"
