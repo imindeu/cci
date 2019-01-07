@@ -89,18 +89,21 @@ class GithubTests: XCTestCase {
     }
 
     func testJwt() throws {
-        Environment.env[Github.APIRequest.Config.githubAppId.rawValue] = "0101"
+        let iss = "0101"
+        let iat: TimeInterval = 1
+        let exp = (10 * 60) + iat
+        
+        Environment.env[Github.APIRequest.Config.githubAppId.rawValue] = iss
         Environment.env[Github.APIRequest.Config.githubPrivateKey.rawValue] = privateKeyString
 
-        // swiftlint:disable line_length
-        #if os(Linux)
-        // on linux the payload data orders are different
-        let token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjEsImlzcyI6IjAxMDEiLCJleHAiOjYwMX0.mkExPTvAJYU09vDb6XuU6i659gzFfNczBeTJadMN-ObvoceOAJEugTU7CwM5dkGFQks1IWz6BcR7Xo-nMjBBCJkB7JKNQVOGQRthANhyWdKJueGVwuofJ0dE3g87q7-QWjuapx02xPfjbGCGw9G6P9CxMZye0HmRFHwuBxRcy1E"
-        #else
-        let token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjEsImV4cCI6NjAxLCJpc3MiOiIwMTAxIn0.F6RslER_TFawnvvPijRhKj0EmP-0fkNsfmPmLSmwk0A1FRXcIg4nIRkmAWlHZD9WQS3_wFYJP3OflmDCZ4xUHNru3Y4JvjsouHaSCrkpgak3RArLW4NXjD1n_Oh9eVvARMSN6bJTIQMey2emYcl08091kdn5mV-67EsvoTgvOU8"
-        #endif
-        // swiftlint:enable line_length
-        XCTAssertEqual(try Github.jwt(date: Date(timeIntervalSince1970: 1)), token)
+        let token = try Github.jwt(date: Date(timeIntervalSince1970: iat))
+        let data: Data = token.data(using: .utf8) ?? Data()
+        let jwt = try JWT<Github.JWTPayloadData>(unverifiedFrom: data)
+
+        XCTAssertEqual(jwt.payload.iss, iss)
+        XCTAssertEqual(jwt.payload.iat, Int(iat))
+        XCTAssertEqual(jwt.payload.exp, Int(exp))
+        
     }
     
     func testAccessToken() throws {
