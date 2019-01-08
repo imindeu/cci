@@ -94,15 +94,13 @@ class Github_GithubTests: XCTestCase {
     
     func testGithubRequestChangesRequested() throws {
         let labelPath = "/issues/1/labels/waiting for review"
-        let reviewer = Github.User(login: "y")
         let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequestReview.rawValue]
         let pullRequest = Github.PullRequest(url: "http://test.com/pulls/1",
                                              id: 1,
                                              title: "x",
                                              body: "",
                                              head: Github.devBranch,
-                                             base: Github.masterBranch,
-                                             requestedReviewers: [reviewer])
+                                             base: Github.masterBranch)
         
         let response = Github.githubRequest(Github.Payload(action: .submitted,
                                                            review: Github.Review(state: .changesRequested),

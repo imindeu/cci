@@ -54,30 +54,19 @@ public enum Github {
         public let body: String
         public let head: Branch
         public let base: Branch
-        public let assignees: [User]
-        public let requestedReviewers: [User]
 
         public init(url: String,
                     id: Int,
                     title: String,
                     body: String,
                     head: Branch,
-                    base: Branch,
-                    assignees: [User] = [],
-                    requestedReviewers: [User] = []) {
+                    base: Branch) {
             self.url = url
             self.id = id
             self.title = title
             self.body = body
             self.head = head
             self.base = base
-            self.assignees = assignees
-            self.requestedReviewers = requestedReviewers
-        }
-        
-        enum CodingKeys: String, CodingKey {
-            case url, id, title, body, head, base, assignees
-            case requestedReviewers = "requested_reviewers"
         }
     }
     

@@ -199,6 +199,14 @@ extension Github.APIRequest: HTTPRequestable {
         default: return nil
         }
     }
+    
+    func headers(token: String) -> [(String, String)] {
+        return [
+            ("Authorization", "token \(token)"),
+            ("Accept", "application/vnd.github.machine-man-preview+json"),
+            ("User-Agent", "cci-imind")
+        ]
+    }
 }
 
 extension Github {
