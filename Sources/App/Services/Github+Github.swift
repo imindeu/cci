@@ -33,11 +33,16 @@ public extension Github {
     }
     
     public struct APIRequest: Equatable {
-        public let installationId: Int
+        public let installationId: Int?
         public let type: RequestType
         
         public init(installationId: Int, type: RequestType) {
             self.installationId = installationId
+            self.type = type
+        }
+        
+        public init(type: RequestType) {
+            self.installationId = nil
             self.type = type
         }
 
@@ -68,9 +73,7 @@ public extension Github {
         case signature
         case jwt
         case accessToken
-        case noMethod
-        case noURL
-        case badUrl(String)
+        case installation
         case underlying(Swift.Error)
         
         public var errorDescription: String? {
@@ -78,15 +81,9 @@ public extension Github {
             case .signature: return "Bad github webhook signature"
             case .jwt: return "JWT token problem"
             case .accessToken: return "Bad github access token"
-            case .noMethod: return "Type doesn't have a method"
-            case .noURL: return "Type doesn't have an url"
-            case .badUrl(let url): return "Bad github response url (\(url))"
+            case .installation: return "No installation"
             case .underlying(let error):
-                if let localizedError = error as? LocalizedError {
-                    return localizedError.localizedDescription
-                    
-                }
-                return "Unknown error (\(error))"
+                return (error as? LocalizedError).map { $0.localizedDescription } ?? "Unknown error (\(error))"
             }
         }
     }
@@ -152,7 +149,40 @@ extension Github.APIRequest: RequestModel {
 }
 
 extension Github.APIRequest: HTTPRequestable {
-    var url: URL? {
+    
+    public var method: HTTPMethod? {
+        switch self.type {
+        case .pullRequestOpened, .pullRequestEdited: return .PATCH
+        case .changesRequested: return .DELETE
+        case .failedStatus, .getPullRequest: return .GET
+        default: return nil
+        }
+    }
+    
+    public var body: Data? {
+        switch self.type {
+        case let .pullRequestOpened(title: title, _, body: body),
+             let .pullRequestEdited(title: title, _, body: body):
+            let issues =
+                (try? Youtrack.issueURLs(from: title,
+                                         base: Environment.get(Youtrack.Request.Config.youtrackURL),
+                                         pattern: "4DM-[0-9]+")
+                .filter { !body.contains($0) }
+                .map { "- \($0)" }) ?? []
+            if !issues.isEmpty {
+                let new = issues.joined(separator: "\n") + "\n\n" + body
+                
+                struct Body: Encodable { let body: String }
+                
+                return try? JSONEncoder().encode(Body(body: new))
+            } else {
+                return nil
+            }
+        default: return nil
+        }
+    }
+    
+    public func url(token: String) -> URL? {
         let waitingForReview = Github.waitingForReviewLabel.name
         switch self.type {
         case let .changesRequested(url: url):
@@ -169,38 +199,8 @@ extension Github.APIRequest: HTTPRequestable {
         default: return nil
         }
     }
-    
-    var method: HTTPMethod? {
-        switch self.type {
-        case .pullRequestOpened, .pullRequestEdited: return .PATCH
-        case .changesRequested: return .DELETE
-        case .failedStatus, .getPullRequest: return .GET
-        default: return nil
-        }
-    }
-    
-    var body: Data? {
-        switch self.type {
-        case let .pullRequestOpened(title: title, _, body: body),
-             let .pullRequestEdited(title: title, _, body: body):
-            let issues =
-                (try? Youtrack.issueURLs(from: title, url: Environment.get(Youtrack.Request.Config.youtrackURL))
-                .filter { !body.contains($0) }
-                .map { "- \($0)" }) ?? []
-            if !issues.isEmpty {
-                let new = issues.joined(separator: "\n") + "\n\n" + body
-                
-                struct Body: Encodable { let body: String }
-                
-                return try? JSONEncoder().encode(Body(body: new))
-            } else {
-                return nil
-            }
-        default: return nil
-        }
-    }
-    
-    func headers(token: String) -> [(String, String)] {
+
+    public func headers(token: String) -> [(String, String)] {
         return [
             ("Authorization", "token \(token)"),
             ("Accept", "application/vnd.github.machine-man-preview+json"),
@@ -242,9 +242,12 @@ extension Github {
                             .replacingOccurrences(of: "\\n", with: "\n") else {
                                 throw Error.jwt
                     }
+                    guard let installationId = request.installationId else {
+                        throw Error.installation
+                    }
                     return accessToken(context: context,
                                        jwtToken: try jwt(appId: appId, privateKey: privateKey),
-                                       installationId: request.installationId,
+                                       installationId: installationId,
                                        api: Environment.api)
                         .map { token in
                             guard let token = token else {
@@ -253,7 +256,7 @@ extension Github {
                             return token
                         }
                         .flatMap {
-                            try fetchRequest(installationId: request.installationId,
+                            try fetchRequest(installationId: installationId,
                                              token: $0,
                                              request: request,
                                              context: context)
@@ -276,23 +279,23 @@ extension Github {
         let instant = pure(Tokened<APIResponse?>(token, nil), context)
         switch request.type {
         case .changesRequested:
-            return try fetch(request, APIResponse.self, token, context, Environment.api)
+            return try Service.fetch(request, APIResponse.self, token, context, Environment.api)
         case .failedStatus:
-            return try fetch(request, SearchResponse<SearchIssue>.self, token, context, Environment.api)
-                .mapTokened { result -> String? in
+            return try Service.fetch(request, SearchResponse<SearchIssue>.self, token, context, Environment.api)
+                .map { result -> String? in
                     return result?.items?
                         .compactMap { item -> String? in
                             return item.pullRequest?.url
                         }
                         .first
                 }
-                .fetchTokened(context, PullRequest.self, installationId) { .getPullRequest(url: $0 ) }
-                .fetchTokened(context, APIResponse.self, installationId) { .changesRequested(url: $0.url) }
+                .fetch(context, PullRequest.self) { APIRequest(type: .getPullRequest(url: $0 )) }
+                .fetch(context, APIResponse.self) { APIRequest(type: .changesRequested(url: $0.url)) }
         case .pullRequestOpened, .pullRequestEdited:
             if request.body == nil {
                 return instant
             } else {
-                return try fetch(request, APIResponse.self, token, context, Environment.api)
+                return try Service.fetch(request, APIResponse.self, token, context, Environment.api)
             }
         default:
             return instant
@@ -330,32 +333,4 @@ extension TokenedIO where T == Tokened<Github.APIResponse?> {
             .catchMap { .left(Github.PayloadResponse(error: Github.Error.underlying($0))) }
     }
     
-}
-
-extension TokenedIO {
-    func mapTokened<A, B>(_ callback: @escaping (A) throws -> B) -> TokenedIO<B> where T == Tokened<A> {
-        return map { tokened in return Tokened(tokened.token, try callback(tokened.value)) }
-    }
-    
-    private func fetch<A: Decodable>(_ context: Context, _ returnType: A.Type)
-        -> TokenedIO<A?> where T == Tokened<Github.APIRequest?> {
-            
-            return self.flatMap { tokened in
-                guard let value = tokened.value else { return pure(Tokened<A?>(tokened.token, nil), context) }
-                return try Github.fetch(value, returnType, tokened.token, context, Environment.api)
-            }
-    }
-    
-    func fetchTokened<A, B: Decodable>(_ context: Context,
-                                       _ returnType: B.Type,
-                                       _ installationId: Int,
-                                       _ type: @escaping (A) -> Github.RequestType)
-        -> TokenedIO<B?> where T == Tokened<A?> {
-            
-            return mapTokened { value -> Github.APIRequest? in
-                return value.map {
-                    Github.APIRequest(installationId: installationId, type: type($0))
-                }
-            }.fetch(context, returnType)
-    }
 }

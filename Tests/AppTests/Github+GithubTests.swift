@@ -14,7 +14,7 @@ import HTTP
 
 @testable import App
 
-class Github_GithubTests: XCTestCase {
+class GithubGithubTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
@@ -108,8 +108,9 @@ class Github_GithubTests: XCTestCase {
                                                            installation: Github.Installation(id: 1)),
                                             pullRequestHeaders)
         
-        XCTAssertEqual(response.right?.url?.host, "test.com")
-        XCTAssertEqual(response.right?.url?.path, labelPath)
+        let url = response.right?.url(token: "x")
+        XCTAssertEqual(url?.host, "test.com")
+        XCTAssertEqual(url?.path, labelPath)
         XCTAssertEqual(response.right?.installationId, 1)
         XCTAssertEqual(response.right?.method, .DELETE)
 
@@ -125,8 +126,9 @@ class Github_GithubTests: XCTestCase {
         
         let query = "shaxyz+label:\"\(Github.waitingForReviewLabel.name)\"+state:open"
         XCTAssertNil(response.left)
-        XCTAssertEqual(response.right?.url?.host, "api.github.com")
-        XCTAssertEqual(response.right?.url?.path, "/search/issues?q=\(query)")
+        let url = response.right?.url(token: "x")
+        XCTAssertEqual(url?.host, "api.github.com")
+        XCTAssertEqual(url?.path, "/search/issues?q=\(query)")
         XCTAssertEqual(response.right?.installationId, 1)
         XCTAssertEqual(response.right?.method, .GET)
     }
@@ -148,12 +150,17 @@ class Github_GithubTests: XCTestCase {
                                                            installation: Github.Installation(id: 1)),
                                             headers)
         XCTAssertNil(response.left)
-        XCTAssertEqual(response.right?.url?.host, "test.com")
-        XCTAssertEqual(response.right?.url?.path, "/pulls/1")
+        let url = response.right?.url(token: "x")
+        XCTAssertEqual(url?.host, "test.com")
+        XCTAssertEqual(url?.path, "/pulls/1")
         XCTAssertEqual(response.right?.installationId, 1)
         XCTAssertEqual(response.right?.method, .PATCH)
         
-        let new = "- " + (try Youtrack.issueURLs(from: title, url: "https://test.com")[0]) + "\n\n\(body)"
+        let new = "- "
+            + (try Youtrack.issueURLs(from: title,
+                                      base: "https://test.com",
+                                      pattern: "4DM-[0-9]+")[0])
+            + "\n\n\(body)"
         
         struct Body: Decodable, Equatable { let body: String }
         
