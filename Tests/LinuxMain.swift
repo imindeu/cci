@@ -42,16 +42,8 @@ extension EitherTests {
   ]
 }
 
-extension GithubServicesTests {
-  static var allTests: [(String, (GithubServicesTests) -> () throws -> Void)] = [
-    ("testVerify", testVerify),
-    ("testJwt", testJwt),
-    ("testAccessToken", testAccessToken)
-  ]
-}
-
-extension Github_GithubTests {
-  static var allTests: [(String, (Github_GithubTests) -> () throws -> Void)] = [
+extension GithubGithubTests {
+  static var allTests: [(String, (GithubGithubTests) -> () throws -> Void)] = [
     ("testCheck", testCheck),
     ("testCheckFailure", testCheckFailure),
     ("testType", testType),
@@ -61,6 +53,14 @@ extension Github_GithubTests {
     ("testApiChangesRequested", testApiChangesRequested),
     ("testApiFailedStatus", testApiFailedStatus),
     ("testResponseToGithub", testResponseToGithub)
+  ]
+}
+
+extension GithubServicesTests {
+  static var allTests: [(String, (GithubServicesTests) -> () throws -> Void)] = [
+    ("testVerify", testVerify),
+    ("testJwt", testJwt),
+    ("testAccessToken", testAccessToken)
   ]
 }
 
@@ -135,8 +135,8 @@ XCTMain([
   testCase(APIConnectTests.allTests),
   testCase(CircleCiTests.allTests),
   testCase(EitherTests.allTests),
+  testCase(GithubGithubTests.allTests),
   testCase(GithubServicesTests.allTests),
-  testCase(Github_GithubTests.allTests),
   testCase(IOTests.allTests),
   testCase(RouterGithubToCircleCiTests.allTests),
   testCase(RouterGithubToGithubTests.allTests),
