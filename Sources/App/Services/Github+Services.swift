@@ -16,6 +16,8 @@ protocol HTTPRequestable {
     var url: URL? { get }
     var method: HTTPMethod? { get }
     var body: Data? { get }
+    
+    func headers(token: String) -> [(String, String)]
 }
 
 extension Github {
@@ -92,15 +94,9 @@ extension Github {
                     throw Error.badUrl(url.absoluteString)
         }
         
-        let headers = HTTPHeaders([
-            ("Authorization", "token \(token)"),
-            ("Accept", "application/vnd.github.machine-man-preview+json"),
-            ("User-Agent", "cci-imind")
-        ])
-        
         let httpRequest = HTTPRequest(method: method,
                                       url: path,
-                                      headers: headers,
+                                      headers: HTTPHeaders(request.headers(token: token)),
                                       body: request.body ?? HTTPBody())
         
         return api(host, url.port)(context, httpRequest)
