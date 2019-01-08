@@ -23,24 +23,14 @@ extension CircleCi {
         
         public var errorDescription: String? {
             switch self {
-            case .noChannel(let name):
-                return "No project found (channel: \(name))"
-            case .unknownCommand(let text):
-                return "Unknown command (\(text))"
-            case .noBranch(let string):
-                return "No branch found (\(string))"
-            case .unknownType(let text):
-                return "Unknown type (\(text))"
-            case .decode:
-                return "Decode error"
-            case .badResponse(let message):
-                return "CircleCi message: \"\(message ?? "")\""
+            case .noChannel(let name): return "No project found (channel: \(name))"
+            case .unknownCommand(let text): return "Unknown command (\(text))"
+            case .noBranch(let string): return "No branch found (\(string))"
+            case .unknownType(let text): return "Unknown type (\(text))"
+            case .decode: return "Decode error"
+            case .badResponse(let message): return "CircleCi message: \"\(message ?? "")\""
             case .underlying(let error):
-                if let localizedError = error as? LocalizedError {
-                    return localizedError.localizedDescription
-                    
-                }
-                return "Unknown error (\(error))"
+                return (error as? LocalizedError).map { $0.localizedDescription } ?? "Unknown error (\(error))"
             }
         }
     }

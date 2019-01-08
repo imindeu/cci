@@ -18,55 +18,19 @@ extension Youtrack {
         return "\(base)/issue/\(issue)"
     }
     
-    static func issues(from: String) throws -> [String] {
-        let regex = try NSRegularExpression(pattern: "4DM-[0-9]+")
+    static func issues(from: String, pattern: String) throws -> [String] {
+        let regex = try NSRegularExpression(pattern: pattern)
         return regex.matches(in: from, options: [], range: NSRange(from.startIndex..., in: from))
             .compactMap { Range($0.range, in: from).map { String(from[$0]) } }
     }
     
-    static func issueURLs(from: String, url: String?) throws -> [String] {
-        return try url
+    static func issueURLs(from: String, base: String?, pattern: String) throws -> [String] {
+        return try base
             .map { url in
-                try issues(from: from).map { path(base: url, issue: $0).replacingOccurrences(of: "/rest", with: "") }
+                try issues(from: from, pattern: pattern)
+                    .map {
+                        path(base: url, issue: $0).replacingOccurrences(of: "/rest", with: "")
+                    }
             } ?? []
-    }
-    
-    private static func path(base: String, issue: String, command: Request.Command) -> String {
-        return path(base: base, issue: issue) + "/execute?command=\(command.rawValue)"
-    }
-    
-    static func fetch(_ context: Context,
-                      _ url: URL,
-                      _ host: String,
-                      _ token: String,
-                      _ api: @escaping API)
-        -> (Request.RequestData)
-        -> EitherIO<Github.PayloadResponse, ResponseContainer> {
-            
-        return { requestData in
-            let headers = HTTPHeaders([
-                ("Accept", "application/json"),
-                ("Content-Type", "application/json"),
-                ("Authorization", "Bearer \(token)")
-            ])
-
-            let httpRequest = HTTPRequest(method: .POST,
-                                          url: path(base: url.path,
-                                                    issue: requestData.issue,
-                                                    command: requestData.command),
-                                          headers: headers)
-            return api(host, url.port)(context, httpRequest)
-                .decode(Response.self)
-                .map { response in
-                    let youtrackResponse = response ?? Response(value: "issue: \(requestData.issue)")
-                    return .right(ResponseContainer(response: youtrackResponse, data: requestData))
-                }
-                .catchMap {
-                    return .left(
-                        Github.PayloadResponse(
-                            value: "issue: \(requestData.issue): " +
-                                "\(Error.underlying($0).localizedDescription)"))
-                }
-        }
     }
 }

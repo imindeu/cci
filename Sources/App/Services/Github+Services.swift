@@ -12,14 +12,6 @@ import Crypto
 import JWT
 import HTTP
 
-protocol HTTPRequestable {
-    var url: URL? { get }
-    var method: HTTPMethod? { get }
-    var body: Data? { get }
-    
-    func headers(token: String) -> [(String, String)]
-}
-
 extension Github {
     static var signatureHeaderName: String { return "X-Hub-Signature" }
     static var eventHeaderName: String { return "X-GitHub-Event" }
@@ -63,11 +55,11 @@ extension Github {
             ("Authorization", "Bearer \(jwtToken)"),
             ("Accept", "application/vnd.github.machine-man-preview+json"),
             ("User-Agent", "cci-imind")
-            ])
+        ])
         let request = HTTPRequest(method: .POST,
                                   url: "/app/installations/\(installationId)/access_tokens",
-            headers: headers,
-            body: "")
+                                  headers: headers,
+                                  body: "")
         struct TokenResponse: Decodable {
             let token: String
         }
@@ -77,30 +69,4 @@ extension Github {
             .map { $0?.token }
     }
     
-    static func fetch<A: Decodable>(_ request: HTTPRequestable,
-                                    _ responseType: A.Type,
-                                    _ token: String,
-                                    _ context: Context,
-                                    _ api: @escaping API) throws -> TokenedIO<A?> {
-        guard let method = request.method else {
-            throw Error.noMethod
-        }
-        guard let url = request.url else {
-            throw Error.noURL
-        }
-        guard let host = url.host,
-            let path = url.path
-                .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed) else {
-                    throw Error.badUrl(url.absoluteString)
-        }
-        
-        let httpRequest = HTTPRequest(method: method,
-                                      url: path,
-                                      headers: HTTPHeaders(request.headers(token: token)),
-                                      body: request.body ?? HTTPBody())
-        
-        return api(host, url.port)(context, httpRequest)
-            .decode(responseType)
-            .map { Tokened(token, $0) }
-    }
 }

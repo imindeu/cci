@@ -38,10 +38,10 @@
 		114FBC7521CBC08400E43560 /* Youtrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114FBC7421CBC08400E43560 /* Youtrack.swift */; };
 		115069E021E3760C00A1A48E /* Github+Github.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069DF21E3760C00A1A48E /* Github+Github.swift */; };
 		115069E321E378BF00A1A48E /* Github+ServicesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069E121E3781E00A1A48E /* Github+ServicesTests.swift */; };
-		115069F421E37AE500A1A48E /* Tokened.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069F321E37AE500A1A48E /* Tokened.swift */; };
 		115069F621E38DE500A1A48E /* Youtrack+Github.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069F521E38DE500A1A48E /* Youtrack+Github.swift */; };
 		115069F821E38F3E00A1A48E /* Youtrack+ServicesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115069F721E38F3E00A1A48E /* Youtrack+ServicesTests.swift */; };
 		1169480C21DCEFCC00590493 /* RouterGithubToCircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */; };
+		11F5275F21E4DC63009855B5 /* Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F5275E21E4DC63009855B5 /* Service.swift */; };
 		OBJ_1013 /* CircleCiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* CircleCiTests.swift */; };
 		OBJ_1014 /* Github+GithubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* Github+GithubTests.swift */; };
 		OBJ_1015 /* RouterGithubToYoutrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* RouterGithubToYoutrackTests.swift */; };
@@ -4706,10 +4706,10 @@
 		114FBC7421CBC08400E43560 /* Youtrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Youtrack.swift; sourceTree = "<group>"; };
 		115069DF21E3760C00A1A48E /* Github+Github.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Github+Github.swift"; sourceTree = "<group>"; };
 		115069E121E3781E00A1A48E /* Github+ServicesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Github+ServicesTests.swift"; sourceTree = "<group>"; };
-		115069F321E37AE500A1A48E /* Tokened.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokened.swift; sourceTree = "<group>"; };
 		115069F521E38DE500A1A48E /* Youtrack+Github.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Youtrack+Github.swift"; sourceTree = "<group>"; };
 		115069F721E38F3E00A1A48E /* Youtrack+ServicesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Youtrack+ServicesTests.swift"; sourceTree = "<group>"; };
 		1169480A21DCEFC400590493 /* RouterGithubToCircleCiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterGithubToCircleCiTests.swift; sourceTree = "<group>"; };
+		11F5275E21E4DC63009855B5 /* Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Service.swift; sourceTree = "<group>"; };
 		"Cci::APIConnect::Product" /* APIConnect.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIConnect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIConnectTests::Product" /* APIConnectTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = APIConnectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Cci::APIModels::Product" /* APIModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = APIModels.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -6379,8 +6379,8 @@
 				OBJ_21 /* Environment.swift */,
 				115069DF21E3760C00A1A48E /* Github+Github.swift */,
 				OBJ_22 /* Github+Services.swift */,
+				11F5275E21E4DC63009855B5 /* Service.swift */,
 				OBJ_24 /* Slack+Services.swift */,
-				115069F321E37AE500A1A48E /* Tokened.swift */,
 				115069F521E38DE500A1A48E /* Youtrack+Github.swift */,
 				OBJ_26 /* Youtrack+Services.swift */,
 			);
@@ -10768,6 +10768,7 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_896 /* CircleCi+Services.swift in Sources */,
+				11F5275F21E4DC63009855B5 /* Service.swift in Sources */,
 				115069E021E3760C00A1A48E /* Github+Github.swift in Sources */,
 				OBJ_897 /* Environment.swift in Sources */,
 				110E8E9921C7AD09000C899A /* APIConnect+Services.swift in Sources */,
@@ -10777,7 +10778,6 @@
 				OBJ_903 /* boot.swift in Sources */,
 				115069F621E38DE500A1A48E /* Youtrack+Github.swift in Sources */,
 				OBJ_904 /* configure.swift in Sources */,
-				115069F421E37AE500A1A48E /* Tokened.swift in Sources */,
 				OBJ_905 /* routes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

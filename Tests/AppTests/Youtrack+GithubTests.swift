@@ -101,7 +101,8 @@ class YoutrackGithubTests: XCTestCase {
         Environment.env[Youtrack.Request.Config.youtrackURL.rawValue] = "x"
         let data = issues.map { Youtrack.Request.RequestData(issue: $0, command: .inProgress) }
         let request: Youtrack.Request = Youtrack.Request(data: data)
-        let badUrlExpected = Github.PayloadResponse(error: Youtrack.Error.badURL)
+        let error = Service.Error.badUrl("x/issue/4DM-2001/execute?command=4DM%20iOS%20state%20In%20Progress")
+        let badUrlExpected = Github.PayloadResponse(error: error)
         let badUrlResponse = try api(request).wait().left
         XCTAssertEqual(badUrlResponse, badUrlExpected)
         

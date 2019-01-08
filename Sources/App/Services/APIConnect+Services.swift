@@ -8,10 +8,7 @@
 import APIConnect
 import APIModels
 
-import HTTP
-
 // MARK: - Custom types
-public typealias API = (String, Int?) -> (Context, HTTPRequest) -> IO<HTTPResponse>
 
 typealias GithubToYoutrack = APIConnect<Github.Payload, Youtrack.Request, Environment>
 typealias GithubToGithub = APIConnect<Github.Payload, Github.APIRequest, Environment>
