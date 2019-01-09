@@ -6,7 +6,17 @@
 //
 import APIConnect
 
-import HTTP
+import struct Foundation.Data
+import struct Foundation.URL
+import class Foundation.JSONDecoder
+import protocol Foundation.LocalizedError
+import struct Foundation.CharacterSet
+
+import struct HTTP.HTTPRequest
+import enum HTTP.HTTPMethod
+import struct HTTP.HTTPResponse
+import struct HTTP.HTTPHeaders
+import struct HTTP.HTTPBody
 
 public typealias API = (String, Int?) -> (Context, HTTPRequest) -> IO<HTTPResponse>
 
@@ -58,6 +68,15 @@ public enum Service {
         return api(host, url.port)(context, httpRequest)
             .decode(responseType)
             .map { Tokened(token, $0) }
+    }
+}
+
+extension IO where T == HTTPResponse {
+    func decode<A: Decodable>(_ type: A.Type) -> IO<A?> {
+        return map { response -> A? in
+            guard let data = response.body.data else { return nil }
+            return try JSONDecoder().decode(type, from: data)
+        }
     }
 }
 

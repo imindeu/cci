@@ -6,8 +6,15 @@
 //
 import APIConnect
 import APIModels
-import Foundation
-import HTTP
+
+import struct Foundation.URL
+import class Foundation.JSONEncoder
+import protocol Foundation.LocalizedError
+
+import struct HTTP.HTTPRequest
+import struct HTTP.HTTPHeaders
+import struct HTTP.HTTPBody
+import enum HTTP.HTTPMethod
 
 extension Slack {
     enum Error: LocalizedError {
@@ -36,10 +43,10 @@ extension Slack.Request: DelayedRequestModel {
     public var responseURL: URL? { return URL(string: responseUrlString) }
 }
 
-extension Slack.Request {
-    static func check(_ from: Slack.Request, _ body: String? = nil, _ headers: Headers? = nil) -> Slack.Response? {
-        var errors: [Slack.Error] = []
-        let token = Environment.get(Config.slackToken)
+extension Slack {
+    static func check(_ from: Request, _ body: String? = nil, _ headers: Headers? = nil) -> Response? {
+        var errors: [Error] = []
+        let token = Environment.get(Request.Config.slackToken)
         if token == nil || from.token != token! {
             errors.append(.badToken)
         }
@@ -47,9 +54,9 @@ extension Slack.Request {
             errors.append(.missingResponseURL)
         }
         guard !errors.isEmpty else { return nil }
-        return Slack.Response.error(Slack.Error.combined(errors))
+        return Response.error(Error.combined(errors))
     }
-    static func api(_ request: Slack.Request, _ context: Context) -> (Slack.Response) -> IO<Void> {
+    static func api(_ request: Request, _ context: Context) -> (Response) -> IO<Void> {
         return { response in
             guard let url = request.responseURL,
                 let hostname = url.host,
@@ -66,8 +73,8 @@ extension Slack.Request {
             return returnAPI(context, request).map { _ in () }
         }
     }
-    static func instant(_ context: Context) -> (Slack.Request) -> IO<Slack.Response?> {
-        return const(pure(Slack.Response.instant, context))
+    static func instant(_ context: Context) -> (Request) -> IO<Response?> {
+        return const(pure(Response.instant, context))
     }
 }
 

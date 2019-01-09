@@ -52,6 +52,17 @@ public extension Either {
     }
 }
 
+extension Either {
+    public func bimap<A, B>(_ l2a: (L) -> A, _ r2b: (R) -> B) -> Either<A, B> {
+        switch self {
+        case let .left(l):
+            return .left(l2a(l))
+        case let .right(r):
+            return .right(r2b(r))
+        }
+    }
+}
+
 extension Either: Equatable where L: Equatable, R: Equatable {
     public static func == (lhs: Either, rhs: Either) -> Bool {
         switch (lhs, rhs) {

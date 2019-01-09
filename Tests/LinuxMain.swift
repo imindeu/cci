@@ -23,9 +23,7 @@ extension CircleCiTests {
     ("testApiWithSlack", testApiWithSlack),
     ("testApiWithSlackMessage", testApiWithSlackMessage),
     ("testResponseToSlack", testResponseToSlack),
-    ("testGithubRequest", testGithubRequest),
-    ("testApiWithGithub", testApiWithGithub),
-    ("testResponseToGithub", testResponseToGithub)
+    ("testGithubRequest", testGithubRequest)
   ]
 }
 

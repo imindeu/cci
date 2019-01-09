@@ -42,6 +42,19 @@ public extension APIConnect {
         self.instant = nil
         
     }
+    
+    public func pullback<A: RequestModel>(check: @escaping (_ from: A, _ body: String?, _ headers: Headers?) -> A.ResponseModel?,
+                                          request: @escaping (_ from: A, _ headers: Headers?) -> Either<A.ResponseModel, To>,
+                                          transform: @escaping (From.ResponseModel) -> A.ResponseModel) -> APIConnect<A, To, E> {
+        return APIConnect<A, To, E>(check: check,
+                                    request: request,
+                                    toAPI: { context -> (To) -> EitherIO<A.ResponseModel, To.ResponseModel> in
+                                        return { to -> EitherIO<A.ResponseModel, To.ResponseModel> in
+                                            return self.toAPI(context)(to).bimapEither(transform, id)
+                                        }
+                                    },
+                                    response: { transform(self.response($0)) })
+    }
 }
 
 public extension APIConnect {

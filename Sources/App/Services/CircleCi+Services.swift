@@ -7,8 +7,12 @@
 
 import APIConnect
 import APIModels
-import Foundation
-import HTTP
+
+import struct Foundation.URL
+import protocol Foundation.LocalizedError
+import class Foundation.JSONEncoder
+import struct HTTP.HTTPHeaders
+import struct HTTP.HTTPRequest
 
 extension CircleCi {
 
@@ -358,23 +362,8 @@ extension CircleCi {
         }
     }
     
-    static func apiWithGithub(_ context: Context)
-        -> (JobRequest)
-        -> EitherIO<Github.PayloadResponse, BuildResponse> {
-            return { jobRequest -> EitherIO<Github.PayloadResponse, BuildResponse> in
-                do {
-                    return try fetch(job: jobRequest.job, context: context)
-                        .map { .right($0) }
-                        .catchMap { .left(Github.PayloadResponse(error: Error.underlying($0))) }
-                } catch {
-                    return leftIO(context)(Github.PayloadResponse(error: Error.underlying(error)))
-                }
-            }
-    }
-    
-    static func responseToGithub(_ from: BuildResponse) -> Github.PayloadResponse {
-        return Github.PayloadResponse(value: "buildURL: \(from.response.buildURL ?? ""), "
-            + "buildNum: \(from.response.buildNum ?? -1)")
+    static func slackToGithubResponse(_ response: Slack.Response) -> Github.PayloadResponse {
+        return Github.PayloadResponse(value: response.attachments.first?.fallback)
     }
     
     private static func fetch(job: CircleCiJob, context: Context) throws -> IO<BuildResponse> {

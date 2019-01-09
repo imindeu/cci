@@ -8,9 +8,16 @@
 import APIConnect
 import APIModels
 
-import Crypto
-import JWT
-import HTTP
+import struct Foundation.Date
+
+import class Crypto.HMAC
+import struct Crypto.RSAKey
+import struct JWT.JWT
+import protocol JWT.JWTPayload
+import class JWT.JWTSigner
+
+import struct HTTP.HTTPHeaders
+import struct HTTP.HTTPRequest
 
 extension Github {
     static var signatureHeaderName: String { return "X-Hub-Signature" }

@@ -7,7 +7,13 @@
 
 import APIConnect
 import APIModels
-import HTTP
+
+import protocol Foundation.LocalizedError
+import struct Foundation.Data
+import struct Foundation.URL
+import class Foundation.JSONEncoder
+
+import enum HTTP.HTTPMethod
 
 public extension Github {
     
