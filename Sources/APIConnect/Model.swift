@@ -5,7 +5,7 @@
 //  Created by Peter Geszten-Kovacs on 2018. 11. 21..
 //
 
-import Foundation
+import struct Foundation.URL
 
 public protocol Configuration: RawRepresentable & CaseIterable where RawValue == String {}
 

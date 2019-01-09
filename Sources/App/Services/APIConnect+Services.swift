@@ -10,12 +10,38 @@ import APIModels
 
 // MARK: - Custom types
 
+typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCi.JobRequest, Environment>
 typealias GithubToYoutrack = APIConnect<Github.Payload, Youtrack.Request, Environment>
 typealias GithubToGithub = APIConnect<Github.Payload, Github.APIRequest, Environment>
 typealias GithubToCircleCi = APIConnect<Github.Payload, CircleCi.JobRequest, Environment>
-typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCi.JobRequest, Environment>
 
 // MARK: - Custom inits
+
+extension APIConnect {
+    static var slackToCircleCi: SlackToCircleCi {
+        return SlackToCircleCi(request: CircleCi.slackRequest,
+                               toAPI: CircleCi.apiWithSlack,
+                               response: CircleCi.responseToSlack)
+    }
+    
+    static var githubToYoutrack: GithubToYoutrack {
+        return GithubToYoutrack(request: Youtrack.githubRequest,
+                                toAPI: Youtrack.apiWithGithub,
+                                response: Youtrack.responseToGithub)
+    }
+    
+    static var githubToGithub: GithubToGithub {
+        return GithubToGithub(request: Github.githubRequest,
+                              toAPI: Github.apiWithGithub,
+                              response: Github.responseToGithub)
+    }
+    
+    static var githubToCircleCi: GithubToCircleCi {
+        return slackToCircleCi.pullback(check: Github.check,
+                                        request: CircleCi.githubRequest,
+                                        transform: CircleCi.slackToGithubResponse)
+    }
+}
 
 // MARK: Github.Payload
 extension APIConnect where From == Github.Payload {
@@ -38,16 +64,23 @@ extension APIConnect where From == Slack.Request {
         -> (To)
         -> EitherIO<Slack.Response, To.ResponseModel>,
          response: @escaping (_ with: To.ResponseModel) -> Slack.Response) {
-        self.init(check: Slack.Request.check,
+        self.init(check: Slack.check,
                   request: request,
                   toAPI: toAPI,
                   response: response,
-                  fromAPI: Slack.Request.api,
-                  instant: Slack.Request.instant)
+                  fromAPI: Slack.api,
+                  instant: Slack.instant)
     }
 }
 
 // MARK: - Custom runs
+
+// MARK: Slack.Request -> CircleCi.JobRequest
+extension APIConnect where From == Slack.Request, To == CircleCi.JobRequest {
+    static func run(_ from: Slack.Request, _ context: Context) -> IO<Slack.Response?> {
+        return slackToCircleCi.run(from, context, nil, nil)
+    }
+}
 
 // MARK: Github.Payload -> Youtrack.Request
 extension APIConnect where From == Github.Payload, To == Youtrack.Request {
@@ -55,10 +88,7 @@ extension APIConnect where From == Github.Payload, To == Youtrack.Request {
                     _ context: Context,
                     _ body: String?,
                     _ headers: Headers?) -> IO<Github.PayloadResponse?> {
-        return GithubToYoutrack(request: Youtrack.githubRequest,
-                                toAPI: Youtrack.apiWithGithub,
-                                response: Youtrack.responseToGithub)
-            .run(from, context, body, headers)
+        return githubToYoutrack.run(from, context, body, headers)
     }
 }
 
@@ -68,33 +98,17 @@ extension APIConnect where From == Github.Payload, To == Github.APIRequest {
                     _ context: Context,
                     _ body: String?,
                     _ headers: Headers?) -> IO<Github.PayloadResponse?> {
-        return GithubToGithub(request: Github.githubRequest,
-                              toAPI: Github.apiWithGithub,
-                              response: Github.responseToGithub)
-            .run(from, context, body, headers)
+        return githubToGithub.run(from, context, body, headers)
     }
 }
 
-// MARK: Github.Payload -> Github.APIRequest
+// MARK: Github.Payload -> CircleCi.JobRequest
 extension APIConnect where From == Github.Payload, To == CircleCi.JobRequest {
     static func run(_ from: Github.Payload,
                     _ context: Context,
                     _ body: String?,
                     _ headers: Headers?) -> IO<Github.PayloadResponse?> {
-        return GithubToCircleCi(request: CircleCi.githubRequest,
-                                toAPI: CircleCi.apiWithGithub,
-                                response: CircleCi.responseToGithub)
-            .run(from, context, body, headers)
-    }
-}
-
-// MARK: Slack.Request -> CircleCi.JobRequest
-extension APIConnect where From == Slack.Request, To == CircleCi.JobRequest {
-    static func run(_ from: Slack.Request, _ context: Context) -> IO<Slack.Response?> {
-        return SlackToCircleCi(request: CircleCi.slackRequest,
-                               toAPI: CircleCi.apiWithSlack,
-                               response: CircleCi.responseToSlack)
-            .run(from, context, nil, nil)
+        return githubToCircleCi.run(from, context, body, headers)
     }
 }
 

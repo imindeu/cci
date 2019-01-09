@@ -325,42 +325,4 @@ class CircleCiTests: XCTestCase {
 
     }
     
-    func testApiWithGithub() throws {
-        let api = CircleCi.apiWithGithub(context())
-        
-        // build response
-        let job = CircleCiTestJob(project: project,
-                                  branch: branch,
-                                  options: options,
-                                  username: username)
-        let request: CircleCi.JobRequest = CircleCi.JobRequest(job: job)
-        let expected = CircleCi.Response(buildURL: "buildURL",
-                                         buildNum: 10)
-        let response = try api(request).wait().right
-        XCTAssertEqual(response?.job as? CircleCiTestJob, job)
-        XCTAssertEqual(response?.response, expected)
-
-    }
-    
-    func testResponseToGithub() {
-        // test
-        let testResponse = CircleCi.BuildResponse(response: CircleCi.Response(buildURL: "buildURL",
-                                                                              buildNum: 10),
-                                                  job: CircleCiTestJob(project: project,
-                                                                       branch: branch,
-                                                                       options: options,
-                                                                       username: username))
-        let testGithubResponse = CircleCi.responseToGithub(testResponse)
-        let expectedTestGithubResponse = Github.PayloadResponse(value: "buildURL: buildURL, buildNum: 10")
-        XCTAssertEqual(testGithubResponse, expectedTestGithubResponse)
-        
-        let messageResponse = CircleCi.BuildResponse(response: CircleCi.Response(message: "x"),
-                                                     job: CircleCiTestJob(project: project,
-                                                                          branch: branch,
-                                                                          options: options,
-                                                                          username: username))
-        let messageGithubResponse = CircleCi.responseToGithub(messageResponse)
-        XCTAssertEqual(messageGithubResponse, Github.PayloadResponse(value: "buildURL: , buildNum: -1"))
-    }
-    
 }

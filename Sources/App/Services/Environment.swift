@@ -6,7 +6,10 @@
 //
 
 import APIConnect
-import HTTP
+
+import class Foundation.ProcessInfo
+import struct HTTP.HTTPResponse
+import class HTTP.HTTPClient
 
 public struct Environment: APIConnectEnvironment {
     public static var api: API = { hostname, port in
@@ -23,11 +26,3 @@ public struct Environment: APIConnectEnvironment {
     
 }
 
-extension IO where T == HTTPResponse {
-    func decode<A: Decodable>(_ type: A.Type) -> IO<A?> {
-        return map { response -> A? in
-            guard let data = response.body.data else { return nil }
-            return try JSONDecoder().decode(type, from: data)
-        }
-    }
-}

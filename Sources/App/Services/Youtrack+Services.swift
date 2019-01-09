@@ -7,8 +7,8 @@
 import APIConnect
 import APIModels
 
-import HTTP
-import Core
+import class Foundation.NSRegularExpression
+import struct Foundation.NSRange
 
 extension Youtrack {
     static func path(base: String, issue: String) -> String {

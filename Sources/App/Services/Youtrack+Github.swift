@@ -8,8 +8,11 @@
 import APIConnect
 import APIModels
 
-import Foundation
-import HTTP
+import struct Foundation.URL
+import protocol Foundation.LocalizedError
+import struct Foundation.Data
+
+import enum HTTP.HTTPMethod
 
 extension Youtrack {
     enum Error: LocalizedError {
