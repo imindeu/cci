@@ -105,6 +105,12 @@ extension RouterSlackToCircleCiTests {
   ]
 }
 
+extension ServiceTests {
+  static var allTests: [(String, (ServiceTests) -> () throws -> Void)] = [
+    ("testFetch", testFetch)
+  ]
+}
+
 extension SlackTests {
   static var allTests: [(String, (SlackTests) -> () throws -> Void)] = [
     ("testCheck", testCheck),
@@ -140,6 +146,7 @@ XCTMain([
   testCase(RouterGithubToGithubTests.allTests),
   testCase(RouterGithubToYoutrackTests.allTests),
   testCase(RouterSlackToCircleCiTests.allTests),
+  testCase(ServiceTests.allTests),
   testCase(SlackTests.allTests),
   testCase(YoutrackGithubTests.allTests),
   testCase(YoutrackServicesTests.allTests),
