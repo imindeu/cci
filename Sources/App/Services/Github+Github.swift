@@ -154,7 +154,7 @@ extension Github.APIRequest: RequestModel {
     
 }
 
-extension Github.APIRequest: HTTPRequestable {
+extension Github.APIRequest: TokenRequestable {
     
     public var method: HTTPMethod? {
         switch self.type {

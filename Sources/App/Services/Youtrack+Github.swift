@@ -8,9 +8,9 @@
 import APIConnect
 import APIModels
 
-import struct Foundation.URL
 import protocol Foundation.LocalizedError
 import struct Foundation.Data
+import struct Foundation.URL
 
 import enum HTTP.HTTPMethod
 
@@ -74,7 +74,7 @@ extension Youtrack.Request: RequestModel {
     }
 }
 
-extension Youtrack.Request.RequestData: HTTPRequestable {
+extension Youtrack.Request.RequestData: TokenRequestable {
     var method: HTTPMethod? {
         return .POST
     }

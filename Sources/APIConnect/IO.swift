@@ -27,7 +27,9 @@ public extension IO {
         return map { $0.either(l2a, r2a) }
     }
     
-    func bimapEither<A, B, L, R>(_ l2a: @escaping (L) -> A, _ r2b: @escaping (R) -> B) -> EitherIO<A, B> where T == Either<L, R> {
+    func bimapEither<A, B, L, R>(_ l2a: @escaping (L) -> A, _ r2b: @escaping (R) -> B)
+        -> EitherIO<A, B> where T == Either<L, R> {
+            
         return map { $0.bimap(l2a, r2b) }
     }
 }

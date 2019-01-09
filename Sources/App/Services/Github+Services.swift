@@ -10,10 +10,11 @@ import APIModels
 
 import struct Foundation.Date
 
-import class Crypto.HMAC
 import struct Crypto.RSAKey
-import struct JWT.JWT
+import class Crypto.HMAC
+
 import protocol JWT.JWTPayload
+import struct JWT.JWT
 import class JWT.JWTSigner
 
 import struct HTTP.HTTPHeaders
