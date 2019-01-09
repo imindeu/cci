@@ -3,7 +3,7 @@
 
 import XCTest
 
-@testable import APIConnectTests; @testable import AppTests
+@testable import APIConnectTests; @testable import APIServiceTests; @testable import AppTests
 
 extension APIConnectTests {
   static var allTests: [(String, (APIConnectTests) -> () throws -> Void)] = [

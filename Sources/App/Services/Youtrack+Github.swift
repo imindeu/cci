@@ -6,7 +6,10 @@
 //
 
 import APIConnect
-import APIModels
+import APIService
+
+import enum APIModels.Github
+import enum APIModels.Youtrack
 
 import protocol Foundation.LocalizedError
 import struct Foundation.Data

@@ -34,7 +34,9 @@ ifndef GITHUBPRIVATEKEY
 endif
 
 # create tests for linux
-imports = @testable import APIConnectTests; @testable import AppTests
+imports = @testable import APIConnectTests;\
+	  @testable import APIServiceTests;\
+	  @testable import AppTests
 
 linux-main:
 	sourcery \

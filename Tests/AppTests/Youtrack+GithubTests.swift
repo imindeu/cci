@@ -7,6 +7,8 @@
 
 import APIConnect
 import APIModels
+import APIService
+
 import XCTest
 import HTTP
 

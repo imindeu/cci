@@ -6,7 +6,10 @@
 //
 
 import APIConnect
-import APIModels
+import APIService
+
+import enum APIModels.Github
+import enum APIModels.Youtrack
 
 import protocol Foundation.LocalizedError
 import struct Foundation.Data
@@ -251,8 +254,11 @@ extension Github {
                     guard let installationId = request.installationId else {
                         throw Error.installation
                     }
+                    guard let jwtToken = try jwt(appId: appId, privateKey: privateKey) else {
+                        throw Error.signature
+                    }
                     return accessToken(context: context,
-                                       jwtToken: try jwt(appId: appId, privateKey: privateKey),
+                                       jwtToken: jwtToken,
                                        installationId: installationId,
                                        api: Environment.api)
                         .map { token in
@@ -295,8 +301,8 @@ extension Github {
                         }
                         .first
                 }
-                .fetch(context, PullRequest.self) { APIRequest(type: .getPullRequest(url: $0 )) }
-                .fetch(context, APIResponse.self) { APIRequest(type: .changesRequested(url: $0.url)) }
+                .fetch(context, PullRequest.self, Environment.api) { APIRequest(type: .getPullRequest(url: $0 )) }
+                .fetch(context, APIResponse.self, Environment.api) { APIRequest(type: .changesRequested(url: $0.url)) }
         case .pullRequestOpened, .pullRequestEdited:
             if request.body == nil {
                 return instant

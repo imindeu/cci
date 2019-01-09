@@ -9,7 +9,7 @@ import APIModels
 
 import XCTest
 
-@testable import App
+@testable import APIService
 
 class YoutrackServicesTests: XCTestCase {
     let issues = ["4DM-2001", "4DM-2002"]
