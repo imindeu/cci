@@ -7,13 +7,14 @@
 import APIConnect
 import APIModels
 
+import protocol Foundation.LocalizedError
+import struct Foundation.Data
 import struct Foundation.URL
 import class Foundation.JSONEncoder
-import protocol Foundation.LocalizedError
 
-import struct HTTP.HTTPRequest
-import struct HTTP.HTTPHeaders
 import struct HTTP.HTTPBody
+import struct HTTP.HTTPHeaders
+import struct HTTP.HTTPRequest
 import enum HTTP.HTTPMethod
 
 extension Slack {

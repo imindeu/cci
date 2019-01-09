@@ -8,6 +8,7 @@
 import APIConnect
 
 import class Foundation.ProcessInfo
+
 import struct HTTP.HTTPResponse
 import class HTTP.HTTPClient
 
@@ -25,4 +26,3 @@ public struct Environment: APIConnectEnvironment {
     public static var env: [String: String] = ProcessInfo.processInfo.environment
     
 }
-

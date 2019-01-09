@@ -8,11 +8,14 @@
 import APIConnect
 import APIModels
 
-import struct Foundation.URL
 import protocol Foundation.LocalizedError
+import struct Foundation.Data
+import struct Foundation.URL
 import class Foundation.JSONEncoder
+
 import struct HTTP.HTTPHeaders
 import struct HTTP.HTTPRequest
+import enum HTTP.HTTPMethod
 
 extension CircleCi {
 
@@ -21,6 +24,7 @@ extension CircleCi {
         case noBranch(String)
         case unknownCommand(String)
         case unknownType(String)
+        case noProject(String)
         case decode
         case badResponse(String?)
         case underlying(Swift.Error)
@@ -31,6 +35,7 @@ extension CircleCi {
             case .unknownCommand(let text): return "Unknown command (\(text))"
             case .noBranch(let string): return "No branch found (\(string))"
             case .unknownType(let text): return "Unknown type (\(text))"
+            case .noProject(let text): return "No project (\(text))"
             case .decode: return "Decode error"
             case .badResponse(let message): return "CircleCi message: \"\(message ?? "")\""
             case .underlying(let error):
@@ -58,7 +63,7 @@ extension CircleCi {
     }
 }
 
-protocol CircleCiJob {
+protocol CircleCiJob: TokenRequestable {
     var name: String { get }
     var project: String { get }
     var branch: String { get }
@@ -83,6 +88,27 @@ extension CircleCiJob {
     }
     var urlEncodedBranch: String {
         return branch.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? branch
+    }
+}
+
+extension CircleCiJob {
+    var method: HTTPMethod? { return .POST }
+    
+    var body: Data? {
+        return try? JSONEncoder().encode(["build_parameters": buildParameters])
+    }
+    
+    func url(token: String) -> URL? {
+        return URL(string: "https://circleci.com/"
+            + CircleCi.path(project, urlEncodedBranch)
+            + "?circle-token=\(token)")
+    }
+    
+    func headers(token: String) -> [(String, String)] {
+        return [
+            ("Accept", "application/json"),
+            ("Content-Type", "application/json")
+        ]
     }
 }
 
@@ -229,13 +255,9 @@ extension CircleCiDeployJob {
 extension CircleCi {
     
     static var path: (String, String) -> String = { project, branch in
-        let projects: [String] = Environment.getArray(JobRequest.Config.projects)
-        let circleCiTokens = Environment.getArray(JobRequest.Config.tokens)
         let vcs = Environment.get(JobRequest.Config.vcs)!
         let company = Environment.get(JobRequest.Config.company)!
-        let index = projects.index(of: project)! // TODO: catch forced unwrap
-        let circleciToken = circleCiTokens[index]
-        return "/api/v1.1/project/\(vcs)/\(company)/\(project)/tree/\(branch)?circle-token=\(circleciToken)"
+        return "/api/v1.1/project/\(vcs)/\(company)/\(project)/tree/\(branch)"
     }
     
     static var helpResponse: Slack.Response {
@@ -299,8 +321,20 @@ extension CircleCi {
         -> EitherIO<Slack.Response, BuildResponse> {
             return { jobRequest -> EitherIO<Slack.Response, BuildResponse> in
                 do {
-                    return try fetch(job: jobRequest.job, context: context)
-                        .map { .right($0) }
+                    let projects: [String] = Environment.getArray(JobRequest.Config.projects)
+                    let circleCiTokens = Environment.getArray(JobRequest.Config.tokens)
+                    guard let index = projects.index(of: jobRequest.job.project) else {
+                        throw Error.noProject(jobRequest.job.project)
+                    }
+                    let circleciToken = circleCiTokens[index]
+
+                    return try Service.fetch(jobRequest.job, Response.self, circleciToken, context, Environment.api)
+                        .map { response in
+                            guard let value = response.value else {
+                                throw Error.decode
+                            }
+                            return .right(BuildResponse(response: value, job: jobRequest.job))
+                        }
                         .catchMap { .left(
                             Slack.Response.error(Error.underlying($0),
                                                  helpResponse: helpResponse))
@@ -364,26 +398,6 @@ extension CircleCi {
     
     static func slackToGithubResponse(_ response: Slack.Response) -> Github.PayloadResponse {
         return Github.PayloadResponse(value: response.attachments.first?.fallback)
-    }
-    
-    private static func fetch(job: CircleCiJob, context: Context) throws -> IO<BuildResponse> {
-        let body = try JSONEncoder().encode(["build_parameters": job.buildParameters])
-        let headers = HTTPHeaders([
-            ("Accept", "application/json"),
-            ("Content-Type", "application/json")
-        ])
-        let httpRequest = HTTPRequest(method: .POST,
-                                      url: path(job.project, job.urlEncodedBranch),
-                                      headers: headers,
-                                      body: body)
-        return Environment.api("circleci.com", nil)(context, httpRequest)
-            .decode(Response.self)
-            .map { response in
-                guard let response = response else {
-                    throw Error.decode
-                }
-                return BuildResponse(response: response, job: job)
-            }
     }
 
 }

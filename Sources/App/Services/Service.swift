@@ -6,21 +6,21 @@
 //
 import APIConnect
 
+import protocol Foundation.LocalizedError
+import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.URL
 import class Foundation.JSONDecoder
-import protocol Foundation.LocalizedError
-import struct Foundation.CharacterSet
 
-import struct HTTP.HTTPRequest
-import enum HTTP.HTTPMethod
-import struct HTTP.HTTPResponse
-import struct HTTP.HTTPHeaders
 import struct HTTP.HTTPBody
+import struct HTTP.HTTPHeaders
+import struct HTTP.HTTPRequest
+import struct HTTP.HTTPResponse
+import enum HTTP.HTTPMethod
 
 public typealias API = (String, Int?) -> (Context, HTTPRequest) -> IO<HTTPResponse>
 
-public protocol HTTPRequestable {
+public protocol TokenRequestable {
     var method: HTTPMethod? { get }
     var body: Data? { get }
     
@@ -43,7 +43,7 @@ public enum Service {
         }
     }
 
-    public static func fetch<A: Decodable>(_ request: HTTPRequestable,
+    public static func fetch<A: Decodable>(_ request: TokenRequestable,
                                            _ responseType: A.Type,
                                            _ token: String,
                                            _ context: Context,
@@ -98,7 +98,7 @@ public extension TokenedIO {
         return map { tokened in return Tokened(tokened.token, try callback(tokened.value)) }
     }
     
-    public func fetch<A: Decodable, B: HTTPRequestable>(_ context: Context, _ returnType: A.Type)
+    public func fetch<A: Decodable, B: TokenRequestable>(_ context: Context, _ returnType: A.Type)
         -> TokenedIO<A?> where T == Tokened<B?> {
             
             return self.flatMap { tokened in
@@ -107,7 +107,7 @@ public extension TokenedIO {
             }
     }
     
-    public func fetch<A, B: Decodable, C: HTTPRequestable>(_ context: Context,
+    public func fetch<A, B: Decodable, C: TokenRequestable>(_ context: Context,
                                                            _ returnType: B.Type,
                                                            _ type: @escaping (A) -> C)
         -> TokenedIO<B?> where T == Tokened<A?> {

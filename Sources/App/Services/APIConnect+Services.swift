@@ -24,46 +24,30 @@ extension APIConnect {
                                response: CircleCi.responseToSlack)
     }
     
+    static var githubToCircleCi: GithubToCircleCi {
+        return slackToCircleCi.transformFrom(check: Github.check,
+                                             request: CircleCi.githubRequest,
+                                             transform: CircleCi.slackToGithubResponse)
+    }
+    
     static var githubToYoutrack: GithubToYoutrack {
-        return GithubToYoutrack(request: Youtrack.githubRequest,
-                                toAPI: Youtrack.apiWithGithub,
-                                response: Youtrack.responseToGithub)
+        return githubToCircleCi.tranformTo(request: Youtrack.githubRequest,
+                                           toAPI: Youtrack.apiWithGithub,
+                                           response: Youtrack.responseToGithub)
     }
     
     static var githubToGithub: GithubToGithub {
-        return GithubToGithub(request: Github.githubRequest,
-                              toAPI: Github.apiWithGithub,
-                              response: Github.responseToGithub)
-    }
-    
-    static var githubToCircleCi: GithubToCircleCi {
-        return slackToCircleCi.pullback(check: Github.check,
-                                        request: CircleCi.githubRequest,
-                                        transform: CircleCi.slackToGithubResponse)
-    }
-}
-
-// MARK: Github.Payload
-extension APIConnect where From == Github.Payload {
-    init(request: @escaping (_ from: Github.Payload, _ headers: Headers?) -> Either<Github.PayloadResponse, To>,
-         toAPI: @escaping (_ context: Context)
-        -> (To)
-        -> EitherIO<Github.PayloadResponse, To.ResponseModel>,
-         response: @escaping (_ with: To.ResponseModel) -> Github.PayloadResponse) {
-        self.init(check: Github.check,
-                  request: request,
-                  toAPI: toAPI,
-                  response: response)
+        return githubToCircleCi.tranformTo(request: Github.githubRequest,
+                                           toAPI: Github.apiWithGithub,
+                                           response: Github.responseToGithub)
     }
 }
 
 // MARK: Slack.Request
 extension APIConnect where From == Slack.Request {
-    init(request: @escaping (_ from: Slack.Request, _ headers: Headers?) -> Either<Slack.Response, To>,
-         toAPI: @escaping (_ context: Context)
-        -> (To)
-        -> EitherIO<Slack.Response, To.ResponseModel>,
-         response: @escaping (_ with: To.ResponseModel) -> Slack.Response) {
+    init(request: @escaping (Slack.Request, Headers?) -> Either<Slack.Response, To>,
+         toAPI: @escaping (Context) -> (To) -> EitherIO<Slack.Response, To.ResponseModel>,
+         response: @escaping (To.ResponseModel) -> Slack.Response) {
         self.init(check: Slack.check,
                   request: request,
                   toAPI: toAPI,
