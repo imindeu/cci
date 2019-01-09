@@ -5,7 +5,12 @@
 //  Created by Peter Geszten-Kovacs on 2018. 11. 21..
 //
 
-import APIConnect
+import protocol APIConnect.APIConnectEnvironment
+import protocol APIConnect.Context
+import class APIConnect.IO
+import func APIConnect.pure
+
+import typealias APIService.API
 
 import class Foundation.ProcessInfo
 

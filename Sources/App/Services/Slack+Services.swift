@@ -5,7 +5,7 @@
 //  Created by Peter Geszten-Kovacs on 2018. 05. 16..
 //
 import APIConnect
-import APIModels
+import enum APIModels.Slack
 
 import protocol Foundation.LocalizedError
 import struct Foundation.Data

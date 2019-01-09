@@ -6,7 +6,11 @@
 //
 
 import APIConnect
-import APIModels
+import APIService
+
+import enum APIModels.CircleCi
+import enum APIModels.Github
+import enum APIModels.Slack
 
 import protocol Foundation.LocalizedError
 import struct Foundation.Data

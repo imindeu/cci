@@ -6,7 +6,7 @@
 //
 
 import APIConnect
-import App
+import APIService
 
 import XCTest
 import HTTP
@@ -48,7 +48,13 @@ class ServiceTests: XCTestCase {
                                             headers: request.headers
                                                 .filter { $0.0 == "Test-Header" }
                                                 .map { $0 + ":" + $1 })
-                return pure(HTTPResponse(body: try! JSONEncoder().encode(response)), context)
+                do {
+                    let body = try JSONEncoder().encode(response)
+                    return pure(HTTPResponse(body: body), context)
+                } catch {
+                    XCTFail(error.localizedDescription)
+                    return pure(.init(), context)
+                }
             }
         }
         let expected = MockResponse(body: "x",
@@ -56,7 +62,11 @@ class ServiceTests: XCTestCase {
                                     port: 8080,
                                     path: "/path?value=x&label=%22test%20label%22&token=t",
                                     headers: ["Test-Header:Token t"])
-        let response = try Service.fetch(MockRequest(value: "x"), MockResponse.self, "t", context(), api).wait()
+        let response = try Service.fetch(MockRequest(value: "x"),
+                                         MockResponse.self,
+                                         "t",
+                                         MultiThreadedEventLoopGroup(numberOfThreads: 1),
+                                         api).wait()
         XCTAssertEqual(response.value, expected)
         XCTAssertEqual(response.token, "t")
     }
