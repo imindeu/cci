@@ -43,13 +43,13 @@ class GithubGithubTests: XCTestCase {
         let title = "test 4DM-2001, 4DM-2002"
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
-        let featureBranch = Github.Branch(ref: "feature")
+        let featureBranch = Github.Branch.template(ref: "feature")
         let pullRequest = Github.PullRequest(url: "",
                                              id: 0,
                                              title: title,
                                              body: "",
                                              head: featureBranch,
-                                             base: Github.devBranch)
+                                             base: Github.Branch.template())
 
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
@@ -77,7 +77,7 @@ class GithubGithubTests: XCTestCase {
         let labeledType = labeledRequest.type(headers: pullRequestHeaders)
         XCTAssertEqual(labeledType, .pullRequestLabeled(label: Github.waitingForReviewLabel,
                                                         head: featureBranch,
-                                                        base: Github.devBranch))
+                                                        base: Github.Branch.template()))
 
         let wrongRequest = Github.Payload()
         XCTAssertNil(wrongRequest.type(headers: branchHeaders) ?? wrongRequest.type(headers: pullRequestHeaders))
@@ -99,9 +99,9 @@ class GithubGithubTests: XCTestCase {
                                              id: 1,
                                              title: "x",
                                              body: "",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch)
-        
+                                             head: Github.Branch.template(),
+                                             base: Github.Branch.template(ref: "master"))
+
         let response = try Github.githubRequest(Github.Payload(action: .submitted,
                                                                review: Github.Review(state: .changesRequested),
                                                                pullRequest: pullRequest,
@@ -143,8 +143,8 @@ class GithubGithubTests: XCTestCase {
                                              id: 1,
                                              title: title,
                                              body: "body",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch)
+                                             head: Github.Branch.template(),
+                                             base: Github.Branch.template(ref: "master"))
 
         let response = try Github.githubRequest(Github.Payload(action: .opened,
                                                                pullRequest: pullRequest,
@@ -230,8 +230,9 @@ class GithubGithubTests: XCTestCase {
                                                                             id: 1,
                                                                             title: "title",
                                                                             body: "",
-                                                                            head: Github.devBranch,
-                                                                            base: Github.masterBranch))
+                                                                            head: Github.Branch.template(),
+                                                                            base: Github.Branch.template(ref: "master"))
+)
                     return pure(HTTPResponse(body: data ?? Data()), context)
                 } else if hostname == "test.com" {
                     return pure(HTTPResponse(body: "{\"message\": \"y\"}"), context)

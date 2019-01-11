@@ -49,3 +49,22 @@ extension Slack.Request {
                              triggerId: triggerId)
     }
 }
+
+extension Github.Branch {
+    static func template(
+        ref: String = "dev",
+        repo: Github.Repository = Github.Repository.template())
+        -> Github.Branch {
+            
+        return Github.Branch(ref: ref, repo: repo)
+    }
+}
+
+extension Github.Repository {
+    static func template(name: String = "repo",
+                         url: String = "https://test.com/repos/company/project")
+        -> Github.Repository {
+            
+        return Github.Repository(name: name, url: url)
+    }
+}

@@ -72,9 +72,11 @@ public enum Github {
     
     public struct Repository: Equatable, Codable {
         public let name: String
+        public let url: String
         
-        public init(name: String) {
+        public init(name: String, url: String) {
             self.name = name
+            self.url = url
         }
     }
     
@@ -88,9 +90,11 @@ public enum Github {
     
     public struct Branch: Equatable, Codable {
         public let ref: String
+        public let repo: Repository
         
-        public init(ref: String) {
+        public init(ref: String, repo: Repository) {
             self.ref = ref
+            self.repo = repo
         }
     }
     
@@ -153,6 +157,14 @@ public enum Github {
         public let state: ReviewState
         
         public init(state: ReviewState) {
+            self.state = state
+        }
+    }
+    
+    public struct Status: Equatable, Codable {
+        public let state: State
+        
+        public init(state: State) {
             self.state = state
         }
     }

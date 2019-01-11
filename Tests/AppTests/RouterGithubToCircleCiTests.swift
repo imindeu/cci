@@ -68,13 +68,13 @@ class RouterGithubToCircleCiTests: XCTestCase {
                                              id: 1,
                                              title: "x",
                                              body: "",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch)
+                                             head: Github.Branch.template(),
+                                             base: Github.Branch.template(ref: "master"))
         let request = Github.Payload(action: .labeled,
                                      pullRequest: pullRequest,
                                      label: Github.waitingForReviewLabel,
                                      installation: Github.Installation(id: 1),
-                                     repository: Github.Repository(name: project))
+                                     repository: Github.Repository.template(name: project))
         let response = try GithubToCircleCi.run(request,
                                                 context(),
                                                 "y",
@@ -93,13 +93,13 @@ class RouterGithubToCircleCiTests: XCTestCase {
                                              id: 1,
                                              title: "x",
                                              body: "",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch)
+                                             head: Github.Branch.template(),
+                                             base: Github.Branch.template(ref: "master"))
         let request = Github.Payload(action: .unlabeled,
                                      pullRequest: pullRequest,
                                      label: Github.waitingForReviewLabel,
                                      installation: Github.Installation(id: 1),
-                                     repository: Github.Repository(name: project))
+                                     repository: Github.Repository.template(name: project))
         let response = try GithubToYoutrack.run(request,
                                                 context(),
                                                 "y",
