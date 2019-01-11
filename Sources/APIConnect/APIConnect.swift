@@ -16,7 +16,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
     }
     
     public let check: (From, String?, Headers?) -> From.ResponseModel?
-    public let request: (From, Headers?) -> Either<From.ResponseModel, To>
+    public let request: (From, Headers?, Context) -> EitherIO<From.ResponseModel, To>
     public let toAPI: (Context) -> (To) -> EitherIO<From.ResponseModel, To.ResponseModel>
     public let response: (To.ResponseModel) -> From.ResponseModel
     public let fromAPI: ((From, Context) -> (From.ResponseModel) -> IO<Void>)?
@@ -26,7 +26,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
 public extension APIConnect {
     
     public init(check: @escaping (From, String?, Headers?) -> From.ResponseModel?,
-                request: @escaping (From, Headers?) -> Either<From.ResponseModel, To>,
+                request: @escaping (From, Headers?, Context) -> EitherIO<From.ResponseModel, To>,
                 toAPI: @escaping (Context) -> (To) -> EitherIO<From.ResponseModel, To.ResponseModel>,
                 response: @escaping (To.ResponseModel) -> From.ResponseModel) {
         
@@ -40,7 +40,8 @@ public extension APIConnect {
     }
     
     public func transformFrom<A: RequestModel>(check: @escaping (A, String?, Headers?) -> A.ResponseModel?,
-                                               request: @escaping (A, Headers?) -> Either<A.ResponseModel, To>,
+                                               request: @escaping (A, Headers?, Context)
+                                                   -> EitherIO<A.ResponseModel, To>,
                                                transform: @escaping (From.ResponseModel) -> A.ResponseModel)
         -> APIConnect<A, To, E> {
             
@@ -52,7 +53,8 @@ public extension APIConnect {
                                     response: { transform(self.response($0)) })
     }
     
-    public func tranformTo<A: RequestModel>(request: @escaping (From, Headers?) -> Either<From.ResponseModel, A>,
+    public func tranformTo<A: RequestModel>(request: @escaping (From, Headers?, Context)
+                                                -> EitherIO<From.ResponseModel, A>,
                                             toAPI: @escaping (Context)
                                                 -> (A)
                                                 -> EitherIO<From.ResponseModel, A.ResponseModel>,
@@ -97,7 +99,7 @@ public extension APIConnect {
         if let response = check(from, body, headers) {
             return pure(response, context)
         }
-        return pure(request(from, headers), context)
+        return request(from, headers, context)
             .flatMap(to(context, toAPI))
             .mapEither(id, response)
             .map(Optional.some)
@@ -116,7 +118,7 @@ public extension APIConnect {
 public extension APIConnect where From: DelayedRequestModel {
     
     public init(check: @escaping (From, String?, Headers?) -> From.ResponseModel?,
-                request: @escaping (From, Headers?) -> Either<From.ResponseModel, To>,
+                request: @escaping (From, Headers?, Context) -> EitherIO<From.ResponseModel, To>,
                 toAPI: @escaping (Context) -> (To) -> EitherIO<From.ResponseModel, To.ResponseModel>,
                 response: @escaping (To.ResponseModel) -> From.ResponseModel,
                 fromAPI: @escaping (From, Context) -> (From.ResponseModel) -> IO<Void>,
@@ -138,7 +140,7 @@ public extension APIConnect where From: DelayedRequestModel {
         if let response = check(from, body, headers) {
             return pure(response, context)
         }
-        let run = pure(request(from, headers), context)
+        let run = request(from, headers, context)
             .flatMap(to(context, toAPI))
             .mapEither(id, response)
         guard from.responseURL != nil, let instant = instant, let fromAPI = fromAPI else {

@@ -45,7 +45,7 @@ extension APIConnect {
 
 // MARK: Slack.Request
 extension APIConnect where From == Slack.Request {
-    init(request: @escaping (Slack.Request, Headers?) -> Either<Slack.Response, To>,
+    init(request: @escaping (Slack.Request, Headers?, Context) -> EitherIO<Slack.Response, To>,
          toAPI: @escaping (Context) -> (To) -> EitherIO<Slack.Response, To.ResponseModel>,
          response: @escaping (To.ResponseModel) -> Slack.Response) {
         self.init(check: Slack.check,

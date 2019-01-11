@@ -50,11 +50,11 @@ public extension TokenedIO {
     public func fetch<A, B: Decodable, C: TokenRequestable>(_ context: Context,
                                                             _ returnType: B.Type,
                                                             _ api: @escaping API,
-                                                            _ type: @escaping (A) -> C)
+                                                            _ type: @escaping (A) -> C?)
         -> TokenedIO<B?> where T == Tokened<A?> {
             
             return map { value -> C? in
-                return value.map(type)
+                return value.flatMap(type)
             }.fetch(context, returnType, api)
     }
     

@@ -282,17 +282,18 @@ extension CircleCi {
     
     // MARK: Slack
     static func slackRequest(_ from: Slack.Request,
-                             _ headers: Headers? = nil) -> Either<Slack.Response, JobRequest> {
+                             _ headers: Headers?,
+                             _ context: Context) -> EitherIO<Slack.Response, JobRequest> {
         let projects: [String] = Environment.getArray(JobRequest.Config.projects)
         
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
-            return .left(Slack.Response.error(Error.noChannel(from.channelName)))
+            return leftIO(context)(Slack.Response.error(Error.noChannel(from.channelName)))
         }
         let project = projects[index]
         
         var parameters = from.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
         guard !parameters.isEmpty else {
-            return .left(Slack.Response.error(Error.unknownCommand(from.text)))
+            return leftIO(context)(Slack.Response.error(Error.unknownCommand(from.text)))
         }
         let command = parameters[0]
         parameters.removeFirst()
@@ -303,20 +304,21 @@ extension CircleCi {
         
         if let job = CircleCiJobKind(rawValue: command) {
             do {
-                return try job.type
+                let request = try job.type
                     .parse(project: project,
                            parameters: parameters,
                            options: options,
                            username: from.userName)
                     .map { JobRequest(job: $0) }
+                return pure(request, context)
             } catch {
-                return .left(Slack.Response.error(Error.underlying(error),
-                                                  helpResponse: job.type.helpResponse))
+                return leftIO(context)(Slack.Response.error(Error.underlying(error),
+                                                            helpResponse: job.type.helpResponse))
             }
         } else if command == "help" {
-            return .left(helpResponse)
+            return leftIO(context)(helpResponse)
         } else {
-            return .left(Slack.Response.error(Error.unknownCommand(from.text)))
+            return leftIO(context)(Slack.Response.error(Error.unknownCommand(from.text)))
         }
     }
     
@@ -376,8 +378,9 @@ extension CircleCi {
 
     // MARK: Github
     static func githubRequest(_ from: Github.Payload,
-                              _ headers: Headers?) -> Either<Github.PayloadResponse, JobRequest> {
-        let defaultResponse: Either<Github.PayloadResponse, JobRequest> = .left(Github.PayloadResponse())
+                              _ headers: Headers?,
+                              _ context: Context) -> EitherIO<Github.PayloadResponse, JobRequest> {
+        let defaultResponse: EitherIO<Github.PayloadResponse, JobRequest> = leftIO(context)(Github.PayloadResponse())
         guard let type = from.type(headers: headers), let repo = from.repository?.name else {
             return defaultResponse
         }
@@ -392,7 +395,7 @@ extension CircleCi {
                                                  parameters: [head.ref],
                                                  options: options,
                                                  username: "cci")
-                    .either({ _ in return defaultResponse }, { .right(JobRequest(job: $0)) })
+                    .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
             } catch {
                 return defaultResponse
             }
