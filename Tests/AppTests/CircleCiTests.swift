@@ -30,12 +30,23 @@ class CircleCiTests: XCTestCase {
             CircleCi.JobRequest.Config.company.rawValue: CircleCi.JobRequest.Config.company.rawValue,
             CircleCi.JobRequest.Config.vcs.rawValue: CircleCi.JobRequest.Config.vcs.rawValue,
             CircleCi.JobRequest.Config.projects.rawValue: project,
+            Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
+            Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
         ]
         Environment.api = { hostname, _ in
             return { context, _ in
                 if hostname == "circleci.com" {
                     return pure(HTTPResponse(body: "{\"build_url\":\"buildURL\",\"build_num\":10}"), context)
+                } else if hostname == "api.github.com" {
+                    return pure(HTTPResponse(body: "{\"token\":\"x\"}"), context)
+                } else if hostname == "empty.com" {
+                    return pure(HTTPResponse(body: "[]"), context)
+                } else if hostname == "error.com" {
+                    return pure(HTTPResponse(body: "[{\"state\":\"error\"}]"), context)
+                } else if hostname == "success.com" {
+                    return pure(HTTPResponse(body: "[{\"state\":\"success\"}]"), context)
                 } else {
+                    XCTFail("unknown host: \(hostname)")
                     return Environment.emptyApi(context)
                 }
             }
@@ -283,24 +294,82 @@ class CircleCiTests: XCTestCase {
     // MARK: Github
     func testGithubRequest() throws {
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
-        let devPullRequest = Github.PullRequest(url: "",
-                                                id: 0,
-                                                title: "test",
-                                                body: "",
-                                                head: Github.Branch.template(ref: branch),
-                                                base: Github.Branch.template())
-        let labeledDevRequest = Github.Payload(action: .labeled,
-                                               pullRequest: devPullRequest,
-                                               label: Github.waitingForReviewLabel,
-                                               repository: Github.Repository.template(name: project))
         
-        let testDevRequest = try CircleCi.githubRequest(labeledDevRequest, pullRequestHeaders, context()).wait()
-        XCTAssertEqual(testDevRequest.right?.job as? CircleCiTestJob,
+        // ci should run, if no status and waiting for review labeling
+        let branchNoStatus = Github.Branch.template(
+            ref: branch,
+            repo: Github.Repository.template(
+                url: "https://empty.com/repo/company/project"))
+        let devNoStatusPullRequest = Github.PullRequest(url: "",
+                                                        id: 0,
+                                                        title: "test",
+                                                        body: "",
+                                                        head: branchNoStatus,
+                                                        base: Github.Branch.template())
+        let labeledDevNoStatuRequest = Github.Payload(action: .labeled,
+                                                      pullRequest: devNoStatusPullRequest,
+                                                      label: Github.waitingForReviewLabel,
+                                                      installation: Github.Installation(id: 1),
+                                                      repository: Github.Repository.template(name: project))
+        let testDevNoStatusRequest = try CircleCi.githubRequest(
+            labeledDevNoStatuRequest,
+            pullRequestHeaders,
+            context()).wait()
+        XCTAssertEqual(testDevNoStatusRequest.right?.job as? CircleCiTestJob,
                        CircleCiTestJob(project: project,
                                        branch: branch,
                                        options: [],
                                        username: "cci"))
-
+        
+        // ci should run, if error is the last commit status and waiting for review labeling
+        let branchErrorStatus = Github.Branch.template(
+            ref: branch,
+            repo: Github.Repository.template(
+                url: "https://error.com/repo/company/project"))
+        let devErrorStatusPullRequest = Github.PullRequest(url: "",
+                                                           id: 0,
+                                                           title: "test",
+                                                           body: "",
+                                                           head: branchErrorStatus,
+                                                           base: Github.Branch.template())
+        let labeledDevErrorStatuRequest = Github.Payload(action: .labeled,
+                                                         pullRequest: devErrorStatusPullRequest,
+                                                         label: Github.waitingForReviewLabel,
+                                                         installation: Github.Installation(id: 1),
+                                                         repository: Github.Repository.template(name: project))
+        let testDevErrorStatusRequest = try CircleCi.githubRequest(
+            labeledDevErrorStatuRequest,
+            pullRequestHeaders,
+            context()).wait()
+        XCTAssertEqual(testDevErrorStatusRequest.right?.job as? CircleCiTestJob,
+                       CircleCiTestJob(project: project,
+                                       branch: branch,
+                                       options: [],
+                                       username: "cci"))
+        
+        // ci should not run, if success is the last commit status and waiting for review labeling
+        let branchSuccessStatus = Github.Branch.template(
+            ref: branch,
+            repo: Github.Repository.template(
+                url: "https://success.com/repo/company/project"))
+        let devSuccessStatusPullRequest = Github.PullRequest(url: "",
+                                                             id: 0,
+                                                             title: "test",
+                                                             body: "",
+                                                             head: branchSuccessStatus,
+                                                             base: Github.Branch.template())
+        let labeledDevSuccessStatuRequest = Github.Payload(action: .labeled,
+                                                           pullRequest: devSuccessStatusPullRequest,
+                                                           label: Github.waitingForReviewLabel,
+                                                           installation: Github.Installation(id: 1),
+                                                           repository: Github.Repository.template(name: project))
+        
+        let testDevSuccessStatusRequest = try CircleCi.githubRequest(
+            labeledDevSuccessStatuRequest,
+            pullRequestHeaders,
+            context()).wait()
+        XCTAssertEqual(testDevSuccessStatusRequest.left, Github.PayloadResponse())
+        
         let masterPullRequest = Github.PullRequest(url: "",
                                                    id: 0,
                                                    title: "test",
@@ -318,7 +387,7 @@ class CircleCiTests: XCTestCase {
                                        branch: branch,
                                        options: ["restrict_fixme_comments:true"],
                                        username: "cci"))
-
+        
         let emptyRequest = Github.Payload()
         let testEmptyRequest = try CircleCi.githubRequest(emptyRequest, nil, context()).wait()
         XCTAssertEqual(testEmptyRequest.left, Github.PayloadResponse())

@@ -387,15 +387,30 @@ extension CircleCi {
         switch type {
         case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base):
             do {
-                var options: [String] = []
                 if Github.isMaster(branch: base) || Github.isRelease(branch: base) {
-                    options.append("restrict_fixme_comments:true")
+                    return try CircleCiTestJob.parse(project: repo,
+                                                     parameters: [head.ref],
+                                                     options: ["restrict_fixme_comments:true"],
+                                                     username: "cci")
+                        .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
+                } else {
+                    guard let installationId = from.installation?.id else {
+                        return defaultResponse
+                    }
+                    let githubRequest = Github.APIRequest(installationId: installationId,
+                                                          type: .getStatus(sha: head.sha, url: head.repo.url))
+                    return try Github.githubAPI(githubRequest, [Github.Status].self, context, Environment.api)
+                        .flatMap { response in
+                            guard let statuses = response.value, statuses.first?.state != .success else {
+                                return defaultResponse
+                            }
+                            return try CircleCiTestJob.parse(project: repo,
+                                                             parameters: [head.ref],
+                                                             options: [],
+                                                             username: "cci")
+                                .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
+                        }
                 }
-                return try CircleCiTestJob.parse(project: repo,
-                                                 parameters: [head.ref],
-                                                 options: options,
-                                                 username: "cci")
-                    .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
             } catch {
                 return defaultResponse
             }

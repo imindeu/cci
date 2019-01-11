@@ -90,10 +90,12 @@ public enum Github {
     
     public struct Branch: Equatable, Codable {
         public let ref: String
+        public let sha: String
         public let repo: Repository
         
-        public init(ref: String, repo: Repository) {
+        public init(ref: String, sha: String, repo: Repository) {
             self.ref = ref
+            self.sha = sha
             self.repo = repo
         }
     }
