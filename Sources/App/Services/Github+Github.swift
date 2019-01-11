@@ -253,30 +253,12 @@ extension Github {
         -> EitherIO<PayloadResponse, APIResponse> {
             return { request -> EitherIO<PayloadResponse, APIResponse> in
                 do {
-                    guard let appId = Environment.get(APIRequest.Config.githubAppId),
-                        let privateKey = Environment.get(APIRequest.Config.githubPrivateKey)?
-                            .replacingOccurrences(of: "\\n", with: "\n") else {
-                                throw Error.jwt
-                    }
                     guard let installationId = request.installationId else {
                         throw Error.installation
                     }
-                    guard let jwtToken = try jwt(appId: appId, privateKey: privateKey) else {
-                        throw Error.signature
-                    }
-                    return accessToken(context: context,
-                                       jwtToken: jwtToken,
-                                       installationId: installationId,
-                                       api: Environment.api)
-                        .map { token in
-                            guard let token = token else {
-                                throw Error.accessToken
-                            }
-                            return token
-                        }
+                    return try fetchAccessToken(installationId, context)
                         .flatMap {
-                            try fetchRequest(installationId: installationId,
-                                             token: $0,
+                            try fetchRequest(token: $0,
                                              request: request,
                                              context: context)
                             .clean()
@@ -291,17 +273,12 @@ extension Github {
         return PayloadResponse(value: from.message.map { $0 + " (\(from.errors ?? []))" })
     }
     
-    static func githubAPI<A: Decodable>(_ request: APIRequest,
-                                        _ responseType: A.Type,
-                                        _ context: Context,
-                                        _ api: @escaping API) throws -> TokenedIO<A?> {
+    static func fetchAccessToken(_ installationId: Int,
+                                 _ context: Context) throws -> IO<String> {
         guard let appId = Environment.get(APIRequest.Config.githubAppId),
             let privateKey = Environment.get(APIRequest.Config.githubPrivateKey)?
                 .replacingOccurrences(of: "\\n", with: "\n") else {
                     throw Error.jwt
-        }
-        guard let installationId = request.installationId else {
-            throw Error.installation
         }
         guard let jwtToken = try jwt(appId: appId, privateKey: privateKey) else {
             throw Error.signature
@@ -316,16 +293,26 @@ extension Github {
                 }
                 return token
             }
-            .flatMap {
-                try Service.fetch(request, responseType, $0, context, api)
-            }
-
     }
     
-    private static func fetchRequest(installationId: Int,
-                                     token: String,
-                                     request: APIRequest,
-                                     context: Context) throws -> TokenedIO<APIResponse?> {
+    static func reduce(_ responses: [PayloadResponse?]) -> PayloadResponse? {
+        return responses
+            .reduce(PayloadResponse()) { next, result in
+                guard let value = next.value else {
+                    return result ?? PayloadResponse()
+                }
+                let response = (result?.value.map { $0 + "\n" } ?? "") + value
+                return PayloadResponse(value: response)
+            }
+    }
+    
+}
+
+private extension Github {
+    
+    static func fetchRequest(token: String,
+                             request: APIRequest,
+                             context: Context) throws -> TokenedIO<APIResponse?> {
         let instant = pure(Tokened<APIResponse?>(token, nil), context)
         switch request.type {
         case .changesRequested:
@@ -351,20 +338,7 @@ extension Github {
             return instant
         }
     }
-    
-    static func reduce(_ responses: [PayloadResponse?]) -> PayloadResponse? {
-        return responses
-            .reduce(PayloadResponse()) { next, result in
-                guard let value = next.value else {
-                    return result ?? PayloadResponse()
-                }
-                let response = (result?.value.map { $0 + "\n" } ?? "") + value
-                return PayloadResponse(value: response)
-            }
-    }
-    
 }
-
 extension TokenedIO where T == Tokened<Github.APIResponse?> {
     func clean() -> EitherIO<Github.PayloadResponse, Github.APIResponse> {
         return map { $0.value }
