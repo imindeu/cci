@@ -399,7 +399,10 @@ extension CircleCi {
                     }
                     let githubRequest = Github.APIRequest(installationId: installationId,
                                                           type: .getStatus(sha: head.sha, url: head.repo.url))
-                    return try Github.githubAPI(githubRequest, [Github.Status].self, context, Environment.api)
+                    return try Github.fetchAccessToken(installationId, context)
+                        .flatMap {
+                            return try Service.fetch(githubRequest, [Github.Status].self, $0, context, Environment.api)
+                        }
                         .flatMap { response in
                             guard let statuses = response.value, statuses.first?.state != .success else {
                                 return defaultResponse
