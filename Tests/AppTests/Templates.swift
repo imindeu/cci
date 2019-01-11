@@ -53,10 +53,11 @@ extension Slack.Request {
 extension Github.Branch {
     static func template(
         ref: String = "dev",
+        sha: String = "sha",
         repo: Github.Repository = Github.Repository.template())
         -> Github.Branch {
             
-        return Github.Branch(ref: ref, repo: repo)
+        return Github.Branch(ref: ref, sha: sha, repo: repo)
     }
 }
 

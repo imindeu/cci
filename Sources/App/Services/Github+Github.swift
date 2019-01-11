@@ -66,7 +66,7 @@ public extension Github {
         case changesRequested(url: String)
         case failedStatus(sha: String)
         case getPullRequest(url: String)
-        case getStatus(sha: String)
+        case getStatus(sha: String, url: String)
         
         var title: String? {
             switch self {
@@ -206,7 +206,11 @@ extension Github.APIRequest: TokenRequestable {
              let .pullRequestEdited(_, url: url, _),
              let .getPullRequest(url: url):
             return URL(string: url)
-        case let .getStatus(sha): return nil
+        case let .getStatus(sha: sha, url: url):
+            return URL(string: url)?
+                .appendingPathComponent("commits")
+                .appendingPathComponent(sha)
+                .appendingPathComponent("statuses")
         default: return nil
         }
     }
