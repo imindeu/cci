@@ -287,12 +287,12 @@ class CircleCiTests: XCTestCase {
                                                 id: 0,
                                                 title: "test",
                                                 body: "",
-                                                head: Github.Branch(ref: branch),
-                                                base: Github.devBranch)
+                                                head: Github.Branch.template(ref: branch),
+                                                base: Github.Branch.template())
         let labeledDevRequest = Github.Payload(action: .labeled,
                                                pullRequest: devPullRequest,
                                                label: Github.waitingForReviewLabel,
-                                               repository: Github.Repository(name: project))
+                                               repository: Github.Repository.template(name: project))
         
         let testDevRequest = try CircleCi.githubRequest(labeledDevRequest, pullRequestHeaders, context()).wait()
         XCTAssertEqual(testDevRequest.right?.job as? CircleCiTestJob,
@@ -305,12 +305,12 @@ class CircleCiTests: XCTestCase {
                                                    id: 0,
                                                    title: "test",
                                                    body: "",
-                                                   head: Github.Branch(ref: branch),
-                                                   base: Github.masterBranch)
+                                                   head: Github.Branch.template(ref: branch),
+                                                   base: Github.Branch.template(ref: "master"))
         let labeledMasterRequest = Github.Payload(action: .labeled,
                                                   pullRequest: masterPullRequest,
                                                   label: Github.waitingForReviewLabel,
-                                                  repository: Github.Repository(name: project))
+                                                  repository: Github.Repository.template(name: project))
         
         let testMasterRequest = try CircleCi.githubRequest(labeledMasterRequest, pullRequestHeaders, context()).wait()
         XCTAssertEqual(testMasterRequest.right?.job as? CircleCiTestJob,

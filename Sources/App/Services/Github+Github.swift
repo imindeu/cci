@@ -22,9 +22,9 @@ public extension Github {
     
     static var waitingForReviewLabel: Label { return Label(name: "waiting for review") }
     
-    static var devBranch: Branch { return Branch(ref: "dev") }
-    static var masterBranch: Branch { return Branch(ref: "master") }
-    static var releaseBranch: Branch { return Branch(ref: "release") }
+    static func isDev(branch: Branch) -> Bool { return branch.ref == "dev" }
+    static func isMaster(branch: Branch) -> Bool { return branch.ref == "master" }
+    static func isRelease(branch: Branch) -> Bool { return branch.ref == "release" }
 
 }
 
@@ -66,6 +66,7 @@ public extension Github {
         case changesRequested(url: String)
         case failedStatus(sha: String)
         case getPullRequest(url: String)
+        case getStatus(sha: String)
         
         var title: String? {
             switch self {
@@ -163,7 +164,7 @@ extension Github.APIRequest: TokenRequestable {
         switch self.type {
         case .pullRequestOpened, .pullRequestEdited: return .PATCH
         case .changesRequested: return .DELETE
-        case .failedStatus, .getPullRequest: return .GET
+        case .failedStatus, .getPullRequest, .getStatus: return .GET
         default: return nil
         }
     }
@@ -205,6 +206,7 @@ extension Github.APIRequest: TokenRequestable {
              let .pullRequestEdited(_, url: url, _),
              let .getPullRequest(url: url):
             return URL(string: url)
+        case let .getStatus(sha): return nil
         default: return nil
         }
     }
@@ -283,6 +285,37 @@ extension Github {
     
     static func responseToGithub(_ from: APIResponse) -> PayloadResponse {
         return PayloadResponse(value: from.message.map { $0 + " (\(from.errors ?? []))" })
+    }
+    
+    static func githubAPI<A: Decodable>(_ request: APIRequest,
+                                        _ responseType: A.Type,
+                                        _ context: Context,
+                                        _ api: @escaping API) throws -> TokenedIO<A?> {
+        guard let appId = Environment.get(APIRequest.Config.githubAppId),
+            let privateKey = Environment.get(APIRequest.Config.githubPrivateKey)?
+                .replacingOccurrences(of: "\\n", with: "\n") else {
+                    throw Error.jwt
+        }
+        guard let installationId = request.installationId else {
+            throw Error.installation
+        }
+        guard let jwtToken = try jwt(appId: appId, privateKey: privateKey) else {
+            throw Error.signature
+        }
+        return accessToken(context: context,
+                           jwtToken: jwtToken,
+                           installationId: installationId,
+                           api: Environment.api)
+            .map { token in
+                guard let token = token else {
+                    throw Error.accessToken
+                }
+                return token
+            }
+            .flatMap {
+                try Service.fetch(request, responseType, $0, context, api)
+            }
+
     }
     
     private static func fetchRequest(installationId: Int,

@@ -388,7 +388,7 @@ extension CircleCi {
         case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base):
             do {
                 var options: [String] = []
-                if [Github.masterBranch, Github.releaseBranch].contains(base) {
+                if Github.isMaster(branch: base) || Github.isRelease(branch: base) {
                     options.append("restrict_fixme_comments:true")
                 }
                 return try CircleCiTestJob.parse(project: repo,

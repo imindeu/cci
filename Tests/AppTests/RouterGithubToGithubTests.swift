@@ -64,8 +64,8 @@ class RouterGithubToGithubTests: XCTestCase {
                                              id: 1,
                                              title: "x",
                                              body: "",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch)
+                                             head: Github.Branch.template(),
+                                             base: Github.Branch.template(ref: "master"))
         let request = Github.Payload(action: .submitted,
                                      review: Github.Review(state: .changesRequested),
                                      pullRequest: pullRequest,
@@ -88,8 +88,8 @@ class RouterGithubToGithubTests: XCTestCase {
                                              id: 1,
                                              title: "x",
                                              body: "",
-                                             head: Github.devBranch,
-                                             base: Github.masterBranch)
+                                             head: Github.Branch.template(),
+                                             base: Github.Branch.template(ref: "master"))
         let request = Github.Payload(action: .labeled,
                                      pullRequest: pullRequest,
                                      label: Github.waitingForReviewLabel,
