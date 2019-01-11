@@ -130,28 +130,28 @@ class CircleCiTests: XCTestCase {
 
     }
 
-    func testSlackRequest() {
+    func testSlackRequest() throws {
         // no channel
         let noChannelRequest = Slack.Request.template(channelName: "nochannel")
-        let noChannelResult = CircleCi.slackRequest(noChannelRequest)
+        let noChannelResult = try CircleCi.slackRequest(noChannelRequest, nil, context()).wait()
         XCTAssertEqual(noChannelResult.left, Slack.Response.error(CircleCi.Error.noChannel("nochannel")))
         
         // unknown command
         let unknownCommandRequest = Slack.Request.template(channelName: project, text: "command branch")
-        let unknownCommandResult = CircleCi.slackRequest(unknownCommandRequest)
+        let unknownCommandResult = try CircleCi.slackRequest(unknownCommandRequest, nil, context()).wait()
         XCTAssertEqual(unknownCommandResult.left,
                        Slack.Response.error(CircleCi.Error.unknownCommand("command branch")))
         
         // help command
         let helpRequest = Slack.Request.template(channelName: project, text: "help")
-        let helpResult = CircleCi.slackRequest(helpRequest)
+        let helpResult = try CircleCi.slackRequest(helpRequest, nil, context()).wait()
         XCTAssertEqual(helpResult.left, CircleCi.helpResponse)
         
         // test job
         let testRequest = Slack.Request.template(channelName: project,
                                                  userName: username,
                                                  text: "test \(branch) \(options.joined(separator: " "))")
-        let testResponse = CircleCi.slackRequest(testRequest)
+        let testResponse = try CircleCi.slackRequest(testRequest, nil, context()).wait()
         XCTAssertEqual(testResponse.right?.job as? CircleCiTestJob,
                        CircleCiTestJob(project: project,
                                        branch: branch,
@@ -162,7 +162,7 @@ class CircleCiTests: XCTestCase {
         let deployRequest = Slack.Request.template(channelName: project,
                                                    userName: username,
                                                    text: "deploy \(type) \(options.joined(separator: " ")) \(branch)")
-        let deployResponse = CircleCi.slackRequest(deployRequest)
+        let deployResponse = try CircleCi.slackRequest(deployRequest, nil, context()).wait()
         XCTAssertEqual(deployResponse.right?.job as? CircleCiDeployJob,
                        CircleCiDeployJob(project: project,
                                          branch: branch,
@@ -281,7 +281,7 @@ class CircleCiTests: XCTestCase {
     }
 
     // MARK: Github
-    func testGithubRequest() {
+    func testGithubRequest() throws {
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
         let devPullRequest = Github.PullRequest(url: "",
                                                 id: 0,
@@ -294,7 +294,7 @@ class CircleCiTests: XCTestCase {
                                                label: Github.waitingForReviewLabel,
                                                repository: Github.Repository(name: project))
         
-        let testDevRequest = CircleCi.githubRequest(labeledDevRequest, pullRequestHeaders)
+        let testDevRequest = try CircleCi.githubRequest(labeledDevRequest, pullRequestHeaders, context()).wait()
         XCTAssertEqual(testDevRequest.right?.job as? CircleCiTestJob,
                        CircleCiTestJob(project: project,
                                        branch: branch,
@@ -312,7 +312,7 @@ class CircleCiTests: XCTestCase {
                                                   label: Github.waitingForReviewLabel,
                                                   repository: Github.Repository(name: project))
         
-        let testMasterRequest = CircleCi.githubRequest(labeledMasterRequest, pullRequestHeaders)
+        let testMasterRequest = try CircleCi.githubRequest(labeledMasterRequest, pullRequestHeaders, context()).wait()
         XCTAssertEqual(testMasterRequest.right?.job as? CircleCiTestJob,
                        CircleCiTestJob(project: project,
                                        branch: branch,
@@ -320,7 +320,7 @@ class CircleCiTests: XCTestCase {
                                        username: "cci"))
 
         let emptyRequest = Github.Payload()
-        let testEmptyRequest = CircleCi.githubRequest(emptyRequest, nil)
+        let testEmptyRequest = try CircleCi.githubRequest(emptyRequest, nil, context()).wait()
         XCTAssertEqual(testEmptyRequest.left, Github.PayloadResponse())
 
     }

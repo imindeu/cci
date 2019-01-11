@@ -106,18 +106,19 @@ extension Youtrack.Request.RequestData: TokenRequestable {
 
 extension Youtrack {
     static func githubRequest(_ from: Github.Payload,
-                              _ headers: Headers?) -> Either<Github.PayloadResponse, Request> {
+                              _ headers: Headers?,
+                              _ context: Context) -> EitherIO<Github.PayloadResponse, Request> {
         guard let type = from.type(headers: headers),
             let command = Request.Command(type),
             let title = type.title else {
-                return .left(Github.PayloadResponse())
+                return leftIO(context)(Github.PayloadResponse())
         }
         do {
             let datas = try issues(from: title, pattern: "4DM-[0-9]+")
                 .map { Request.RequestData(issue: $0, command: command) }
-            return .right(Request(data: datas))
+            return rightIO(context)(Request(data: datas))
         } catch {
-            return .left(Github.PayloadResponse(value: error.localizedDescription))
+            return leftIO(context)(Github.PayloadResponse(value: error.localizedDescription))
         }
     }
     

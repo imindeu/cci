@@ -102,11 +102,12 @@ class GithubGithubTests: XCTestCase {
                                              head: Github.devBranch,
                                              base: Github.masterBranch)
         
-        let response = Github.githubRequest(Github.Payload(action: .submitted,
-                                                           review: Github.Review(state: .changesRequested),
-                                                           pullRequest: pullRequest,
-                                                           installation: Github.Installation(id: 1)),
-                                            pullRequestHeaders)
+        let response = try Github.githubRequest(Github.Payload(action: .submitted,
+                                                               review: Github.Review(state: .changesRequested),
+                                                               pullRequest: pullRequest,
+                                                               installation: Github.Installation(id: 1)),
+                                            pullRequestHeaders,
+                                            context()).wait()
         
         let url = response.right?.url(token: "x")
         XCTAssertEqual(url?.host, "test.com")
@@ -116,13 +117,13 @@ class GithubGithubTests: XCTestCase {
 
     }
     
-    func testFailedStatus() {
+    func testFailedStatus() throws {
         let headers = [Github.eventHeaderName: Github.Event.status.rawValue]
         
-        let response = Github.githubRequest(Github.Payload(installation: Github.Installation(id: 1),
-                                                           commit: Github.Commit(sha: "shaxyz"),
-                                                           state: .some(.error)),
-                                            headers)
+        let response = try Github.githubRequest(Github.Payload(installation: Github.Installation(id: 1),
+                                                               commit: Github.Commit(sha: "shaxyz"),
+                                                               state: .some(.error)),
+                                            headers, context()).wait()
         
         let query = "shaxyz+label:\"\(Github.waitingForReviewLabel.name)\"+state:open"
         XCTAssertNil(response.left)
@@ -145,10 +146,11 @@ class GithubGithubTests: XCTestCase {
                                              head: Github.devBranch,
                                              base: Github.masterBranch)
 
-        let response = Github.githubRequest(Github.Payload(action: .opened,
-                                                           pullRequest: pullRequest,
-                                                           installation: Github.Installation(id: 1)),
-                                            headers)
+        let response = try Github.githubRequest(Github.Payload(action: .opened,
+                                                               pullRequest: pullRequest,
+                                                               installation: Github.Installation(id: 1)),
+                                            headers,
+                                            context()).wait()
         XCTAssertNil(response.left)
         let url = response.right?.url(token: "x")
         XCTAssertEqual(url?.host, "test.com")

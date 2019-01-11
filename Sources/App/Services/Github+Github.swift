@@ -232,13 +232,14 @@ extension Github {
     }
 
     static func githubRequest(_ from: Payload,
-                              _ headers: Headers?) -> Either<PayloadResponse, APIRequest> {
-        let defaultResponse: Either<PayloadResponse, APIRequest> = .left(PayloadResponse())
+                              _ headers: Headers?,
+                              _ context: Context) -> EitherIO<PayloadResponse, APIRequest> {
+        let defaultResponse: EitherIO<PayloadResponse, APIRequest> = leftIO(context)(PayloadResponse())
         guard let type = from.type(headers: headers),
             let installationId = from.installation?.id else {
                 return defaultResponse
         }
-        return .right(APIRequest(installationId: installationId, type: type))
+        return rightIO(context)(APIRequest(installationId: installationId, type: type))
     }
     
     static func apiWithGithub(_ context: Context)
