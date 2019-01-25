@@ -119,6 +119,7 @@ extension CircleCiJob {
 enum CircleCiJobKind: String, CaseIterable {
     case deploy
     case test
+    case buildsim
 }
 
 private extension CircleCiJobKind {
@@ -128,6 +129,8 @@ private extension CircleCiJobKind {
             return CircleCiDeployJob.self
         case .test:
             return CircleCiTestJob.self
+        case .buildsim:
+            return CircleCiBuildsimJob.self
         }
     }
 }
@@ -181,6 +184,56 @@ extension CircleCiTestJob {
         
     }
 }
+
+struct CircleCiBuildsimJob: CircleCiJob, Equatable {
+    let name: String = CircleCiJobKind.buildsim.rawValue
+    let project: String
+    let branch: String
+    let options: [String]
+    let username: String
+}
+
+extension CircleCiBuildsimJob {
+    var slackResponseFields: [Slack.Response.Field] {
+        return [
+            Slack.Response.Field(title: "Project", value: project, short: true),
+            Slack.Response.Field(title: "Branch", value: branch, short: true),
+            Slack.Response.Field(title: "User", value: username, short: true)
+        ]
+    }
+    
+    static var helpResponse: Slack.Response {
+        let text = "`buildsim`: build a simulator app from a branch\n" +
+            "Usage:\n`/cci buildsim branch [options]`\n" +
+            "  - *branch*: branch name to test\n" +
+            "  - *options*: optional fastlane options in the xyz:qwo format\n" +
+            "  (currently there is no options for this)"
+        let attachment = Slack.Response.Attachment(
+            fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
+        let response = Slack.Response(responseType: .ephemeral,
+                                      text: "Send commands to <https://circleci.com|CircleCI>",
+                                      attachments: [attachment],
+                                      mrkdwn: true)
+        return response
+    }
+    
+    static func parse(project: String,
+                      parameters: [String],
+                      options: [String],
+                      username: String) throws -> Either<Slack.Response, CircleCiJob> {
+        
+        guard !parameters.isEmpty else {
+            throw CircleCi.Error.noBranch(parameters.joined(separator: " "))
+        }
+        guard parameters[0] != "help" else {
+            return .left(CircleCiBuildsimJob.helpResponse)
+        }
+        let branch = parameters[0]
+        return .right(CircleCiBuildsimJob(project: project, branch: branch, options: options, username: username))
+        
+    }
+}
+
 
 struct CircleCiDeployJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.deploy.rawValue
@@ -270,6 +323,7 @@ extension CircleCi {
             "  - help: show this message\n" +
             "  - deploy: deploy a build\n" +
             "  - test: test a branch\n\n" +
+            "  - buildsim: build a simulator app from a branch\n\n" +
         "All commands have a help subcommand to show their functionality\n"
         let attachment = Slack.Response.Attachment(
             fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])

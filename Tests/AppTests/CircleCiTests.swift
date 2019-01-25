@@ -64,7 +64,7 @@ class CircleCiTests: XCTestCase {
         XCTAssertEqual(goodJob.buildParameters,
                        ["CCI_OPTIONS": options.joined(separator: " "),
                         "CIRCLE_JOB": CircleCiJobKind.test.rawValue])
-
+        
         // parse
         let parsedJob = try CircleCiTestJob.parse(project: project,
                                                   parameters: [branch],
@@ -77,10 +77,53 @@ class CircleCiTests: XCTestCase {
                                                      options: options,
                                                      username: username).left
         XCTAssertEqual(helpResponse, CircleCiTestJob.helpResponse)
-
+        
         // parse error
         do {
             _ = try CircleCiTestJob.parse(project: project, parameters: [], options: [], username: username)
+            XCTFail("We should have an exception")
+        } catch {
+            guard let error = error as? CircleCi.Error else {
+                XCTFail("We should have a CircleCi.Error")
+                return
+            }
+            if case CircleCi.Error.noBranch = error {
+                XCTAssertEqual(error.localizedDescription, CircleCi.Error.noBranch("").localizedDescription)
+            } else {
+                XCTFail("We should have a parse error")
+            }
+        }
+        
+    }
+    
+    func testBuildsimJob() throws {
+        // init
+        let goodJob = CircleCiBuildsimJob(project: project,
+                                          branch: branch,
+                                          options: options,
+                                          username: username)
+        XCTAssertEqual(goodJob.name, CircleCiJobKind.buildsim.rawValue)
+        XCTAssertEqual(goodJob.urlEncodedBranch, urlEncodedBranch)
+        XCTAssertEqual(goodJob.buildParameters,
+                       ["CCI_OPTIONS": options.joined(separator: " "),
+                        "CIRCLE_JOB": CircleCiJobKind.buildsim.rawValue])
+        
+        // parse
+        let parsedJob = try CircleCiBuildsimJob.parse(project: project,
+                                                      parameters: [branch],
+                                                      options: options,
+                                                      username: username).right as? CircleCiBuildsimJob
+        XCTAssertEqual(goodJob, parsedJob)
+        
+        let helpResponse = try CircleCiBuildsimJob.parse(project: project,
+                                                         parameters: ["help"],
+                                                         options: options,
+                                                         username: username).left
+        XCTAssertEqual(helpResponse, CircleCiBuildsimJob.helpResponse)
+        
+        // parse error
+        do {
+            _ = try CircleCiBuildsimJob.parse(project: project, parameters: [], options: [], username: username)
             XCTFail("We should have an exception")
         } catch {
             guard let error = error as? CircleCi.Error else {
