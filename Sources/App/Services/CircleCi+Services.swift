@@ -205,9 +205,9 @@ extension CircleCiBuildsimJob {
     static var helpResponse: Slack.Response {
         let text = "`buildsim`: build a simulator app from a branch\n" +
             "Usage:\n`/cci buildsim branch [options]`\n" +
-            "  - *branch*: branch name to test\n" +
+            "  - *branch*: branch name to build app from\n" +
             "  - *options*: optional fastlane options in the xyz:qwo format\n" +
-            "  (currently there is no options for this)"
+            "  (currently there are no options for this job)"
         let attachment = Slack.Response.Attachment(
             fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
         let response = Slack.Response(responseType: .ephemeral,
@@ -322,7 +322,7 @@ extension CircleCi {
             "Current command\n" +
             "  - help: show this message\n" +
             "  - deploy: deploy a build\n" +
-            "  - test: test a branch\n\n" +
+            "  - test: test a branch\n" +
             "  - buildsim: build a simulator app from a branch\n\n" +
         "All commands have a help subcommand to show their functionality\n"
         let attachment = Slack.Response.Attachment(
