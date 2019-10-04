@@ -27,8 +27,10 @@ extension CircleCi {
         case noChannel(String)
         case noBranch(String)
         case unknownCommand(String)
+        case unknownApp(String)
         case unknownType(String)
         case noProject(String)
+        case invalidDeployCombination(String)
         case decode
         case badResponse(String?)
         case underlying(Swift.Error)
@@ -38,8 +40,10 @@ extension CircleCi {
             case .noChannel(let name): return "No project found (channel: \(name))"
             case .unknownCommand(let text): return "Unknown command (\(text))"
             case .noBranch(let string): return "No branch found (\(string))"
+            case .unknownApp(let text): return "Unknown app (\(text))"
             case .unknownType(let text): return "Unknown type (\(text))"
             case .noProject(let text): return "No project (\(text))"
+            case .invalidDeployCombination(let text): return "Invalid deploy combination: (\(text))"
             case .decode: return "Decode error"
             case .badResponse(let message): return "CircleCi message: \"\(message ?? "")\""
             case .underlying(let error):
@@ -245,6 +249,27 @@ struct CircleCiDeployJob: CircleCiJob, Equatable {
 }
 
 extension CircleCiDeployJob {
+    private enum App: String {
+        case fourd
+        case mi
+
+        func branch(for deployType: DeployType) throws -> String {
+            switch (self, deployType) {
+            case (_, .alpha): return "dev"
+            case (.fourd, .beta): return "fourd"
+            case (.fourd, .appStore): return "release"
+            case (.mi, .beta): return "mi"
+            default: throw CircleCi.Error.invalidDeployCombination("\(self.rawValue) - \(deployType)")
+            }
+        }
+    }
+
+    private enum DeployType: String {
+        case alpha
+        case beta
+        case appStore = "app_store"
+    }
+
     var buildParameters: [String: String] {
         return [
             "CCI_DEPLOY_TYPE": type,
@@ -264,15 +289,16 @@ extension CircleCiDeployJob {
     
     static var helpResponse: Slack.Response {
         let text = "`deploy`: deploy a build\n" +
-            "Usage:\n`/cci deploy type [options] [branch]`\n" +
+            "Usage:\n`/cci deploy app type [options] [branch]`\n" +
             "  - *type*: alpha|beta|app_store\n" +
+            "  - *app*: fourd|mi\n" +
             "  - *options*: optional fastlane options in the xyz:qwo format\n" +
             "    (eg. emails:xy@test.com,zw@test.com groups:qa,beta-customers version:2.0.1)\n" +
             "    (space shouldn't be in the option for now)\n" +
             "  - *branch*: an optional branch name to deploy from\n" +
             "  If emails and groups are both set, emails will be used\n" +
             "  (currently available options, maybe not up to date: " +
-        "    emails, groups, use_git, version, skip_xcode_version_check)"
+            "    emails, groups, use_git, version, skip_xcode_version_check)"
         let attachment = Slack.Response.Attachment(
             fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
         let response = Slack.Response(responseType: .ephemeral,
@@ -290,17 +316,37 @@ extension CircleCiDeployJob {
         if parameters.count == 1 && parameters[0] == "help" {
             return .left(CircleCiDeployJob.helpResponse)
         }
-        let types = [
-            "alpha": "dev",
-            "beta": "master",
-            "app_store": "release"]
-        if parameters.isEmpty || !types.keys.contains(parameters[0]) {
-            throw CircleCi.Error.unknownType(parameters.joined(separator: " "))
+
+        let branch: String
+        let type: String
+        if project == "4dmotion-ios" {
+            guard let appRaw = parameters[safe: 0], let app = App(rawValue: appRaw) else {
+                throw CircleCi.Error.unknownApp(parameters.joined(separator: " "))
+            }
+            
+            guard let deployTypeRaw = parameters[safe: 1], let deployType = DeployType(rawValue: deployTypeRaw) else {
+                throw CircleCi.Error.unknownType(parameters.joined(separator: " "))
+            }
+            
+            branch = try parameters[safe: 2] ?? app.branch(for: deployType)
+            type = deployType.rawValue
+        } else {
+            // For other (not 4d projects)
+            let types = [
+                "alpha": "dev",
+                "beta": "master",
+                "app_store": "release"]
+            if parameters.isEmpty || !types.keys.contains(parameters[0]) {
+                throw CircleCi.Error.unknownType(parameters.joined(separator: " "))
+            }
+            type = parameters[0]
+            guard let b = parameters[safe: 1] ?? types[type] else {
+                throw CircleCi.Error.noBranch(parameters.joined(separator: " "))
+            }
+            
+            branch = b
         }
-        let type = parameters[0]
-        guard let branch = parameters[safe: 1] ?? types[type] else {
-            throw CircleCi.Error.noBranch(parameters.joined(separator: " "))
-        }
+        
         return .right(CircleCiDeployJob(project: project,
                                         branch: branch,
                                         options: options,

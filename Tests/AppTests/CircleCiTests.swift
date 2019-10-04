@@ -166,6 +166,17 @@ class CircleCiTests: XCTestCase {
                                                        username: username).left
         XCTAssertEqual(helpResponse, CircleCiDeployJob.helpResponse)
         
+        let goodFourDJob = CircleCiDeployJob(project: "4dmotion-ios",
+                                             branch: branch,
+                                             options: options,
+                                             username: username,
+                                             type: "beta")
+        let fourdResponse = try CircleCiDeployJob.parse(project: "4dmotion-ios",
+                                                        parameters: ["mi", "beta", branch],
+                                                        options: options,
+                                                        username: username).right as? CircleCiDeployJob
+        XCTAssertEqual(fourdResponse, goodFourDJob)
+        
         // parse error
         do {
             _ = try CircleCiDeployJob.parse(project: project, parameters: ["unknown"], options: [], username: username)
