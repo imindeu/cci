@@ -10,20 +10,20 @@ import struct Foundation.NSRange
 import class Foundation.NSRegularExpression
 
 public extension Youtrack {
-    public static func path(base: String, issue: String) -> String {
+    static func path(base: String, issue: String) -> String {
         if base.hasSuffix("/") {
             return "\(base)issue/\(issue)"
         }
         return "\(base)/issue/\(issue)"
     }
     
-    public static func issues(from: String, pattern: String) throws -> [String] {
+    static func issues(from: String, pattern: String) throws -> [String] {
         let regex = try NSRegularExpression(pattern: pattern)
         return regex.matches(in: from, options: [], range: NSRange(from.startIndex..., in: from))
             .compactMap { Range($0.range, in: from).map { String(from[$0]) } }
     }
     
-    public static func issueURLs(from: String, base: String?, pattern: String) throws -> [String] {
+    static func issueURLs(from: String, base: String?, pattern: String) throws -> [String] {
         return try base
             .map { url in
                 try issues(from: from, pattern: pattern)

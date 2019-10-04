@@ -29,7 +29,7 @@ public extension Github {
 }
 
 public extension Github {
-    public struct PayloadResponse: Equatable, Codable {
+    struct PayloadResponse: Equatable, Codable {
         public let value: String?
         
         public init(value: String? = nil) {
@@ -41,7 +41,7 @@ public extension Github {
         }
     }
     
-    public struct APIRequest: Equatable {
+    struct APIRequest: Equatable {
         public let installationId: Int?
         public let type: RequestType
         
@@ -57,7 +57,7 @@ public extension Github {
 
     }
     
-    public enum RequestType: Equatable {
+    enum RequestType: Equatable {
         case branchCreated(title: String)
         case pullRequestOpened(title: String, url: String, body: String)
         case pullRequestEdited(title: String, url: String, body: String)
@@ -79,7 +79,7 @@ public extension Github {
         
     }
     
-    public enum Error: LocalizedError {
+    enum Error: LocalizedError {
         case signature
         case jwt
         case accessToken

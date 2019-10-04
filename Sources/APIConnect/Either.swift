@@ -11,7 +11,7 @@ public enum Either<L, R> {
 }
 
 public extension Either {
-    public func either<A>(_ l2a: (L) -> A, _ r2a: (R) -> A) -> A {
+    func either<A>(_ l2a: (L) -> A, _ r2a: (R) -> A) -> A {
         switch self {
         case let .left(l):
             return l2a(l)
@@ -20,26 +20,26 @@ public extension Either {
         }
     }
     
-    public var left: L? {
+    var left: L? {
         return either(Optional.some, const(.none))
     }
     
-    public var right: R? {
+    var right: R? {
         return either(const(.none), Optional.some)
     }
     
-    public var isLeft: Bool {
+    var isLeft: Bool {
         return either(const(true), const(false))
     }
     
-    public var isRight: Bool {
+    var isRight: Bool {
         return either(const(false), const(true))
     }
     
 }
 
 public extension Either {
-    public func map<A>(_ r2a: (R) -> A) -> Either<L, A> {
+    func map<A>(_ r2a: (R) -> A) -> Either<L, A> {
         switch self {
         case let .left(l):
             return .left(l)
@@ -47,7 +47,7 @@ public extension Either {
             return .right(r2a(r))
         }
     }
-    public func flatMap<A>(_ r2a: (R) -> Either<L, A>) -> Either<L, A> {
+    func flatMap<A>(_ r2a: (R) -> Either<L, A>) -> Either<L, A> {
         return either(Either<L, A>.left, r2a)
     }
 }

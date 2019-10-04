@@ -39,7 +39,7 @@ public protocol DelayedRequestModel: RequestModel {
 }
 
 public extension RequestModel {
-    public static func check<A: APIConnectEnvironment>(_ type: A.Type) -> [Config] {
+    static func check<A: APIConnectEnvironment>(_ type: A.Type) -> [Config] {
         return Config.allCases.compactMap { A.get($0) == nil ? $0 : nil }
     }
 }

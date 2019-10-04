@@ -225,14 +225,14 @@ public enum Github {
 
 public extension Github {
     
-    public enum APIErrorCode: String, Equatable, Codable {
+    enum APIErrorCode: String, Equatable, Codable {
         case missing
         case missingField = "missing_field"
         case invalid
         case alreadyExists = "already_exists"
     }
     
-    public struct APIError: Equatable, Codable {
+    struct APIError: Equatable, Codable {
         public let resource: String?
         public let field: String?
         public let code: APIErrorCode?
@@ -244,7 +244,7 @@ public extension Github {
         }
     }
     
-    public struct APIResponse: Equatable, Codable {
+    struct APIResponse: Equatable, Codable {
         public let message: String?
         public let errors: [APIError]?
         
@@ -257,7 +257,7 @@ public extension Github {
 }
 
 public extension Github {
-    public struct SearchResponse<A: Codable & Equatable>: Equatable, Codable {
+    struct SearchResponse<A: Codable & Equatable>: Equatable, Codable {
         public let message: String?
         public let errors: [APIError]?
         public let items: [A]?
@@ -280,7 +280,7 @@ public extension Github {
         
     }
 
-    public struct SearchIssue: Equatable, Codable {
+    struct SearchIssue: Equatable, Codable {
         public struct PullRequest: Equatable, Codable {
             public let url: String?
             

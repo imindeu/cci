@@ -22,8 +22,8 @@ import struct HTTP.HTTPHeaders
 import struct HTTP.HTTPRequest
 
 public extension Github {
-    public static var signatureHeaderName: String { return "X-Hub-Signature" }
-    public static var eventHeaderName: String { return "X-GitHub-Event" }
+    static var signatureHeaderName: String { return "X-Hub-Signature" }
+    static var eventHeaderName: String { return "X-GitHub-Event" }
 }
 
 public extension Github {
@@ -46,7 +46,7 @@ public extension Github {
         return signature == "sha1=\(digest.hexEncodedString())"
     }
 
-    public static func jwt(date: Date = Date(), appId: String, privateKey: String) throws -> String? {
+    static func jwt(date: Date = Date(), appId: String, privateKey: String) throws -> String? {
         let iat = Int(date.timeIntervalSince1970)
         let exp = Int(date.addingTimeInterval(10 * 60).timeIntervalSince1970)
         let signer = try JWTSigner.rs256(key: RSAKey.private(pem: privateKey))
@@ -55,10 +55,10 @@ public extension Github {
         return String(data: data, encoding: .utf8)
     }
     
-    public static func accessToken(context: Context,
-                                   jwtToken: String,
-                                   installationId: Int,
-                                   api: @escaping API) -> IO<String?> {
+    static func accessToken(context: Context,
+                            jwtToken: String,
+                            installationId: Int,
+                            api: @escaping API) -> IO<String?> {
         let headers = HTTPHeaders([
             ("Authorization", "Bearer \(jwtToken)"),
             ("Accept", "application/vnd.github.machine-man-preview+json"),

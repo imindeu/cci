@@ -34,11 +34,11 @@ public typealias TokenedIO<A> = IO<Tokened<A>>
 
 public extension TokenedIO {
     
-    public func map<A, B>(_ callback: @escaping (A) throws -> B) -> TokenedIO<B> where T == Tokened<A> {
+    func map<A, B>(_ callback: @escaping (A) throws -> B) -> TokenedIO<B> where T == Tokened<A> {
         return map { tokened in return Tokened(tokened.token, try callback(tokened.value)) }
     }
     
-    public func fetch<A: Decodable, B: TokenRequestable>(_ context: Context, _ returnType: A.Type, _ api: @escaping API)
+    func fetch<A: Decodable, B: TokenRequestable>(_ context: Context, _ returnType: A.Type, _ api: @escaping API)
         -> TokenedIO<A?> where T == Tokened<B?> {
             
             return self.flatMap { tokened in
@@ -47,7 +47,7 @@ public extension TokenedIO {
             }
     }
     
-    public func fetch<A, B: Decodable, C: TokenRequestable>(_ context: Context,
+    func fetch<A, B: Decodable, C: TokenRequestable>(_ context: Context,
                                                             _ returnType: B.Type,
                                                             _ api: @escaping API,
                                                             _ type: @escaping (A) -> C?)
