@@ -168,7 +168,11 @@ class CircleCiTests: XCTestCase {
         
         let goodFourDJob = CircleCiDeployJob(project: "4dmotion-ios",
                                              branch: branch,
-                                             options: options,
+                                             options: options + [
+                                                "use_git:false",
+                                                "branch:\(branch)",
+                                                "project_name:MotionInsights"
+                                             ],
                                              username: username,
                                              type: "beta")
         let fourdResponse = try CircleCiDeployJob.parse(project: "4dmotion-ios",

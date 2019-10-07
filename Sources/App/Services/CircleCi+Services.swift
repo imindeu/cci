@@ -249,7 +249,7 @@ struct CircleCiDeployJob: CircleCiJob, Equatable {
 }
 
 extension CircleCiDeployJob {
-    private enum App: String {
+    private enum App: String, CaseIterable {
         case fourd
         case mi
 
@@ -260,6 +260,13 @@ extension CircleCiDeployJob {
             case (.fourd, .appStore): return "release"
             case (.mi, .beta): return "mi"
             default: throw CircleCi.Error.invalidDeployCombination("\(self.rawValue) - \(deployType)")
+            }
+        }
+        
+        var projectName: String {
+            switch self {
+            case .fourd: return "FourDMotion"
+            case .mi: return "MotionInsights"
             }
         }
     }
@@ -317,6 +324,7 @@ extension CircleCiDeployJob {
             return .left(CircleCiDeployJob.helpResponse)
         }
 
+        var options = options
         let branch: String
         let type: String
         if project == "4dmotion-ios" {
@@ -328,8 +336,28 @@ extension CircleCiDeployJob {
                 throw CircleCi.Error.unknownType(parameters.joined(separator: " "))
             }
             
-            branch = try parameters[safe: 2] ?? app.branch(for: deployType)
+            let isSingleProject: Bool
+            // If building from a custom branch, build only the selected app
+            if let customBranch = parameters[safe: 2] {
+                branch = customBranch
+                isSingleProject = true
+                options += ["use_git:false"]
+            } else {
+                branch = try app.branch(for: deployType)
+                isSingleProject = deployType == .alpha
+            }
+            
             type = deployType.rawValue
+            options += ["branch:\(branch)"]
+            if isSingleProject {
+                options += ["project_name:\(app.projectName)"]
+            } else {
+                // If not building a single app, then start with the one specified
+                var apps = App.allCases.filter { $0 != app }
+                apps.insert(app, at: 0)
+                let appNames = apps.map { $0.projectName }.joined(separator: ",")
+                options += ["project_names:\(appNames)"]
+            }
         } else {
             // For other (not 4d projects)
             let types = [
