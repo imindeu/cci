@@ -341,7 +341,7 @@ extension CircleCiDeployJob {
             if let customBranch = parameters[safe: 2] {
                 branch = customBranch
                 isSingleProject = true
-                options += ["use_git:false"]
+                options += ["test_release:true"]
             } else {
                 branch = try app.branch(for: deployType)
                 isSingleProject = deployType == .alpha

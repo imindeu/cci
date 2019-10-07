@@ -169,7 +169,7 @@ class CircleCiTests: XCTestCase {
         let goodFourDJob = CircleCiDeployJob(project: "4dmotion-ios",
                                              branch: branch,
                                              options: options + [
-                                                "use_git:false",
+                                                "test_release:true",
                                                 "branch:\(branch)",
                                                 "project_name:MotionInsights"
                                              ],
