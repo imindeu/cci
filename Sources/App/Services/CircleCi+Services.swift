@@ -344,7 +344,7 @@ extension CircleCiDeployJob {
                 options += ["test_release:true"]
             } else {
                 branch = try app.branch(for: deployType)
-                isSingleProject = deployType == .alpha
+                isSingleProject = deployType == .beta
             }
             
             type = deployType.rawValue
