@@ -23,7 +23,7 @@ public extension Github {
     static var waitingForReviewLabel: Label { return Label(name: "waiting for review") }
     
     static func isDev(branch: Branch) -> Bool { return branch.ref == "dev" }
-    static func isMaster(branch: Branch) -> Bool { return branch.ref == "master" }
+    static func isMaster(branch: Branch) -> Bool { return ["master", "fourd", "mi"].contains(branch.ref) }
     static func isRelease(branch: Branch) -> Bool { return branch.ref == "release" }
 
 }
