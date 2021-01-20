@@ -22,7 +22,7 @@ extension APIConnectEnvironment {
         return env[key.rawValue]
     }
     
-    public static func getArray<A: Configuration>(_ key: A, separator: Character = ",") -> [String] {
+    public static func getArray<A: Configuration>(_ key: A, separator: Character = "@") -> [String] {
         return get(key)?.split(separator: separator).map(String.init) ?? []
     }
 }
