@@ -23,4 +23,7 @@ RUN apt-get -qq update && apt-get install -y \
 WORKDIR /app
 COPY --from=builder /build/bin/Run .
 COPY --from=builder /build/lib/* /usr/lib/
+
+EXPOSE 8081
+
 CMD ./Run --hostname 0.0.0.0 --port 8081
