@@ -12,6 +12,8 @@ public func routes(_ router: Router) throws {
             .map(String.init)
             .flatMap(Github.webhook(payload, req, req.http.headers))
     }
+    /// This route will match everything that is not in other routes
+    router.on(.GET, "", at: PathComponent.anything) { req, payload in "" }
 }
 
 extension Slack.Request: Content {}
