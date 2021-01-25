@@ -15,7 +15,7 @@ These need to be set on your cloud provider or in docker container:
 - *circleCiTokens*: tokens for the circleci API - separated by `@`
 - *circleCiCompany*: company's name (that's in the circleci api url)
 - *circleCiVcs*: the vcs used by circleci (github or bitbucket)
-- *circleCiProjects*: the projects that can be deployed (they have to be the same or the prefix for the slack channel, where the command is invomed) - separated by `@
+- *circleCiProjects*: the projects that can be deployed (they have to be the same or the prefix for the slack channel, where the command is invomed) - separated by `@`
 
 - *githubAppId*: github application id
 - *githubSecret*: github secret for webhook verification
