@@ -238,7 +238,6 @@ extension CircleCiBuildsimJob {
     }
 }
 
-
 struct CircleCiDeployJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.deploy.rawValue
     let project: String
@@ -418,8 +417,18 @@ extension CircleCi {
             return leftIO(context)(Slack.Response.error(Error.noChannel(from.channelName)))
         }
         let project = projects[index]
+        var rawText = from.text
+        var customChangelog: String?
+        let parts = rawText.components(separatedBy: " customChangelog:\"")
         
-        var parameters = from.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
+        if parts.count == 2, let end = parts.last {
+            customChangelog = end.components(separatedBy: "\"").first
+            if let customChangelog = customChangelog {
+                rawText = rawText.replacingOccurrences(of: " customChangelog:\"" + customChangelog + "\"", with: "")
+            }
+        }
+
+        var parameters = rawText.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
         guard !parameters.isEmpty else {
             return leftIO(context)(Slack.Response.error(Error.unknownCommand(from.text)))
         }
@@ -427,9 +436,12 @@ extension CircleCi {
         parameters.removeFirst()
         
         let isOption: (String) -> Bool = { $0.contains(":") }
-        let options = parameters.filter(isOption)
+        var options = parameters.filter(isOption)
         parameters = parameters.filter { !isOption($0) }
         
+        if let customChangelog = customChangelog {
+            options.append("customChangelog: \(customChangelog)")
+        }
         if let job = CircleCiJobKind(rawValue: command) {
             do {
                 let request = try job.type
