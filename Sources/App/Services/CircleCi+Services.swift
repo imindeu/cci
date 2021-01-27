@@ -442,6 +442,10 @@ extension CircleCi {
         if let customChangelog = customChangelog {
             options.append("customChangelog: \(customChangelog)")
         }
+
+        print("options: \(options)")
+        print("parameters: \(parameters)")
+
         if let job = CircleCiJobKind(rawValue: command) {
             do {
                 let request = try job.type
