@@ -443,9 +443,6 @@ extension CircleCi {
             options.append("customChangelog: \(customChangelog)")
         }
 
-        print("options: \(options)")
-        print("parameters: \(parameters)")
-
         if let job = CircleCiJobKind(rawValue: command) {
             do {
                 let request = try job.type
@@ -454,6 +451,13 @@ extension CircleCi {
                            options: options,
                            username: from.userName)
                     .map { JobRequest(job: $0) }
+                
+                if Environment.get(key: "debugMode") == "true" {
+                    print(" ==================== ")
+                    print(" CIRCLE CI REQUEST\n")
+                    print("Job request:\n\(request)\n")
+                }
+
                 return pure(request, context)
             } catch {
                 return leftIO(context)(Slack.Response.error(Error.underlying(error),
