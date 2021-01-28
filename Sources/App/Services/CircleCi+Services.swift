@@ -5,6 +5,7 @@
 //  Created by Peter Geszten-Kovacs on 2018. 05. 16..
 //
 
+import Foundation
 import APIConnect
 import APIService
 
@@ -412,23 +413,27 @@ extension CircleCi {
                              _ headers: Headers?,
                              _ context: Context) -> EitherIO<Slack.Response, JobRequest> {
         let projects: [String] = Environment.getArray(JobRequest.Config.projects)
-        
+        let spacePlaceholderString = "[CCI_SPACE_PLACEHOLDER_STRING]"
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
             return leftIO(context)(Slack.Response.error(Error.noChannel(from.channelName)))
         }
         let project = projects[index]
         var rawText = from.text
-        var customChangelog: String?
-        let parts = rawText.components(separatedBy: " customChangelog:\"")
-        
-        if parts.count == 2, let end = parts.last {
-            customChangelog = end.components(separatedBy: "\"").first
-            if let customChangelog = customChangelog {
-                rawText = rawText.replacingOccurrences(of: " customChangelog:\"" + customChangelog + "\"", with: "")
+        rawText.matchingStrings(regex: "\"(.*?)\"").forEach { textArray in
+            if let part = textArray.first {
+                let partWithoutSpaces = part.replacingOccurrences(of: " ", with: spacePlaceholderString)
+                rawText = rawText.replacingOccurrences(of: part, with: partWithoutSpaces)
             }
         }
 
-        var parameters = rawText.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
+        var parameters = rawText.split(separator: " ")
+            .map(String.init)
+            .map { $0
+                    .replacingOccurrences(of: spacePlaceholderString, with: " " )
+                    .replacingOccurrences(of: "\"", with: "")
+            }
+            .filter({ !$0.isEmpty })
+        
         guard !parameters.isEmpty else {
             return leftIO(context)(Slack.Response.error(Error.unknownCommand(from.text)))
         }
@@ -439,10 +444,6 @@ extension CircleCi {
         var options = parameters.filter(isOption)
         parameters = parameters.filter { !isOption($0) }
         
-        if let customChangelog = customChangelog {
-            options.append("customChangelog: \(customChangelog)")
-        }
-
         if let job = CircleCiJobKind(rawValue: command) {
             do {
                 let request = try job.type
@@ -452,7 +453,7 @@ extension CircleCi {
                            username: from.userName)
                     .map { JobRequest(job: $0) }
                 
-                if Environment.get(key: "debugMode") == "true" {
+                if Environment.isDebugMode() {
                     print(" ==================== ")
                     print(" CIRCLE CI REQUEST\n")
                     print("Job request:\n\(request)\n")
@@ -579,5 +580,20 @@ private extension Collection {
     subscript(safe index: Index) -> Element? {
         guard indices.contains(index) else { return nil }
         return self[index]
+    }
+}
+
+extension String {
+    func matchingStrings(regex: String) -> [[String]] {
+        guard let regex = try? NSRegularExpression(pattern: regex, options: []) else { return [] }
+        let nsString = self as NSString
+        let results = regex.matches(in: self, options: [], range: NSMakeRange(0, nsString.length))
+        return results.map { result in
+            (0..<result.numberOfRanges).map {
+                result.range(at: $0).location != NSNotFound
+                    ? nsString.substring(with: result.range(at: $0))
+                    : ""
+            }
+        }
     }
 }

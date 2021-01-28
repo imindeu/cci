@@ -22,6 +22,10 @@ extension APIConnectEnvironment {
         return env[key]
     }
 
+    public static func isDebugMode() -> Bool {
+        return env["debugMode"] == "true"
+    }
+
     public static func get<A: Configuration>(_ key: A) -> String? {
         return env[key.rawValue]
     }

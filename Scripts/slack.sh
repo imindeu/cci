@@ -10,7 +10,7 @@
 if [ "$#" -eq 0 ]; then
 # if there are no args, use default coomand
     SALCK_COMMAND='deploy'
-    SALCK_TEXT='deploy fourd alpha emails:gab.horv@gmail.com unofficial_release:true customChangelog:"Test changelog with spaces" feature/4DM-5808-Update-deploy-from-custom-branch'
+    SALCK_TEXT='deploy fourd alpha emails:gab.horv@gmail.com unofficial_release:true custom_change_log:"Test changelog with spaces" feature/4DM-5808-Update-deploy-from-custom-branch'
 else
 # if there are args, use them
     SALCK_COMMAND=$1

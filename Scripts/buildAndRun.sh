@@ -1,5 +1,6 @@
 #!/bin/sh
 
+cd ..
 # build
 #  - add 'cci' tag
 #  - path: . (current directory)
@@ -41,4 +42,4 @@ fi
 
 
 # sample call:
-# curl -d 'token=SLACKTOKEN&team_id=team_id&team_domain=team_domain&channel_id=channel_id&channel_name=4dmotion-ios&user_id=user_id&user_name=user_name&command=deploy&text=deploy fourd alpha emails:gab.horv@gmail.com unofficial_release:true customChangelog:"Test changelog with spaces" feature/4DM-5808-Update-deploy-from-custom-branch&response_url=http://testresponseurl.com:1234&trigger_id=trigger_id' -X POST http://localhost:8080/slackCommand
+# see slack.sh
