@@ -316,9 +316,9 @@ private extension Github {
         let instant = pure(Tokened<APIResponse?>(token, nil), context)
         switch request.type {
         case .changesRequested:
-            return try Service.fetch(request, APIResponse.self, token, context, Environment.api)
+            return try Service.fetch(request, APIResponse.self, token, context, Environment.api, isDebugMode: Environment.isDebugMode())
         case .failedStatus:
-            return try Service.fetch(request, SearchResponse<SearchIssue>.self, token, context, Environment.api)
+            return try Service.fetch(request, SearchResponse<SearchIssue>.self, token, context, Environment.api, isDebugMode: Environment.isDebugMode())
                 .map { result -> String? in
                     return result?.items?
                         .compactMap { item -> String? in
@@ -332,7 +332,7 @@ private extension Github {
             if request.body == nil {
                 return instant
             } else {
-                return try Service.fetch(request, APIResponse.self, token, context, Environment.api)
+                return try Service.fetch(request, APIResponse.self, token, context, Environment.api, isDebugMode: Environment.isDebugMode())
             }
         default:
             return instant

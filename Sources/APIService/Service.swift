@@ -37,16 +37,29 @@ public enum Service {
                                            _ responseType: A.Type,
                                            _ token: String,
                                            _ context: Context,
-                                           _ api: @escaping API) throws -> TokenedIO<A?> {
+                                           _ api: @escaping API,
+                                           isDebugMode: Bool = false) throws -> TokenedIO<A?> {
         guard let method = request.method else {
+            if isDebugMode {
+                print("\n\n ==================== ")
+                print(" ERROR: No method\n")
+            }
             throw Error.noMethod
         }
         guard let url = request.url(token: token) else {
+            if isDebugMode {
+                print("\n\n ==================== ")
+                print(" ERROR: No URL\n")
+            }
             throw Error.noURL
         }
         guard let host = url.host,
             let path = url.path
                 .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed) else {
+            if isDebugMode {
+                print("\n\n ==================== ")
+                print(" ERROR: Bad URL: \(url)\n")
+            }
                     throw Error.badUrl(url.absoluteString)
         }
         
@@ -54,7 +67,14 @@ public enum Service {
                                       url: path + (url.query.map { "?\($0)" } ?? ""),
                                       headers: HTTPHeaders(request.headers(token: token)),
                                       body: request.body ?? HTTPBody())
-        
+
+        if isDebugMode {
+            print("\n\n ==================== ")
+            print(" OUTGOING REQUEST\n")
+            print("request:\n\(request)\n")
+            print("httpRequest:\n\(httpRequest)\n")
+        }
+
         return api(host, url.port)(context, httpRequest)
             .decode(responseType)
             .map { Tokened(token, $0) }

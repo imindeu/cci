@@ -452,13 +452,6 @@ extension CircleCi {
                            options: options,
                            username: from.userName)
                     .map { JobRequest(job: $0) }
-                
-                if Environment.isDebugMode() {
-                    print(" ==================== ")
-                    print(" CIRCLE CI REQUEST\n")
-                    print("Job request:\n\(request)\n")
-                }
-
                 return pure(request, context)
             } catch {
                 return leftIO(context)(Slack.Response.error(Error.underlying(error),
@@ -483,7 +476,7 @@ extension CircleCi {
                     }
                     let circleciToken = circleCiTokens[index]
 
-                    return try Service.fetch(jobRequest.job, Response.self, circleciToken, context, Environment.api)
+                    return try Service.fetch(jobRequest.job, Response.self, circleciToken, context, Environment.api, isDebugMode: Environment.isDebugMode())
                         .map { response in
                             guard let value = response.value else {
                                 throw Error.decode
@@ -503,6 +496,11 @@ extension CircleCi {
     }
     
     static func responseToSlack(_ from: BuildResponse) -> Slack.Response {
+        if Environment.isDebugMode() {
+            print("\n\n ==================== ")
+            print(" RESPONSE TO SLACK\n")
+            print("\(from)\n")
+        }
         guard let buildURL = from.response.buildURL, let buildNum = from.response.buildNum else {
             return Slack.Response.error(Error.badResponse(from.response.message))
         }
@@ -550,7 +548,7 @@ extension CircleCi {
                                                           type: .getStatus(sha: head.sha, url: head.repo.url))
                     return try Github.fetchAccessToken(installationId, context)
                         .flatMap {
-                            return try Service.fetch(githubRequest, [Github.Status].self, $0, context, Environment.api)
+                            return try Service.fetch(githubRequest, [Github.Status].self, $0, context, Environment.api, isDebugMode: Environment.isDebugMode())
                         }
                         .flatMap { response in
                             guard let statuses = response.value, statuses.first?.state != .success else {

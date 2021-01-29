@@ -63,7 +63,7 @@ extension APIConnect where From == Slack.Request {
 extension APIConnect where From == Slack.Request, To == CircleCi.JobRequest {
     static func run(_ from: Slack.Request, _ context: Context) -> IO<Slack.Response?> {
         if Environment.isDebugMode() {
-            let contextString = String(describing: context).replacingOccurrences(of: "&", with: "\n")
+            let contextString = String(describing: context).replacingOccurrences(of: "&", with: "&\n")
             print(" ==================== ")
             print(" INCOMING REQUEST\n")
             print("Context:\n\(contextString)\n")
