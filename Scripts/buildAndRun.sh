@@ -1,6 +1,7 @@
 #!/bin/sh
 
-cd ..
+cd "$(dirname "$0")/.."
+
 # build
 #  - add 'cci' tag
 #  - path: . (current directory)
