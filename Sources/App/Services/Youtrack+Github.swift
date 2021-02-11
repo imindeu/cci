@@ -167,7 +167,7 @@ private extension Youtrack {
         -> EitherIO<Github.PayloadResponse, ResponseContainer> {
             
             return { data in
-                try Service.fetch(data, Response.self, token, context, Environment.api)
+                try Service.fetch(data, Response.self, token, context, Environment.api, isDebugMode: Environment.isDebugMode())
                     .map { response in
                         let youtrackResponse = response.value ?? Response(value: "issue: \(data.issue)")
                         return .right(ResponseContainer(response: youtrackResponse, data: data))

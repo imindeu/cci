@@ -5,6 +5,7 @@
 //  Created by Peter Geszten-Kovacs on 2018. 05. 16..
 //
 
+import Foundation
 import APIConnect
 import APIService
 
@@ -238,7 +239,6 @@ extension CircleCiBuildsimJob {
     }
 }
 
-
 struct CircleCiDeployJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.deploy.rawValue
     let project: String
@@ -413,13 +413,27 @@ extension CircleCi {
                              _ headers: Headers?,
                              _ context: Context) -> EitherIO<Slack.Response, JobRequest> {
         let projects: [String] = Environment.getArray(JobRequest.Config.projects)
-        
+        let spacePlaceholderString = "[CCI_SPACE_PLACEHOLDER_STRING]"
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
             return leftIO(context)(Slack.Response.error(Error.noChannel(from.channelName)))
         }
         let project = projects[index]
+        var rawText = from.text
+        rawText.matchingStrings(regex: "\"(.*?)\"").forEach { textArray in
+            if let part = textArray.first {
+                let partWithoutSpaces = part.replacingOccurrences(of: " ", with: spacePlaceholderString)
+                rawText = rawText.replacingOccurrences(of: part, with: partWithoutSpaces)
+            }
+        }
+
+        var parameters = rawText.split(separator: " ")
+            .map(String.init)
+            .map { $0
+                    .replacingOccurrences(of: spacePlaceholderString, with: " " )
+                    .replacingOccurrences(of: "\"", with: "")
+            }
+            .filter({ !$0.isEmpty })
         
-        var parameters = from.text.split(separator: " ").map(String.init).filter({ !$0.isEmpty })
         guard !parameters.isEmpty else {
             return leftIO(context)(Slack.Response.error(Error.unknownCommand(from.text)))
         }
@@ -427,7 +441,7 @@ extension CircleCi {
         parameters.removeFirst()
         
         let isOption: (String) -> Bool = { $0.contains(":") }
-        let options = parameters.filter(isOption)
+        var options = parameters.filter(isOption)
         parameters = parameters.filter { !isOption($0) }
         
         if let job = CircleCiJobKind(rawValue: command) {
@@ -462,7 +476,7 @@ extension CircleCi {
                     }
                     let circleciToken = circleCiTokens[index]
 
-                    return try Service.fetch(jobRequest.job, Response.self, circleciToken, context, Environment.api)
+                    return try Service.fetch(jobRequest.job, Response.self, circleciToken, context, Environment.api, isDebugMode: Environment.isDebugMode())
                         .map { response in
                             guard let value = response.value else {
                                 throw Error.decode
@@ -482,6 +496,11 @@ extension CircleCi {
     }
     
     static func responseToSlack(_ from: BuildResponse) -> Slack.Response {
+        if Environment.isDebugMode() {
+            print("\n\n ==================== ")
+            print(" RESPONSE TO SLACK\n")
+            print("\(from)\n")
+        }
         guard let buildURL = from.response.buildURL, let buildNum = from.response.buildNum else {
             return Slack.Response.error(Error.badResponse(from.response.message))
         }
@@ -529,7 +548,7 @@ extension CircleCi {
                                                           type: .getStatus(sha: head.sha, url: head.repo.url))
                     return try Github.fetchAccessToken(installationId, context)
                         .flatMap {
-                            return try Service.fetch(githubRequest, [Github.Status].self, $0, context, Environment.api)
+                            return try Service.fetch(githubRequest, [Github.Status].self, $0, context, Environment.api, isDebugMode: Environment.isDebugMode())
                         }
                         .flatMap { response in
                             guard let statuses = response.value, statuses.first?.state != .success else {
@@ -559,5 +578,20 @@ private extension Collection {
     subscript(safe index: Index) -> Element? {
         guard indices.contains(index) else { return nil }
         return self[index]
+    }
+}
+
+extension String {
+    func matchingStrings(regex: String) -> [[String]] {
+        guard let regex = try? NSRegularExpression(pattern: regex, options: []) else { return [] }
+        let nsString = self as NSString
+        let results = regex.matches(in: self, options: [], range: NSMakeRange(0, nsString.length))
+        return results.map { result in
+            (0..<result.numberOfRanges).map {
+                result.range(at: $0).location != NSNotFound
+                    ? nsString.substring(with: result.range(at: $0))
+                    : ""
+            }
+        }
     }
 }
