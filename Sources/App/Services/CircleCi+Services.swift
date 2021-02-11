@@ -432,7 +432,8 @@ extension CircleCi {
         var parameters = rawText.split(separator: " ")
             .map(String.init)
             .map { $0
-                    .replacingOccurrences(of: spacePlaceholderString, with: " " )
+                    .replacingOccurrences(of: spacePlaceholderString, with: "%20" )
+                    .replacingOccurrences(of: "\"", with: "")
             }
             .filter({ !$0.isEmpty })
         
