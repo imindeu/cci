@@ -433,7 +433,6 @@ extension CircleCi {
             .map(String.init)
             .map { $0
                     .replacingOccurrences(of: spacePlaceholderString, with: " " )
-                    .replacingOccurrences(of: "\"", with: "")
             }
             .filter({ !$0.isEmpty })
         
