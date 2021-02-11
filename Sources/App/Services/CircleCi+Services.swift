@@ -419,6 +419,9 @@ extension CircleCi {
         }
         let project = projects[index]
         var rawText = from.text
+            .replacingOccurrences(of: "“", with: "\"")
+            .replacingOccurrences(of: "”", with: "\"")
+        print("rawText: \(rawText)")
         rawText.matchingStrings(regex: "\"(.*?)\"").forEach { textArray in
             if let part = textArray.first {
                 let partWithoutSpaces = part.replacingOccurrences(of: " ", with: spacePlaceholderString)
