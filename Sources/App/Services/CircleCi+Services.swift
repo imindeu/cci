@@ -58,6 +58,7 @@ extension CircleCi {
         
         enum Config: String, Configuration {
             case tokens = "circleCiTokens"
+            case personalApiToken = "circleCiPersonalApiToken"
             case company = "circleCiCompany"
             case vcs = "circleCiVcs"
             case projects = "circleCiProjects"
@@ -86,6 +87,10 @@ protocol CircleCiJob: TokenRequestable {
     
     static func parse(project: String, parameters: [String], options: [String], username: String) throws
         -> Either<Slack.Response, CircleCiJob>
+}
+
+protocol CircleCiJobv2: CircleCiJob {
+    
 }
 
 extension CircleCiJob {
@@ -121,6 +126,36 @@ extension CircleCiJob {
     }
 }
 
+struct TestJobDescriptor: Encodable {
+    var branch: String
+    var CCI_OPTIONS: String
+    var parameters: [String: Bool]
+}
+
+extension CircleCiJobv2 {
+    var method: HTTPMethod? { return .POST }
+
+    var body: Data? {
+        return try? JSONEncoder().encode(
+            TestJobDescriptor(branch: branch,
+                              CCI_OPTIONS: options.joined(separator: " "),
+                              parameters: ["run_parallel_test_workflow" : true])
+        )
+    }
+    
+    func url(token: String) -> URL? {
+        return URL(string: "https://circleci.com/"
+            + CircleCi.pathv2(project))
+    }
+    
+    func headers(token: String) -> [(String, String)] {
+        return [
+            ("Circle-Token", token),
+            ("Content-Type", "application/json")
+        ]
+    }
+}
+
 enum CircleCiJobKind: String, CaseIterable {
     case deploy
     case test
@@ -140,7 +175,7 @@ private extension CircleCiJobKind {
     }
 }
 
-struct CircleCiTestJob: CircleCiJob, Equatable {
+struct CircleCiTestJob: CircleCiJobv2, Equatable {
     let name: String = CircleCiJobKind.test.rawValue
     let project: String
     let branch: String
@@ -390,7 +425,13 @@ extension CircleCi {
         let company = Environment.get(JobRequest.Config.company)!
         return "/api/v1.1/project/\(vcs)/\(company)/\(project)/tree/\(branch)"
     }
-    
+
+    static var pathv2: (String) -> String = { project in
+        let vcs = Environment.get(JobRequest.Config.vcs)!
+        let company = Environment.get(JobRequest.Config.company)!
+        return "/api/v2/project/\(vcs)/\(company)/\(project)/pipeline"
+    }
+
     static var helpResponse: Slack.Response {
         let text = "Help:\n- `/cci command [help]`\n" +
             "Current command\n" +
@@ -474,10 +515,16 @@ extension CircleCi {
                 do {
                     let projects: [String] = Environment.getArray(JobRequest.Config.projects)
                     let circleCiTokens = Environment.getArray(JobRequest.Config.tokens)
+                    let circleCiPersonalApiToken = Environment.get(JobRequest.Config.personalApiToken)
                     guard let index = projects.index(of: jobRequest.job.project) else {
                         throw Error.noProject(jobRequest.job.project)
                     }
-                    let circleciToken = circleCiTokens[index]
+                    let isTestJob = jobRequest.job as? CircleCiTestJob != nil
+                    var circleciToken = circleCiTokens[index]
+
+                    if isTestJob, let circleCiPersonalApiToken = circleCiPersonalApiToken {
+                        circleciToken = circleCiPersonalApiToken
+                    }
 
                     return try Service.fetch(jobRequest.job, Response.self, circleciToken, context, Environment.api, isDebugMode: Environment.isDebugMode())
                         .map { response in
