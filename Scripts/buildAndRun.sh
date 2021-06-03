@@ -22,10 +22,11 @@ then
   docker run -it \
   -e port="8080" \
   -e slackToken="SLACKTOKEN" \
-  -e circleCiTokens="CIRCLECITOKENS" \
+  -e circleCiTokens="token1@token2" \
+  -e circleCiPersonalApiToken="personalToken" \
   -e circleCiVcs="github" \
   -e circleCiProjects="4dmotion-ios@cci" \
-  -e circleCiCompany="CIRCLECICOMPANY" \
+  -e circleCiCompany="imindeu" \
   -e githubSecret="GITHUBSECRET" \
   -e githubAppId="GITHUBAPPID" \
   -e githubPrivateKey="GITHUBPRIVATEKEY" \
