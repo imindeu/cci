@@ -1,0 +1,18 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - mkdir -p /build/lib
+      - cp -R /usr/lib/swift/linux/*.so /build/lib
+      - swift package update
+      - swift build --product Run --configuration release
+      - mv `swift build --product Run --configuration release --show-bin-path` /build/bin
+      - mv Dockerfile /build/Dockerfile
+artifacts:
+  files:
+    - 'bin/Run'
+    - 'lib/**/*'
+    - 'Dockerfile'
+  base-directory: 'build/'
+  discard-paths: no
