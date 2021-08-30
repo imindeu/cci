@@ -14,5 +14,5 @@ artifacts:
     - 'bin/Run'
     - 'lib/**/*'
     - 'Dockerfile'
-  base-directory: 'build/'
+  base-directory: '/build/'
   discard-paths: no
