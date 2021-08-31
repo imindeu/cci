@@ -6,8 +6,8 @@ RUN apt-get -qq update && apt-get install -y \
   && rm -r /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY /build/bin/Run .
-COPY /build/lib/* /usr/lib/
+COPY /bin/Run .
+COPY /lib/* /usr/lib/
 
 EXPOSE 8081
 
