@@ -120,11 +120,11 @@ extension Github.Payload {
         case let (.some(.pullRequest), .some(.closed), _, _, .some(pr), _, _, _, _):
             return .pullRequestClosed(title: pr.title)
         case let (.some(.pullRequest), .some(.opened), _, _, .some(pr), _, _, _, _):
-            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body)
+            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "")
         case let (.some(.pullRequest), .some(.reopened), _, _, .some(pr), _, _, _, _):
-            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body)
+            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "")
         case let (.some(.pullRequest), .some(.edited), _, _, .some(pr), _, _, _, _):
-            return .pullRequestEdited(title: pr.title, url: pr.url, body: pr.body)
+            return .pullRequestEdited(title: pr.title, url: pr.url, body: pr.body ?? "")
             
         case let (.some(.create), _, _, _, _, .some(title), .some(.branch), _, _):
             return .branchCreated(title: title)

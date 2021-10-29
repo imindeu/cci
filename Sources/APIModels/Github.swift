@@ -51,14 +51,14 @@ public enum Github {
         public let url: String
         public let id: Int
         public let title: String
-        public let body: String
+        public let body: String?
         public let head: Branch
         public let base: Branch
 
         public init(url: String,
                     id: Int,
                     title: String,
-                    body: String,
+                    body: String?,
                     head: Branch,
                     base: Branch) {
             self.url = url
