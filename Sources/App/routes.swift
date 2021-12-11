@@ -12,6 +12,9 @@ public func routes(_ router: Router) throws {
             .map(String.init)
             .flatMap(Github.webhook(payload, req, req.http.headers))
     }
+    router.get("status") { _ -> String in
+        return "OK"
+    }
     /// This route will match everything that is not in other routes
     router.get(PathComponent.anything) { _ in "" }
 }

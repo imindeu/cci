@@ -21,7 +21,7 @@ class YoutrackGithubTests: XCTestCase {
         super.setUp()
         Environment.env = [
             Youtrack.Request.Config.youtrackToken.rawValue: Youtrack.Request.Config.youtrackToken.rawValue,
-            Youtrack.Request.Config.youtrackURL.rawValue: "https://test.com/youtrack/rest/"
+            Youtrack.Request.Config.youtrackURL.rawValue: "https://test.com/youtrack/api/"
         ]
         Environment.api = { hostname, _ in
             return { context, _ in

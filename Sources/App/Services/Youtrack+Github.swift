@@ -39,9 +39,9 @@ extension Youtrack {
     
     struct Request: Equatable, Codable {
         enum Command: String, Equatable, Codable {
-            case inProgress = "4DM%20iOS%20state%20In%20Progress"
-            case inReview = "4DM%20iOS%20state%20In%20Review"
-            case waitingForDeploy = "4DM%20iOS%20state%20Waiting%20for%20deploy"
+            case inProgress = "4DM iOS state In Progress"
+            case inReview = "4DM iOS state In Review"
+            case waitingForDeploy = "4DM iOS state Waiting for deploy"
             
             init?(_ githubWebhookType: Github.RequestType) {
                 switch githubWebhookType {
@@ -83,7 +83,8 @@ extension Youtrack.Request.RequestData: TokenRequestable {
     }
     
     var body: Data? {
-        return nil
+        return "{\"query\": \"\(command.rawValue)\", \"issues\": [ { \"idReadable\": \"\(issue)\" } ] }"
+            .data(using: .utf8)
     }
     
     func url(token: String) -> URL? {
@@ -157,7 +158,10 @@ extension Youtrack {
 private extension Youtrack {
     
     static func path(base: String, issue: String, command: Request.Command) -> String {
-        return path(base: base, issue: issue) + "/execute?command=\(command.rawValue)"
+        if base.hasSuffix("/") {
+            return "\(base)commands"
+        }
+        return "\(base)/commands"
     }
 
     static func fetch(_ context: Context,
