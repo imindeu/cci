@@ -20,7 +20,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
         Environment.env = [
             Github.Payload.Config.githubSecret.rawValue: "x",
             Youtrack.Request.Config.youtrackToken.rawValue: Youtrack.Request.Config.youtrackToken.rawValue,
-            Youtrack.Request.Config.youtrackURL.rawValue: "https://test.com/youtrack/rest"
+            Youtrack.Request.Config.youtrackURL.rawValue: "https://test.com/youtrack/api"
         ]
         Environment.api = { hostname, _ in
             return { context, request in

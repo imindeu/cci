@@ -28,7 +28,7 @@ public extension Youtrack {
             .map { url in
                 try issues(from: from, pattern: pattern)
                     .map {
-                        path(base: url, issue: $0).replacingOccurrences(of: "/rest", with: "")
+                        path(base: url, issue: $0).replacingOccurrences(of: "/api", with: "")
                     }
             } ?? []
     }

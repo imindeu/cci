@@ -25,7 +25,7 @@ class YoutrackServicesTests: XCTestCase {
         let expected = [ "https://test.com/youtrack/issue/4DM-2001", "https://test.com/youtrack/issue/4DM-2002"]
         XCTAssertEqual(
             try Youtrack.issueURLs(from: "test \(issues.joined(separator: ", "))",
-                                   base: "https://test.com/youtrack/rest/",
+                                   base: "https://test.com/youtrack/api/",
                                    pattern: "4DM-[0-9]+"),
             expected)
     }
