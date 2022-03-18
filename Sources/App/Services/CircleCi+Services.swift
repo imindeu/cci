@@ -252,6 +252,7 @@ extension CircleCiDeployJob {
     private enum App: String, CaseIterable {
         case fourd
         case mi
+        case orthocor
 
         func branch(for deployType: DeployType) throws -> String {
             switch (self, deployType) {
@@ -259,6 +260,7 @@ extension CircleCiDeployJob {
             case (.fourd, .beta): return "fourd"
             case (.fourd, .appStore): return "release"
             case (.mi, .beta): return "mi"
+            case (.orthocor, .beta): return "oc"
             default: throw CircleCi.Error.invalidDeployCombination("\(self.rawValue) - \(deployType)")
             }
         }
@@ -267,6 +269,7 @@ extension CircleCiDeployJob {
             switch self {
             case .fourd: return "FourDMotion"
             case .mi: return "MotionInsights"
+            case .orthocor: return "OrthoCor"
             }
         }
     }
@@ -298,7 +301,7 @@ extension CircleCiDeployJob {
         let text = "`deploy`: deploy a build\n" +
             "Usage:\n`/cci deploy app type [options] [branch]`\n" +
             "  - *type*: alpha|beta|app_store\n" +
-            "  - *app*: fourd|mi\n" +
+            "  - *app*: fourd|mi|orthocor\n" +
             "  - *options*: optional fastlane options in the xyz:qwo format\n" +
             "    (eg. emails:xy@test.com,zw@test.com groups:qa,beta-customers version:2.0.1)\n" +
             "    (space shouldn't be in the option for now)\n" +
