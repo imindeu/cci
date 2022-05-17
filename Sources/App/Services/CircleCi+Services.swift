@@ -261,6 +261,7 @@ extension CircleCiDeployJob {
             case (.fourd, .appStore): return "release"
             case (.mi, .beta): return "mi"
             case (.orthocor, .beta): return "oc"
+            case (.orthocor, .appStore): return "release_oc"
             default: throw CircleCi.Error.invalidDeployCombination("\(self.rawValue) - \(deployType)")
             }
         }
