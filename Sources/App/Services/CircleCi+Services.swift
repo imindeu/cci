@@ -344,28 +344,16 @@ extension CircleCiDeployJob {
                 throw CircleCi.Error.unknownType(parameters.joined(separator: " "))
             }
             
-            let isSingleProject: Bool
-            // If building from a custom branch, build only the selected app
             if let customBranch = parameters[safe: 2] {
                 branch = customBranch
-                isSingleProject = true
                 options += ["test_release:true"]
             } else {
                 branch = try app.branch(for: deployType)
-                isSingleProject = deployType != .alpha
             }
             
             type = deployType.rawValue
             options += ["branch:\(branch)"]
-            if isSingleProject {
-                options += ["project_name:\(app.projectName)"]
-            } else {
-                // If not building a single app, then start with the one specified
-                var apps = App.allCases.filter { $0 != app }
-                apps.insert(app, at: 0)
-                let appNames = apps.map { $0.projectName }.joined(separator: ",")
-                options += ["project_names:\(appNames)"]
-            }
+            options += ["project_name:\(app.projectName)"]
         } else {
             // For other (not 4d projects)
             let types = [
