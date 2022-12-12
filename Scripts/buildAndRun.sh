@@ -19,12 +19,18 @@ then
 #    - set debugMode=true for debug messages
 #  - port: localhost 8080 -> cci 8081
 #  - docker image tag: cci
+#
+# it also needs (in strict order and count):
+# - circleCiTokens=token01,token02,token03
+# for
+# - circleCiProjects=CIProjectName01,CIProjectName02,CIProjectName03
+# to run slack command on CircleCI
   docker run -it \
   -e port="8080" \
   -e slackToken="SLACKTOKEN" \
   -e circleCiTokens="CIRCLECITOKENS" \
   -e circleCiVcs="github" \
-  -e circleCiProjects="4dmotion-ios@cci" \
+  -e circleCiProjects="4dmotion-ios@cci@4dmotion-android" \
   -e circleCiCompany="CIRCLECICOMPANY" \
   -e githubSecret="GITHUBSECRET" \
   -e githubAppId="GITHUBAPPID" \
