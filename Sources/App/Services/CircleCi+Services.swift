@@ -72,9 +72,43 @@ extension CircleCi {
     }
 }
 
+enum CircleCiProject: RawRepresentable, Equatable {
+    case iOS4DM
+    case android4DM
+    case unknown(String)
+    
+    var rawValue: String {
+        switch self {
+        case .iOS4DM: return "4dmotion-ios"
+        case .android4DM: return "4dmotion-android"
+        case let .unknown(rawValue): return rawValue
+        }
+    }
+
+    init?(rawValue: String) {
+        switch rawValue {
+        case "4dmotion-ios": self = .iOS4DM
+        case "4dmotion-android": self = .android4DM
+        default: self = .unknown(rawValue)
+        }
+    }
+    
+    static func == (lhs: CircleCiProject, rhs: CircleCiProject) -> Bool {
+        switch (lhs, rhs) {
+        case (.iOS4DM, .iOS4DM), (.android4DM, .android4DM): return true
+        case let (.unknown(lrw), .unknown(rrw)): return lrw == rrw
+        default: return false
+        }
+    }
+}
+
+// The `project` param is parsed from the `circleCiProjects` Docker's param:
+// - matching the prefix of the slack command's channel.
+// - accessed via Environment
+// - this identifies the project on Circle CI
 protocol CircleCiJob: TokenRequestable {
     var name: String { get }
-    var project: String { get }
+    var project: CircleCiProject { get }
     var branch: String { get }
     var options: [String] { get }
     var username: String { get }
@@ -84,7 +118,7 @@ protocol CircleCiJob: TokenRequestable {
     
     static var helpResponse: Slack.Response { get }
     
-    static func parse(project: String, parameters: [String], options: [String], username: String) throws
+    static func parse(project: CircleCiProject, parameters: [String], options: [String], username: String) throws
         -> Either<Slack.Response, CircleCiJob>
 }
 
@@ -108,9 +142,11 @@ extension CircleCiJob {
     }
     
     func url(token: String) -> URL? {
-        return URL(string: "https://circleci.com/"
-            + CircleCi.path(project, urlEncodedBranch)
-            + "?circle-token=\(token)")
+        return URL(
+            string: "https://circleci.com/"
+            + CircleCi.path(project.rawValue, urlEncodedBranch)
+            + "?circle-token=\(token)"
+        )
     }
     
     func headers(token: String) -> [(String, String)] {
@@ -142,7 +178,7 @@ private extension CircleCiJobKind {
 
 struct CircleCiTestJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.test.rawValue
-    let project: String
+    let project: CircleCiProject
     let branch: String
     let options: [String]
     let username: String
@@ -151,7 +187,7 @@ struct CircleCiTestJob: CircleCiJob, Equatable {
 extension CircleCiTestJob {
     var slackResponseFields: [Slack.Response.Field] {
         return [
-            Slack.Response.Field(title: "Project", value: project, short: true),
+            Slack.Response.Field(title: "Project", value: project.rawValue, short: true),
             Slack.Response.Field(title: "Branch", value: branch, short: true),
             Slack.Response.Field(title: "User", value: username, short: true)
         ]
@@ -173,7 +209,7 @@ extension CircleCiTestJob {
         return response
     }
     
-    static func parse(project: String,
+    static func parse(project: CircleCiProject,
                       parameters: [String],
                       options: [String],
                       username: String) throws -> Either<Slack.Response, CircleCiJob> {
@@ -192,7 +228,7 @@ extension CircleCiTestJob {
 
 struct CircleCiBuildsimJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.buildsim.rawValue
-    let project: String
+    let project: CircleCiProject
     let branch: String
     let options: [String]
     let username: String
@@ -201,7 +237,7 @@ struct CircleCiBuildsimJob: CircleCiJob, Equatable {
 extension CircleCiBuildsimJob {
     var slackResponseFields: [Slack.Response.Field] {
         return [
-            Slack.Response.Field(title: "Project", value: project, short: true),
+            Slack.Response.Field(title: "Project", value: project.rawValue, short: true),
             Slack.Response.Field(title: "Branch", value: branch, short: true),
             Slack.Response.Field(title: "User", value: username, short: true)
         ]
@@ -222,7 +258,7 @@ extension CircleCiBuildsimJob {
         return response
     }
     
-    static func parse(project: String,
+    static func parse(project: CircleCiProject,
                       parameters: [String],
                       options: [String],
                       username: String) throws -> Either<Slack.Response, CircleCiJob> {
@@ -241,7 +277,7 @@ extension CircleCiBuildsimJob {
 
 struct CircleCiDeployJob: CircleCiJob, Equatable {
     let name: String = CircleCiJobKind.deploy.rawValue
-    let project: String
+    let project: CircleCiProject
     let branch: String
     let options: [String]
     let username: String
@@ -269,12 +305,14 @@ extension CircleCiDeployJob {
             }
         }
         
-        var projectName: String {
-            switch self {
-            case .fourd: return "FourDMotion"
-            case .mi: return "MotionInsights"
-            case .oc: return "OrthoCor"
-            case .sp: return "SinglePlane"
+        func projectName(for project: CircleCiProject) throws -> String {
+            switch (project, self) {
+            case (.iOS4DM, .fourd): return "FourDMotion"
+            case (.iOS4DM, .mi): return "MotionInsights"
+            case (.iOS4DM, .oc): return "OrthoCor"
+            case (.iOS4DM, .sp): return "SinglePlane"
+            case (.android4DM, .oc): return "orthocor"
+            default: throw CircleCi.Error.invalidDeployCombination("\(self.rawValue) - \(project.rawValue)")
             }
         }
     }
@@ -295,7 +333,7 @@ extension CircleCiDeployJob {
     
     var slackResponseFields: [Slack.Response.Field] {
         return [
-            Slack.Response.Field(title: "Project", value: project, short: true),
+            Slack.Response.Field(title: "Project", value: project.rawValue, short: true),
             Slack.Response.Field(title: "Type", value: type, short: true),
             Slack.Response.Field(title: "User", value: username, short: true),
             Slack.Response.Field(title: "Branch", value: branch, short: true)
@@ -323,7 +361,7 @@ extension CircleCiDeployJob {
         return response
     }
     
-    static func parse(project: String,
+    static func parse(project: CircleCiProject,
                       parameters: [String],
                       options: [String],
                       username: String) throws -> Either<Slack.Response, CircleCiJob> {
@@ -335,7 +373,9 @@ extension CircleCiDeployJob {
         var options = options
         let branch: String
         let type: String
-        if project == "4dmotion-ios" {
+        
+        switch project {
+        case .iOS4DM, .android4DM:
             guard let appRaw = parameters[safe: 0], let app = App(rawValue: appRaw) else {
                 throw CircleCi.Error.unknownApp(parameters.joined(separator: " "))
             }
@@ -353,8 +393,8 @@ extension CircleCiDeployJob {
             
             type = deployType.rawValue
             options += ["branch:\(branch)"]
-            options += ["project_name:\(app.projectName)"]
-        } else {
+            options += ["project_name:\(try app.projectName(for: project))"]
+        case .unknown:
             // For other (not 4d projects)
             let types = [
                 "alpha": "dev",
@@ -408,12 +448,17 @@ extension CircleCi {
     static func slackRequest(_ from: Slack.Request,
                              _ headers: Headers?,
                              _ context: Context) -> EitherIO<Slack.Response, JobRequest> {
-        let projects: [String] = Environment.getArray(JobRequest.Config.projects)
         let spacePlaceholderString = "[CCI_SPACE_PLACEHOLDER_STRING]"
+
+        let projects: [String] = Environment.getArray(JobRequest.Config.projects)
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
             return leftIO(context)(Slack.Response.error(Error.noChannel(from.channelName)))
         }
-        let project = projects[index]
+
+        guard let project = CircleCiProject(rawValue: projects[index]) else {
+            return leftIO(context)(Slack.Response.error(Error.noProject(from.channelName)))
+        }
+
         var rawText = from.text
             .replacingOccurrences(of: "“", with: "\"")
             .replacingOccurrences(of: "”", with: "\"")
@@ -470,8 +515,8 @@ extension CircleCi {
                 do {
                     let projects: [String] = Environment.getArray(JobRequest.Config.projects)
                     let circleCiTokens = Environment.getArray(JobRequest.Config.tokens)
-                    guard let index = projects.index(of: jobRequest.job.project) else {
-                        throw Error.noProject(jobRequest.job.project)
+                    guard let index = projects.index(of: jobRequest.job.project.rawValue) else {
+                        throw Error.noProject(jobRequest.job.project.rawValue)
                     }
                     let circleciToken = circleCiTokens[index]
 
@@ -527,14 +572,19 @@ extension CircleCi {
                               _ headers: Headers?,
                               _ context: Context) -> EitherIO<Github.PayloadResponse, JobRequest> {
         let defaultResponse: EitherIO<Github.PayloadResponse, JobRequest> = leftIO(context)(Github.PayloadResponse())
-        guard let type = from.type(headers: headers), let repo = from.repository?.name else {
+        guard
+            let type = from.type(headers: headers),
+            let repo = from.repository?.name,
+            let project = CircleCiProject(rawValue: repo)
+        else {
             return defaultResponse
         }
+        
         switch type {
         case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base):
             do {
                 if Github.isMaster(branch: base) || Github.isRelease(branch: base) {
-                    return try CircleCiTestJob.parse(project: repo,
+                    return try CircleCiTestJob.parse(project: project,
                                                      parameters: [head.ref],
                                                      options: ["restrict_fixme_comments:true"],
                                                      username: "cci")
@@ -553,7 +603,7 @@ extension CircleCi {
                             guard let statuses = response.value, statuses.first?.state != .success else {
                                 return defaultResponse
                             }
-                            return try CircleCiTestJob.parse(project: repo,
+                            return try CircleCiTestJob.parse(project: project,
                                                              parameters: [head.ref],
                                                              options: [],
                                                              username: "cci")
