@@ -107,13 +107,13 @@ enum CircleCiProject: RawRepresentable, Equatable {
 // - accessed via Environment
 // - this identifies the project on Circle CI
 protocol CircleCiJob: TokenRequestable {
-    var name: String { get }
     var project: CircleCiProject { get }
     var branch: String { get }
+    var name: String { get }
+    var type: String { get }
     var options: [String] { get }
     var username: String { get }
     
-    var buildParameters: [String: String] { get }
     var slackResponseFields: [Slack.Response.Field] { get }
     
     static var helpResponse: Slack.Response { get }
@@ -123,37 +123,51 @@ protocol CircleCiJob: TokenRequestable {
 }
 
 extension CircleCiJob {
-    var buildParameters: [String: String] {
-        return [
-            "CCI_OPTIONS": options.joined(separator: " "),
-            "CIRCLE_JOB": name
-        ]
-    }
     var urlEncodedBranch: String {
         return branch.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? branch
     }
+}
+
+private struct CircleCiJobRequestBody: Encodable {
+    struct Parameters: Encodable {
+        let job: String
+        let deploy_type: String
+        let options: String
+    }
+    
+    let branch: String
+    let parameters: Parameters
 }
 
 extension CircleCiJob {
     var method: HTTPMethod? { return .POST }
     
     var body: Data? {
-        return try? JSONEncoder().encode(["build_parameters": buildParameters])
-    }
-    
-    func url(token: String) -> URL? {
-        return URL(
-            string: "https://circleci.com/"
-            + CircleCi.path(project.rawValue, urlEncodedBranch)
-            + "?circle-token=\(token)"
+        try? JSONEncoder().encode(
+            CircleCiJobRequestBody(
+                branch: branch,
+                parameters: .init(
+                    job: name,
+                    deploy_type: type,
+                    options: options.joined(separator: " ")
+                )
+            )
         )
     }
     
+    func url(token: String) -> URL? {
+        guard
+            let vcs = Environment.get(CircleCi.JobRequest.Config.vcs),
+            let company = Environment.get(CircleCi.JobRequest.Config.company)
+        else {
+            return nil
+        }
+                
+        return URL(string: "https://circleci.com/api/v2/project/\(vcs)/\(company)/\(project.rawValue)/pipeline")
+    }
+    
     func headers(token: String) -> [(String, String)] {
-        return [
-            ("Accept", "application/json"),
-            ("Content-Type", "application/json")
-        ]
+        [("Content-Type", "application/json"), ("Circle-Token", token)]
     }
 }
 
@@ -177,9 +191,10 @@ private extension CircleCiJobKind {
 }
 
 struct CircleCiTestJob: CircleCiJob, Equatable {
-    let name: String = CircleCiJobKind.test.rawValue
     let project: CircleCiProject
     let branch: String
+    let name: String = CircleCiJobKind.test.rawValue
+    let type: String = ""
     let options: [String]
     let username: String
 }
@@ -227,9 +242,10 @@ extension CircleCiTestJob {
 }
 
 struct CircleCiBuildsimJob: CircleCiJob, Equatable {
-    let name: String = CircleCiJobKind.buildsim.rawValue
     let project: CircleCiProject
     let branch: String
+    let name: String = CircleCiJobKind.buildsim.rawValue
+    let type: String = ""
     let options: [String]
     let username: String
 }
@@ -276,12 +292,12 @@ extension CircleCiBuildsimJob {
 }
 
 struct CircleCiDeployJob: CircleCiJob, Equatable {
-    let name: String = CircleCiJobKind.deploy.rawValue
     let project: CircleCiProject
     let branch: String
+    let name: String = CircleCiJobKind.deploy.rawValue
+    let type: String
     let options: [String]
     let username: String
-    let type: String
 }
 
 extension CircleCiDeployJob {
@@ -321,14 +337,6 @@ extension CircleCiDeployJob {
         case alpha
         case beta
         case appStore = "app_store"
-    }
-
-    var buildParameters: [String: String] {
-        return [
-            "CCI_DEPLOY_TYPE": type,
-            "CCI_OPTIONS": options.joined(separator: " "),
-            "CIRCLE_JOB": name
-        ]
     }
     
     var slackResponseFields: [Slack.Response.Field] {
@@ -413,20 +421,13 @@ extension CircleCiDeployJob {
         
         return .right(CircleCiDeployJob(project: project,
                                         branch: branch,
+                                        type: type,
                                         options: options,
-                                        username: username,
-                                        type: type))
+                                        username: username))
     }
 }
 
 extension CircleCi {
-    
-    static var path: (String, String) -> String = { project, branch in
-        let vcs = Environment.get(JobRequest.Config.vcs)!
-        let company = Environment.get(JobRequest.Config.company)!
-        return "/api/v1.1/project/\(vcs)/\(company)/\(project)/tree/\(branch)"
-    }
-    
     static var helpResponse: Slack.Response {
         let text = "Help:\n- `/cci command [help]`\n" +
             "Current command\n" +
