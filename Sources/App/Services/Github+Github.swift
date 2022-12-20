@@ -25,8 +25,7 @@ public extension Github {
     static func isDev(branch: Branch) -> Bool { return branch.ref == "dev" }
     static func isMaster(branch: Branch) -> Bool { return ["master", "fourd", "mi", "oc", "sp"].contains(branch.ref) }
     static func isRelease(branch: Branch) -> Bool { return ["release", "release_oc", "release_sp"].contains(branch.ref) }
-    
-    static func isMain(branch: Branch) -> Bool { return isDev(branch: branch) || isMaster(branch: branch) || isRelease(branch: branch) }
+
 }
 
 public extension Github {
@@ -60,10 +59,9 @@ public extension Github {
     
     enum RequestType: Equatable {
         case branchCreated(title: String)
-        case branchPushed(Branch)
         case pullRequestOpened(title: String, url: String, body: String)
         case pullRequestEdited(title: String, url: String, body: String)
-        case pullRequestClosed(title: String, head: Branch, base: Branch, merged: Bool)
+        case pullRequestClosed(title: String)
         case pullRequestLabeled(label: Label, head: Branch, base: Branch)
         case changesRequested(url: String)
         case failedStatus(sha: String)
@@ -72,7 +70,7 @@ public extension Github {
         
         var title: String? {
             switch self {
-            case .branchCreated(let t), .pullRequestClosed(let t, _, _, _), .pullRequestOpened(let t, _, _):
+            case .branchCreated(let t), .pullRequestClosed(let t), .pullRequestOpened(let t, _, _):
                 return t
             default:
                 return nil
@@ -113,40 +111,33 @@ extension Github.Payload: RequestModel {
 extension Github.Payload {
     func type(headers: Headers?) -> Github.RequestType? {
         let event = headers?.get(Github.eventHeaderName).flatMap(Github.Event.init)
-        switch (event,
-                action,
-                label,
-                review?.state,
+        switch (event, action,
+                label, review?.state,
                 pullRequest,
-                ref,
-                refType,
-                commit?.sha,
-                state,
-                repository) {
+                ref, refType,
+                commit?.sha, state) {
             
-        case let (.some(.pullRequest), .some(.closed), _, _, .some(pr), _, _, _, _, _):
-            return .pullRequestClosed(title: pr.title, head: pr.head, base: pr.base, merged: pr.merged)
-        case let (.some(.pullRequest), .some(.opened), _, _, .some(pr), _, _, _, _, _):
+        case let (.some(.pullRequest), .some(.closed), _, _, .some(pr), _, _, _, _):
+            return .pullRequestClosed(title: pr.title)
+        case let (.some(.pullRequest), .some(.opened), _, _, .some(pr), _, _, _, _):
             return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "")
-        case let (.some(.pullRequest), .some(.reopened), _, _, .some(pr), _, _, _, _, _):
+        case let (.some(.pullRequest), .some(.reopened), _, _, .some(pr), _, _, _, _):
             return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "")
-        case let (.some(.pullRequest), .some(.edited), _, _, .some(pr), _, _, _, _, _):
+        case let (.some(.pullRequest), .some(.edited), _, _, .some(pr), _, _, _, _):
             return .pullRequestEdited(title: pr.title, url: pr.url, body: pr.body ?? "")
             
-        case let (.some(.create), _, _, _, _, .some(title), .some(.branch), _, _, _):
+        case let (.some(.create), _, _, _, _, .some(title), .some(.branch), _, _):
             return .branchCreated(title: title)
-        case let (.some(.push), _, _, _, _, .some(ref), _, _, _, .some(repository)):
-            return .branchPushed(.init(ref: ref, sha: "", repo: repository))
             
-        case let (.some(.pullRequest), .some(.labeled), .some(label), _, .some(pr), _, _, _, _, _):
+        case let (.some(.pullRequest), .some(.labeled), .some(label), _, .some(pr), _, _, _, _):
             return .pullRequestLabeled(label: label, head: pr.head, base: pr.base)
             
-        case let (.some(.pullRequestReview), .some(.submitted), _, .some(.changesRequested), .some(pr), _, _, _, _, _):
+        case let (.some(.pullRequestReview), .some(.submitted), _, .some(.changesRequested), .some(pr), _, _, _, _):
             return .changesRequested(url: pr.url)
             
-        case let (.some(.status), _, _, _, _, _, _, .some(sha), .some(.error), _):
+        case let (.some(.status), _, _, _, _, _, _, .some(sha), .some(.error)):
             return .failedStatus(sha: sha)
-        case let (.some(.status), _, _, _, _, _, _, .some(sha), .some(.failure), _):
+        case let (.some(.status), _, _, _, _, _, _, .some(sha), .some(.failure)):
             return .failedStatus(sha: sha)
             
             //        case (_, _, _, _, _, _, _, _, _):
