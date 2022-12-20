@@ -69,7 +69,10 @@ class GithubGithubTests: XCTestCase {
         let closedRequest = Github.Payload(action: Github.Action.closed,
                                            pullRequest: pullRequest)
         let closedType = closedRequest.type(headers: pullRequestHeaders)
-        XCTAssertEqual(closedType, .pullRequestClosed(title: title))
+        XCTAssertEqual(closedType, .pullRequestClosed(title: title,
+                                                      head: featureBranch,
+                                                      base: Github.Branch.template(),
+                                                      merged: false))
         
         let labeledRequest = Github.Payload(action: .labeled,
                                             pullRequest: pullRequest,

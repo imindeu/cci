@@ -54,19 +54,22 @@ public enum Github {
         public let body: String?
         public let head: Branch
         public let base: Branch
+        public let merged: Bool
 
         public init(url: String,
                     id: Int,
                     title: String,
                     body: String?,
                     head: Branch,
-                    base: Branch) {
+                    base: Branch,
+                    merged: Bool = false) {
             self.url = url
             self.id = id
             self.title = title
             self.body = body
             self.head = head
             self.base = base
+            self.merged = merged
         }
     }
     
@@ -216,6 +219,7 @@ public enum Github {
     
     public enum Event: String, Equatable, Codable {
         case create
+        case push
         case pullRequest = "pull_request"
         case status
         case pullRequestReview = "pull_request_review"
