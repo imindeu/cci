@@ -85,7 +85,7 @@ class RouterGithubToCircleCiTests: XCTestCase {
         XCTAssertEqual(Environment.env["circleci.com"], "circleci.com")
         XCTAssertEqual(response,
                        Github.PayloadResponse(value: "Job \'test\' has started at <buildURL|#10>. "
-                        + "(project: projectX, branch: dev)"))
+                        + "(project: unknown(\"projectX\"), branch: dev)"))
     }
 
     func testEmptyRun() throws {

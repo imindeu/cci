@@ -128,8 +128,8 @@ extension CircleCiJob {
     }
 }
 
-private struct CircleCiJobRequestBody: Encodable {
-    struct Parameters: Encodable {
+struct CircleCiJobRequestBody: Codable, Equatable {
+    struct Parameters: Codable, Equatable {
         let job: String
         let deploy_type: String
         let options: String
