@@ -143,7 +143,7 @@ extension CircleCiJob {
     var method: HTTPMethod? { return .POST }
     
     var body: Data? {
-        try? JSONEncoder().encode(
+        return try? JSONEncoder().encode(
             CircleCiJobRequestBody(
                 branch: branch,
                 parameters: .init(
@@ -167,7 +167,7 @@ extension CircleCiJob {
     }
     
     func headers(token: String) -> [(String, String)] {
-        [("Content-Type", "application/json"), ("Circle-Token", token)]
+        return [("Content-Type", "application/json"), ("Circle-Token", token)]
     }
 }
 
