@@ -26,7 +26,7 @@ class RouterSlackToCircleCiTests: XCTestCase {
         }
         let response = CircleCi.BuildResponse(response: CircleCi.Response(buildURL: "buildURL",
                                                                           buildNum: 10),
-                                             job: CircleCiTestJob(project: project,
+                                              job: CircleCiTestJob(project: .unknown(project),
                                                                   branch: branch,
                                                                   options: options,
                                                                   username: username))
