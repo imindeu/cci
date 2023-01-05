@@ -76,6 +76,14 @@ public enum Service {
         }
 
         return api(host, url.port)(context, httpRequest)
+            .map { response in
+                if isDebugMode {
+                    print("\n\n ==================== ")
+                    print(" INCOMING RESPONSE\n")
+                    print("response:\n\(response)\n")
+                }
+                return response
+            }
             .decode(responseType)
             .map { Tokened(token, $0) }
     }

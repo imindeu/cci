@@ -10,10 +10,10 @@ import APIModels
 
 // MARK: - Custom types
 
-typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCi.JobRequest, Environment>
+typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCi.JobTriggerRequest, Environment>
 typealias GithubToYoutrack = APIConnect<Github.Payload, Youtrack.Request, Environment>
 typealias GithubToGithub = APIConnect<Github.Payload, Github.APIRequest, Environment>
-typealias GithubToCircleCi = APIConnect<Github.Payload, CircleCi.JobRequest, Environment>
+typealias GithubToCircleCi = APIConnect<Github.Payload, CircleCi.JobTriggerRequest, Environment>
 
 // MARK: - Custom inits
 
@@ -60,7 +60,7 @@ extension APIConnect where From == Slack.Request {
 // MARK: - Custom runs
 
 // MARK: Slack.Request -> CircleCi.JobRequest
-extension APIConnect where From == Slack.Request, To == CircleCi.JobRequest {
+extension APIConnect where From == Slack.Request, To == CircleCi.JobTriggerRequest {
     static func run(_ from: Slack.Request, _ context: Context) -> IO<Slack.Response?> {
         if Environment.isDebugMode() {
             let contextString = String(describing: context).replacingOccurrences(of: "&", with: "&\n")
@@ -94,7 +94,7 @@ extension APIConnect where From == Github.Payload, To == Github.APIRequest {
 }
 
 // MARK: Github.Payload -> CircleCi.JobRequest
-extension APIConnect where From == Github.Payload, To == CircleCi.JobRequest {
+extension APIConnect where From == Github.Payload, To == CircleCi.JobTriggerRequest {
     static func run(_ from: Github.Payload,
                     _ context: Context,
                     _ body: String?,

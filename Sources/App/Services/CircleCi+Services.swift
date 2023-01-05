@@ -53,8 +53,8 @@ extension CircleCi {
         }
     }
 
-    struct JobRequest: RequestModel {
-        typealias ResponseModel = BuildResponse
+    struct JobTriggerRequest: RequestModel {
+        typealias ResponseModel = JobTriggerResponse
         
         enum Config: String, Configuration {
             case tokens = "circleCiTokens"
@@ -63,12 +63,25 @@ extension CircleCi {
             case projects = "circleCiProjects"
         }
         
-        let job: CircleCiJob
+        let request: CircleCiJobTriggerRequest
     }
     
-    struct BuildResponse {
-        let response: Response
-        let job: CircleCiJob
+    struct JobTriggerResponse {
+        let responseObject: CircleCi.JobTrigger.Response
+        let request: CircleCiJobTriggerRequest
+    }
+}
+
+extension CircleCi.JobTrigger.Response {
+    func url(project: CircleCiProject) -> URL? {
+        guard
+            let vcs = Environment.get(CircleCi.JobTriggerRequest.Config.vcs),
+            let company = Environment.get(CircleCi.JobTriggerRequest.Config.company)
+        else {
+            return nil
+        }
+
+        return URL(string: "https://app.circleci.com/pipelines/\(vcs)/\(company)/\(project.rawValue)/908")
     }
 }
 
@@ -106,8 +119,40 @@ enum CircleCiProject: RawRepresentable, Equatable {
 // - matching the prefix of the slack command's channel.
 // - accessed via Environment
 // - this identifies the project on Circle CI
-protocol CircleCiJob: TokenRequestable {
+protocol CircleCiRequest: TokenRequestable {
     var project: CircleCiProject { get }
+    var method: HTTPMethod? { get }
+    var body: Data? { get }
+    
+    func url(token: String) -> URL?
+    func headers(token: String) -> [(String, String)]
+}
+
+extension CircleCiRequest {
+    func headers(token: String) -> [(String, String)] {
+        return [("Content-Type", "application/json"), ("Circle-Token", token)]
+    }
+}
+
+struct CircleCiJobInfoRequest: CircleCiRequest {
+    let project: CircleCiProject
+    let jobNumber: Int
+    let method: HTTPMethod? = .GET
+    let body: Data? = nil
+    
+    func url(token: String) -> URL? {
+        guard
+            let vcs = Environment.get(CircleCi.JobTriggerRequest.Config.vcs),
+            let company = Environment.get(CircleCi.JobTriggerRequest.Config.company)
+        else {
+            return nil
+        }
+
+        return URL(string: "https://circleci.com/api/v2/project/\(vcs)/\(company)/\(project.rawValue)/job/\(jobNumber)")
+    }
+}
+
+protocol CircleCiJobTriggerRequest: CircleCiRequest {
     var branch: String { get }
     var name: String { get }
     var type: String { get }
@@ -115,20 +160,14 @@ protocol CircleCiJob: TokenRequestable {
     var username: String { get }
     
     var slackResponseFields: [Slack.Response.Field] { get }
+
+    static func parse(project: CircleCiProject, parameters: [String], options: [String], username: String) throws
+        -> Either<Slack.Response, CircleCiJobTriggerRequest>
     
     static var helpResponse: Slack.Response { get }
-    
-    static func parse(project: CircleCiProject, parameters: [String], options: [String], username: String) throws
-        -> Either<Slack.Response, CircleCiJob>
 }
 
-extension CircleCiJob {
-    var urlEncodedBranch: String {
-        return branch.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? branch
-    }
-}
-
-struct CircleCiJobRequestBody: Codable, Equatable {
+struct CircleCiJobTriggerRequestBody: Codable, Equatable {
     struct Parameters: Codable, Equatable {
         let job: String
         let deploy_type: String
@@ -139,12 +178,16 @@ struct CircleCiJobRequestBody: Codable, Equatable {
     let parameters: Parameters
 }
 
-extension CircleCiJob {
+extension CircleCiJobTriggerRequest {
     var method: HTTPMethod? { return .POST }
+    
+    var urlEncodedBranch: String {
+        return branch.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? branch
+    }
     
     var body: Data? {
         return try? JSONEncoder().encode(
-            CircleCiJobRequestBody(
+            CircleCiJobTriggerRequestBody(
                 branch: branch,
                 parameters: .init(
                     job: name,
@@ -157,17 +200,13 @@ extension CircleCiJob {
     
     func url(token: String) -> URL? {
         guard
-            let vcs = Environment.get(CircleCi.JobRequest.Config.vcs),
-            let company = Environment.get(CircleCi.JobRequest.Config.company)
+            let vcs = Environment.get(CircleCi.JobTriggerRequest.Config.vcs),
+            let company = Environment.get(CircleCi.JobTriggerRequest.Config.company)
         else {
             return nil
         }
                 
         return URL(string: "https://circleci.com/api/v2/project/\(vcs)/\(company)/\(project.rawValue)/pipeline")
-    }
-    
-    func headers(token: String) -> [(String, String)] {
-        return [("Content-Type", "application/json"), ("Circle-Token", token)]
     }
 }
 
@@ -178,7 +217,7 @@ enum CircleCiJobKind: String, CaseIterable {
 }
 
 private extension CircleCiJobKind {
-    var type: CircleCiJob.Type {
+    var type: CircleCiJobTriggerRequest.Type {
         switch self {
         case .deploy:
             return CircleCiDeployJob.self
@@ -190,7 +229,7 @@ private extension CircleCiJobKind {
     }
 }
 
-struct CircleCiTestJob: CircleCiJob, Equatable {
+struct CircleCiTestJob: CircleCiJobTriggerRequest, Equatable {
     let project: CircleCiProject
     let branch: String
     let name: String = CircleCiJobKind.test.rawValue
@@ -227,7 +266,7 @@ extension CircleCiTestJob {
     static func parse(project: CircleCiProject,
                       parameters: [String],
                       options: [String],
-                      username: String) throws -> Either<Slack.Response, CircleCiJob> {
+                      username: String) throws -> Either<Slack.Response, CircleCiJobTriggerRequest> {
         
         guard !parameters.isEmpty else {
             throw CircleCi.Error.noBranch(parameters.joined(separator: " "))
@@ -241,7 +280,7 @@ extension CircleCiTestJob {
     }
 }
 
-struct CircleCiBuildsimJob: CircleCiJob, Equatable {
+struct CircleCiBuildsimJob: CircleCiJobTriggerRequest, Equatable {
     let project: CircleCiProject
     let branch: String
     let name: String = CircleCiJobKind.buildsim.rawValue
@@ -277,7 +316,7 @@ extension CircleCiBuildsimJob {
     static func parse(project: CircleCiProject,
                       parameters: [String],
                       options: [String],
-                      username: String) throws -> Either<Slack.Response, CircleCiJob> {
+                      username: String) throws -> Either<Slack.Response, CircleCiJobTriggerRequest> {
         
         guard !parameters.isEmpty else {
             throw CircleCi.Error.noBranch(parameters.joined(separator: " "))
@@ -291,7 +330,7 @@ extension CircleCiBuildsimJob {
     }
 }
 
-struct CircleCiDeployJob: CircleCiJob, Equatable {
+struct CircleCiDeployJob: CircleCiJobTriggerRequest, Equatable {
     let project: CircleCiProject
     let branch: String
     let name: String = CircleCiJobKind.deploy.rawValue
@@ -372,7 +411,7 @@ extension CircleCiDeployJob {
     static func parse(project: CircleCiProject,
                       parameters: [String],
                       options: [String],
-                      username: String) throws -> Either<Slack.Response, CircleCiJob> {
+                      username: String) throws -> Either<Slack.Response, CircleCiJobTriggerRequest> {
         
         if parameters.count == 1 && parameters[0] == "help" {
             return .left(CircleCiDeployJob.helpResponse)
@@ -448,10 +487,10 @@ extension CircleCi {
     // MARK: Slack
     static func slackRequest(_ from: Slack.Request,
                              _ headers: Headers?,
-                             _ context: Context) -> EitherIO<Slack.Response, JobRequest> {
+                             _ context: Context) -> EitherIO<Slack.Response, JobTriggerRequest> {
         let spacePlaceholderString = "[CCI_SPACE_PLACEHOLDER_STRING]"
 
-        let projects: [String] = Environment.getArray(JobRequest.Config.projects)
+        let projects: [String] = Environment.getArray(JobTriggerRequest.Config.projects)
         guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
             return leftIO(context)(Slack.Response.error(Error.noChannel(from.channelName)))
         }
@@ -496,7 +535,7 @@ extension CircleCi {
                            parameters: parameters,
                            options: options,
                            username: from.userName)
-                    .map { JobRequest(job: $0) }
+                    .map { JobTriggerRequest(request: $0) }
                 return pure(request, context)
             } catch {
                 return leftIO(context)(Slack.Response.error(Error.underlying(error),
@@ -510,23 +549,24 @@ extension CircleCi {
     }
     
     static func apiWithSlack(_ context: Context)
-        -> (JobRequest)
-        -> EitherIO<Slack.Response, BuildResponse> {
-            return { jobRequest -> EitherIO<Slack.Response, BuildResponse> in
+        -> (JobTriggerRequest)
+        -> EitherIO<Slack.Response, JobTriggerResponse> {
+            return { jobRequest -> EitherIO<Slack.Response, JobTriggerResponse> in
                 do {
-                    let projects: [String] = Environment.getArray(JobRequest.Config.projects)
-                    let circleCiTokens = Environment.getArray(JobRequest.Config.tokens)
-                    guard let index = projects.index(of: jobRequest.job.project.rawValue) else {
-                        throw Error.noProject(jobRequest.job.project.rawValue)
+                    let projects: [String] = Environment.getArray(JobTriggerRequest.Config.projects)
+                    let circleCiTokens = Environment.getArray(JobTriggerRequest.Config.tokens)
+                    guard let index = projects.index(of: jobRequest.request.project.rawValue) else {
+                        throw Error.noProject(jobRequest.request.project.rawValue)
                     }
                     let circleciToken = circleCiTokens[index]
 
-                    return try Service.fetch(jobRequest.job, Response.self, circleciToken, context, Environment.api, isDebugMode: Environment.isDebugMode())
-                        .map { response in
-                            guard let value = response.value else {
+                    return try Service.fetch(jobRequest.request, JobTrigger.Response.self, circleciToken, context, Environment.api, isDebugMode: Environment.isDebugMode())
+                        .map { jobTriggerResponse in
+                            guard let jobTriggerResponseObject = jobTriggerResponse.value else {
                                 throw Error.decode
                             }
-                            return .right(BuildResponse(response: value, job: jobRequest.job))
+                            
+                            return .right(JobTriggerResponse(responseObject: jobTriggerResponseObject, request: jobRequest.request))
                         }
                         .catchMap { .left(
                             Slack.Response.error(Error.underlying($0),
@@ -540,20 +580,17 @@ extension CircleCi {
             }
     }
     
-    static func responseToSlack(_ from: BuildResponse) -> Slack.Response {
-        if Environment.isDebugMode() {
-            print("\n\n ==================== ")
-            print(" RESPONSE TO SLACK\n")
-            print("\(from)\n")
+    static func responseToSlack(_ from: JobTriggerResponse) -> Slack.Response {
+        guard let buildNum = from.responseObject.number else {
+            return Slack.Response.error(Error.badResponse(from.responseObject.message))
         }
-        guard let buildURL = from.response.buildURL, let buildNum = from.response.buildNum else {
-            return Slack.Response.error(Error.badResponse(from.response.message))
-        }
-        let job = from.job
-        let fallback = "Job '\(job.name)' has started at <\(buildURL)|#\(buildNum)>. " +
-        "(project: \(from.job.project), branch: \(job.branch))"
-        var fields = job.slackResponseFields
-        job.options.forEach { option in
+        
+        let request = from.request
+        let buildURL = from.responseObject.url(project: request.project)?.absoluteString ?? "N/A"
+        let fallback = "Job '\(request.name)' has started at <\(buildURL)|#\(buildNum)>. " +
+        "(project: \(request.project), branch: \(request.branch))"
+        var fields = request.slackResponseFields
+        request.options.forEach { option in
             let array = option.split(separator: ":").map(String.init)
             if array.count == 2 {
                 fields.append(Slack.Response.Field(title: array[0], value: array[1], short: true))
@@ -561,18 +598,26 @@ extension CircleCi {
         }
         let attachment = Slack.Response.Attachment(
             fallback: fallback,
-            text: "Job '\(job.name)' has started at <\(buildURL)|#\(buildNum)>.",
+            text: "Job '\(request.name)' has started at <\(buildURL)|#\(buildNum)>.",
             color: "#764FA5",
             mrkdwnIn: ["text", "fields"],
             fields: fields)
+        
+        if Environment.isDebugMode() {
+            print("\n\n ==================== ")
+            print(" RESPONSE TO SLACK\n")
+            print("\(from)\n")
+            print("\(attachment)\n")
+        }
+        
         return Slack.Response(responseType: .inChannel, text: nil, attachments: [attachment], mrkdwn: true)
     }
 
     // MARK: Github
     static func githubRequest(_ from: Github.Payload,
                               _ headers: Headers?,
-                              _ context: Context) -> EitherIO<Github.PayloadResponse, JobRequest> {
-        let defaultResponse: EitherIO<Github.PayloadResponse, JobRequest> = leftIO(context)(Github.PayloadResponse())
+                              _ context: Context) -> EitherIO<Github.PayloadResponse, JobTriggerRequest> {
+        let defaultResponse: EitherIO<Github.PayloadResponse, JobTriggerRequest> = leftIO(context)(Github.PayloadResponse())
         guard
             let type = from.type(headers: headers),
             let repo = from.repository?.name,
@@ -589,7 +634,7 @@ extension CircleCi {
                                                      parameters: [head.ref],
                                                      options: ["restrict_fixme_comments:true"],
                                                      username: "cci")
-                        .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
+                        .either({ _ in return defaultResponse }, { rightIO(context)(JobTriggerRequest(request: $0)) })
                 } else {
                     guard let installationId = from.installation?.id else {
                         return defaultResponse
@@ -608,7 +653,7 @@ extension CircleCi {
                                                              parameters: [head.ref],
                                                              options: [],
                                                              username: "cci")
-                                .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
+                                .either({ _ in return defaultResponse }, { rightIO(context)(JobTriggerRequest(request: $0)) })
                         }
                 }
             } catch {
@@ -622,7 +667,7 @@ extension CircleCi {
                                                  parameters: [base.ref],
                                                  options: options,
                                                  username: "cci")
-                .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
+                .either({ _ in return defaultResponse }, { rightIO(context)(JobTriggerRequest(request: $0)) })
             } catch {
                 return defaultResponse
             }
@@ -634,7 +679,7 @@ extension CircleCi {
                                                  parameters: [branch.ref],
                                                  options: options,
                                                  username: "cci")
-                .either({ _ in return defaultResponse }, { rightIO(context)(JobRequest(job: $0)) })
+                .either({ _ in return defaultResponse }, { rightIO(context)(JobTriggerRequest(request: $0)) })
             } catch {
                 return defaultResponse
             }

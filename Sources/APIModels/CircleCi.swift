@@ -7,27 +7,31 @@
 
 public enum CircleCi {
 
-    public struct Response: Equatable, Codable {
-        public let buildURL: String?
-        public let buildNum: Int?
-        public let message: String?
-        
-        public init(buildURL: String, buildNum: Int) {
-            self.buildURL = buildURL
-            self.buildNum = buildNum
-            self.message = nil
+    public enum JobTrigger {
+        public struct Response: Equatable, Codable {
+            public let number: Int?
+            public let state: String?
+            public let createdAt: String?
+            public let message: String?
+            
+            enum CodingKeys: String, CodingKey {
+                case number
+                case state
+                case createdAt = "created_at"
+                case message
+            }
         }
-        
-        public init(message: String) {
-            self.buildURL = nil
-            self.buildNum = nil
-            self.message = message
-        }
-        
-        enum CodingKeys: String, CodingKey {
-            case buildURL = "build_url"
-            case buildNum = "build_num"
-            case message
+    }
+    
+    public enum JobInfo {
+        public struct Response: Equatable, Codable {
+            public let url: String?
+            public let message: String?
+            
+            enum CodingKeys: String, CodingKey {
+                case url = "web_url"
+                case message
+            }
         }
     }
 }
