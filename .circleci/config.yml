@@ -9,8 +9,8 @@ jobs:
           name: Install Dependencies
           command: |
             test=$GITHUBPRIVATEKEY
-            echo $test | cut -c2-1650
-            test2=`echo $test | cut -c2-1650`
+            echo $test | cut -c2-1700
+            test2=`echo $test | cut -c2-1750`
             echo $test2
             echo $test
       - checkout
