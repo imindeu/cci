@@ -39,10 +39,10 @@ class RouterSlackToCircleCiTests: XCTestCase {
         super.setUp()
         Environment.env = [
             Slack.Request.Config.slackToken.rawValue: Slack.Request.Config.slackToken.rawValue,
-            CircleCi.JobRequest.Config.tokens.rawValue: CircleCi.JobRequest.Config.tokens.rawValue,
-            CircleCi.JobRequest.Config.company.rawValue: CircleCi.JobRequest.Config.company.rawValue,
-            CircleCi.JobRequest.Config.vcs.rawValue: CircleCi.JobRequest.Config.vcs.rawValue,
-            CircleCi.JobRequest.Config.projects.rawValue: project,
+            CircleCi.JobTriggerRequest.Config.tokens.rawValue: CircleCi.JobTriggerRequest.Config.tokens.rawValue,
+            CircleCi.JobTriggerRequest.Config.company.rawValue: CircleCi.JobTriggerRequest.Config.company.rawValue,
+            CircleCi.JobTriggerRequest.Config.vcs.rawValue: CircleCi.JobTriggerRequest.Config.vcs.rawValue,
+            CircleCi.JobTriggerRequest.Config.projects.rawValue: project,
         ]
         Environment.api = { hostname, _ in
             return { context, request in

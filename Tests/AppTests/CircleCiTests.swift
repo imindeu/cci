@@ -26,10 +26,10 @@ class CircleCiTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Environment.env = [
-            CircleCi.JobRequest.Config.tokens.rawValue: CircleCi.JobRequest.Config.tokens.rawValue,
-            CircleCi.JobRequest.Config.company.rawValue: CircleCi.JobRequest.Config.company.rawValue,
-            CircleCi.JobRequest.Config.vcs.rawValue: CircleCi.JobRequest.Config.vcs.rawValue,
-            CircleCi.JobRequest.Config.projects.rawValue: project,
+            CircleCi.JobTriggerRequest.Config.tokens.rawValue: CircleCi.JobTriggerRequest.Config.tokens.rawValue,
+            CircleCi.JobTriggerRequest.Config.company.rawValue: CircleCi.JobTriggerRequest.Config.company.rawValue,
+            CircleCi.JobTriggerRequest.Config.vcs.rawValue: CircleCi.JobTriggerRequest.Config.vcs.rawValue,
+            CircleCi.JobTriggerRequest.Config.projects.rawValue: project,
             Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
             Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
         ]
@@ -251,7 +251,7 @@ class CircleCiTests: XCTestCase {
                                   branch: branch,
                                   options: options,
                                   username: username)
-        let request: CircleCi.JobRequest = CircleCi.JobRequest(job: job)
+        let request: CircleCi.JobTriggerRequest = CircleCi.JobTriggerRequest(job: job)
         let expected = CircleCi.Response(buildURL: "buildURL",
                                          buildNum: 10)
         let response = try api(request).wait().right
@@ -275,7 +275,7 @@ class CircleCiTests: XCTestCase {
                                   branch: branch,
                                   options: options,
                                   username: username)
-        let request: CircleCi.JobRequest = CircleCi.JobRequest(job: job)
+        let request: CircleCi.JobTriggerRequest = CircleCi.JobTriggerRequest(job: job)
         let expected = CircleCi.Response(message: "x")
         let response = try api(request).wait().right
         XCTAssertEqual(response?.job as? CircleCiTestJob, job)

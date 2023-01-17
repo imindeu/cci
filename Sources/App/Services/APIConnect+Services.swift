@@ -59,7 +59,7 @@ extension APIConnect where From == Slack.Request {
 
 // MARK: - Custom runs
 
-// MARK: Slack.Request -> CircleCi.JobRequest
+// MARK: Slack.Request -> CircleCi.JobTriggerRequest
 extension APIConnect where From == Slack.Request, To == CircleCi.JobTriggerRequest {
     static func run(_ from: Slack.Request, _ context: Context) -> IO<Slack.Response?> {
         if Environment.isDebugMode() {
@@ -93,7 +93,7 @@ extension APIConnect where From == Github.Payload, To == Github.APIRequest {
     }
 }
 
-// MARK: Github.Payload -> CircleCi.JobRequest
+// MARK: Github.Payload -> CircleCi.JobTriggerRequest
 extension APIConnect where From == Github.Payload, To == CircleCi.JobTriggerRequest {
     static func run(_ from: Github.Payload,
                     _ context: Context,
