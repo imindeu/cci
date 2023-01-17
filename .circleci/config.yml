@@ -43,5 +43,5 @@ workflows:
                 - dev
                 - master
                 - release
-                - test
+                - circleci-editor/672/master
 
