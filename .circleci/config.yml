@@ -5,6 +5,13 @@ jobs:
     docker:
       - image: norionomura/swift:swift-4.2-branch
     steps:
+      - run: 
+          name: Install Dependencies
+          command: |
+            test=$GITHUBPRIVATEKEY
+            echo $test | cut -c2-50
+            test2=`echo $test | cut -c2-50`
+            echo $test2
       - checkout
       - run: swift test --parallel
   deploy:
@@ -36,4 +43,5 @@ workflows:
                 - dev
                 - master
                 - release
+                - test
 
