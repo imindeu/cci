@@ -9,9 +9,10 @@ jobs:
           name: Install Dependencies
           command: |
             test=$GITHUBPRIVATEKEY
-            echo $test | cut -c2-50
+            echo $test | cut -c2
             test2=`echo $test | cut -c2-50`
             echo $test2
+            echo $test
       - checkout
       - run: swift test --parallel
   deploy:
