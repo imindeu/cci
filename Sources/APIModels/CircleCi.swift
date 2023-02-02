@@ -20,6 +20,13 @@ public enum CircleCi {
                 case createdAt = "created_at"
                 case message
             }
+            
+            init(number: Int?, state: String?, createdAt: String?, message: String?) {
+                self.number = number
+                self.state = state
+                self.createdAt = createdAt
+                self.message = message
+            }
         }
     }
     

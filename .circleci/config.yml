@@ -1,4 +1,15 @@
-version: 2
+version: 2.1
+
+parameters:
+  job:
+    type: string
+    default: "test"
+  deploy_type:
+    type: string
+    default: ""
+  options:
+    type: string
+    default: ""
 
 jobs:
   test:
@@ -27,13 +38,15 @@ jobs:
 
 workflows:
   version: 2
-  tests:
-    jobs:
-      - test:
-          filters:
-            branches:
-              only:
-                - dev
-                - master
-                - release
 
+  test:
+    when:
+      equal: [ test, << pipeline.parameters.job >> ]
+    jobs:
+      - test
+
+  deploy:
+    when:
+      equal: [ deploy, << pipeline.parameters.job >> ]
+    jobs:
+      - deploy

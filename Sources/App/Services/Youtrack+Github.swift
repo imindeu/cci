@@ -39,15 +39,21 @@ extension Youtrack {
     
     struct Request: Equatable, Codable {
         enum Command: String, Equatable, Codable {
-            case inProgress = "4DM iOS state In Progress"
-            case inReview = "4DM iOS state In Review"
-            case waitingForDeploy = "4DM iOS state Waiting for deploy"
+            case iOS_inProgress = "4DM iOS state In Progress"
+            case iOS_inReview = "4DM iOS state In Review"
+            case iOS_waitingForDeploy = "4DM iOS state Waiting for deploy"
+            case android_inProgress = "4DM Android state In Progress"
+            case android_inReview = "4DM Android state In Review"
+            case android_waitingForDeploy = "4DM Android state Waiting for deploy"
+//            case inProgress = "4DM state In Progress"
+//            case inReview = "4DM state In Review"
+//            case waitingForDeploy = "4DM state Waiting for deploy"
             
             init?(_ githubWebhookType: Github.RequestType) {
                 switch githubWebhookType {
-                case .branchCreated: self = .inProgress
-                case .pullRequestOpened: self = .inReview
-                case .pullRequestClosed: self = .waitingForDeploy
+                case .branchCreated: self = githubWebhookType.platform == .android ? .android_inProgress : .iOS_inProgress
+                case .pullRequestOpened: self = githubWebhookType.platform == .android ? .android_inReview : .iOS_inReview
+                case .pullRequestClosed: self = githubWebhookType.platform == .android ? .android_waitingForDeploy : .iOS_waitingForDeploy
                 default: return nil
                 }
             }

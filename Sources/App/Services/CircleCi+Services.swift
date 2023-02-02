@@ -525,7 +525,7 @@ extension CircleCi {
         parameters.removeFirst()
         
         let isOption: (String) -> Bool = { $0.contains(":") }
-        var options = parameters.filter(isOption)
+        let options = parameters.filter(isOption)
         parameters = parameters.filter { !isOption($0) }
         
         if let job = CircleCiJobKind(rawValue: command) {
@@ -627,7 +627,7 @@ extension CircleCi {
         }
         
         switch type {
-        case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base):
+        case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base, platform: platform):
             do {
                 if Github.isMaster(branch: base) || Github.isRelease(branch: base) {
                     return try CircleCiTestJob.parse(project: project,
@@ -659,7 +659,7 @@ extension CircleCi {
             } catch {
                 return defaultResponse
             }
-        case let .pullRequestClosed(_, _, base: base, merged: merged) where Github.isMain(branch: base) && merged:
+        case let .pullRequestClosed(_, _, base: base, merged: merged, platform: platform) where Github.isMain(branch: base) && merged:
             do {
                 let options = Github.isMaster(branch: base) || Github.isRelease(branch: base)
                     ? ["restrict_fixme_comments:true"] : []

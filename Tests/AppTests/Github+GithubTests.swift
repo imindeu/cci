@@ -54,17 +54,17 @@ class GithubGithubTests: XCTestCase {
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
         let branchType = branchRequest.type(headers: branchHeaders)
-        XCTAssertEqual(branchType, .branchCreated(title: title))
+        XCTAssertEqual(branchType, .branchCreated(title: title, platform: .iOS))
         
         let openedRequest = Github.Payload(action: Github.Action.opened,
                                            pullRequest: pullRequest)
         let openedType = openedRequest.type(headers: pullRequestHeaders)
-        XCTAssertEqual(openedType, .pullRequestOpened(title: title, url: "", body: ""))
+        XCTAssertEqual(openedType, .pullRequestOpened(title: title, url: "", body: "", platform: .iOS))
 
         let editedRequest = Github.Payload(action: Github.Action.edited,
                                            pullRequest: pullRequest)
         let editedType = editedRequest.type(headers: pullRequestHeaders)
-        XCTAssertEqual(editedType, .pullRequestEdited(title: title, url: "", body: ""))
+        XCTAssertEqual(editedType, .pullRequestEdited(title: title, url: "", body: "", platform: .iOS))
 
         let closedRequest = Github.Payload(action: Github.Action.closed,
                                            pullRequest: pullRequest)
@@ -72,7 +72,7 @@ class GithubGithubTests: XCTestCase {
         XCTAssertEqual(closedType, .pullRequestClosed(title: title,
                                                       head: featureBranch,
                                                       base: Github.Branch.template(),
-                                                      merged: false))
+                                                      merged: false, platform: .iOS))
         
         let labeledRequest = Github.Payload(action: .labeled,
                                             pullRequest: pullRequest,
@@ -80,7 +80,8 @@ class GithubGithubTests: XCTestCase {
         let labeledType = labeledRequest.type(headers: pullRequestHeaders)
         XCTAssertEqual(labeledType, .pullRequestLabeled(label: Github.waitingForReviewLabel,
                                                         head: featureBranch,
-                                                        base: Github.Branch.template()))
+                                                        base: Github.Branch.template(),
+                                                        platform: .iOS))
 
         let wrongRequest = Github.Payload()
         XCTAssertNil(wrongRequest.type(headers: branchHeaders) ?? wrongRequest.type(headers: pullRequestHeaders))
@@ -126,7 +127,8 @@ class GithubGithubTests: XCTestCase {
         let response = try Github.githubRequest(Github.Payload(installation: Github.Installation(id: 1),
                                                                commit: Github.Commit(sha: "shaxyz"),
                                                                state: .some(.error)),
-                                            headers, context()).wait()
+                                                headers,
+                                                context()).wait()
         
         let query = "shaxyz+label:\"\(Github.waitingForReviewLabel.name)\"+state:open"
         XCTAssertNil(response.left)
