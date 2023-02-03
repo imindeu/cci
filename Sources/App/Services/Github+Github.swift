@@ -58,13 +58,18 @@ public extension Github {
 
     }
     
+    enum PlatformType: String {
+        case android
+        case iOS
+    }
+    
     enum RequestType: Equatable {
-        case branchCreated(title: String)
+        case branchCreated(title: String, platform: PlatformType)
         case branchPushed(Branch)
-        case pullRequestOpened(title: String, url: String, body: String)
-        case pullRequestEdited(title: String, url: String, body: String)
-        case pullRequestClosed(title: String, head: Branch, base: Branch, merged: Bool)
-        case pullRequestLabeled(label: Label, head: Branch, base: Branch)
+        case pullRequestOpened(title: String, url: String, body: String, platform: PlatformType)
+        case pullRequestEdited(title: String, url: String, body: String, platform: PlatformType)
+        case pullRequestClosed(title: String, head: Branch, base: Branch, merged: Bool, platform: PlatformType)
+        case pullRequestLabeled(label: Label, head: Branch, base: Branch, platform: PlatformType)
         case changesRequested(url: String)
         case failedStatus(sha: String)
         case getPullRequest(url: String)
@@ -72,13 +77,21 @@ public extension Github {
         
         var title: String? {
             switch self {
-            case .branchCreated(let t), .pullRequestClosed(let t, _, _, _), .pullRequestOpened(let t, _, _):
+            case .branchCreated(let t, _), .pullRequestClosed(let t, _, _, _, _), .pullRequestOpened(let t, _, _, _):
                 return t
             default:
                 return nil
             }
         }
         
+        var platform: PlatformType? {
+            switch self {
+            case .branchCreated(_, let platform),.pullRequestClosed(_, _, _, _, let platform), .pullRequestOpened(_, _, _, let platform):
+                return platform
+            default:
+                return nil
+            }
+        }
     }
     
     enum Error: LocalizedError {
@@ -113,6 +126,8 @@ extension Github.Payload: RequestModel {
 extension Github.Payload {
     func type(headers: Headers?) -> Github.RequestType? {
         let event = headers?.get(Github.eventHeaderName).flatMap(Github.Event.init)
+        let platform: Github.PlatformType = repository?.name == "4dmotion-ios" ? .iOS : .android
+        
         switch (event,
                 action,
                 label,
@@ -125,21 +140,21 @@ extension Github.Payload {
                 repository) {
             
         case let (.some(.pullRequest), .some(.closed), _, _, .some(pr), _, _, _, _, _):
-            return .pullRequestClosed(title: pr.title, head: pr.head, base: pr.base, merged: pr.merged)
+            return .pullRequestClosed(title: pr.title, head: pr.head, base: pr.base, merged: pr.merged, platform: platform)
         case let (.some(.pullRequest), .some(.opened), _, _, .some(pr), _, _, _, _, _):
-            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "")
+            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "", platform: platform)
         case let (.some(.pullRequest), .some(.reopened), _, _, .some(pr), _, _, _, _, _):
-            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "")
+            return .pullRequestOpened(title: pr.title, url: pr.url, body: pr.body ?? "", platform: platform)
         case let (.some(.pullRequest), .some(.edited), _, _, .some(pr), _, _, _, _, _):
-            return .pullRequestEdited(title: pr.title, url: pr.url, body: pr.body ?? "")
+            return .pullRequestEdited(title: pr.title, url: pr.url, body: pr.body ?? "", platform: platform)
             
         case let (.some(.create), _, _, _, _, .some(title), .some(.branch), _, _, _):
-            return .branchCreated(title: title)
+            return .branchCreated(title: title, platform: platform)
         case let (.some(.push), _, _, _, _, .some(ref), _, _, _, .some(repository)):
             return .branchPushed(.init(ref: ref, sha: "", repo: repository))
             
         case let (.some(.pullRequest), .some(.labeled), .some(label), _, .some(pr), _, _, _, _, _):
-            return .pullRequestLabeled(label: label, head: pr.head, base: pr.base)
+            return .pullRequestLabeled(label: label, head: pr.head, base: pr.base, platform: platform)
             
         case let (.some(.pullRequestReview), .some(.submitted), _, .some(.changesRequested), .some(pr), _, _, _, _, _):
             return .changesRequested(url: pr.url)
@@ -180,8 +195,8 @@ extension Github.APIRequest: TokenRequestable {
     
     public var body: Data? {
         switch self.type {
-        case let .pullRequestOpened(title: title, _, body: body),
-             let .pullRequestEdited(title: title, _, body: body):
+        case let .pullRequestOpened(title: title, _, body: body, platform: _),
+            let .pullRequestEdited(title: title, _, body: body, platform: _):
             let issues =
                 (try? Youtrack.issueURLs(from: title,
                                          base: Environment.get(Youtrack.Request.Config.youtrackURL),
@@ -211,8 +226,8 @@ extension Github.APIRequest: TokenRequestable {
         case let .failedStatus(sha: sha):
             let query = "issues?q=\(sha)+label:\"\(waitingForReview)\"+state:open"
             return URL(string: "https://api.github.com/search/")?.appendingPathComponent(query)
-        case let .pullRequestOpened(_, url: url, _),
-             let .pullRequestEdited(_, url: url, _),
+        case let .pullRequestOpened(_, url: url, _, _),
+             let .pullRequestEdited(_, url: url, _, _),
              let .getPullRequest(url: url):
             return URL(string: url)
         case let .getStatus(sha: sha, url: url):

@@ -24,12 +24,14 @@ class RouterSlackToCircleCiTests: XCTestCase {
             XCTFail("Empty body", file: file, line: line)
             return
         }
-        let response = CircleCi.BuildResponse(response: CircleCi.Response(buildURL: "buildURL",
-                                                                          buildNum: 10),
-                                              job: CircleCiTestJob(project: .unknown(project),
-                                                                  branch: branch,
-                                                                  options: options,
-                                                                  username: username))
+        
+        let responseObj = CircleCi.JobTrigger.Response(number: 10, state: "", createdAt: "", message: "")
+        let response = CircleCi.JobTriggerResponse(responseObject: responseObj,
+                                                   request: CircleCiTestJob(project: .unknown(project),
+                                                                            branch: branch,
+                                                                            options: options,
+                                                                            username: username))
+        
         let slackResponse = CircleCi.responseToSlack(response)
         let data = try? JSONEncoder().encode(slackResponse)
         XCTAssertEqual(data, body, file: file, line: line)
