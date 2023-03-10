@@ -45,9 +45,6 @@ extension Youtrack {
             case android_inProgress = "4DM Android state In Progress"
             case android_inReview = "4DM Android state In Review"
             case android_waitingForDeploy = "4DM Android state Waiting for deploy"
-//            case inProgress = "4DM state In Progress"
-//            case inReview = "4DM state In Review"
-//            case waitingForDeploy = "4DM state Waiting for deploy"
             
             init?(_ githubWebhookType: Github.RequestType) {
                 switch githubWebhookType {
