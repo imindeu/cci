@@ -81,7 +81,7 @@ extension CircleCi.JobTrigger.Response {
             return nil
         }
 
-        return URL(string: "https://app.circleci.com/pipelines/\(vcs)/\(company)/\(project.rawValue)/\(self.number ?? 908)")
+        return URL(string: "https://app.circleci.com/pipelines/\(vcs)/\(company)/\(project.rawValue)/\(self.number ?? 0)")
     }
 }
 
