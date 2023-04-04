@@ -212,6 +212,7 @@ extension CircleCiJobTriggerRequest {
 
 enum CircleCiJobKind: String, CaseIterable {
     case deploy
+    case deploy_reporter
     case test
     case buildsim
 }
@@ -221,6 +222,8 @@ private extension CircleCiJobKind {
         switch self {
         case .deploy:
             return CircleCiDeployJob.self
+        case .deploy_reporter:
+            return CircleCiDeployReporterJob.self
         case .test:
             return CircleCiTestJob.self
         case .buildsim:
@@ -463,6 +466,53 @@ extension CircleCiDeployJob {
                                         type: type,
                                         options: options,
                                         username: username))
+    }
+}
+
+struct CircleCiDeployReporterJob: CircleCiJobTriggerRequest, Equatable {
+    let project: CircleCiProject = .iOS4DM
+    let branch: String
+    let name: String = CircleCiJobKind.deploy_reporter.rawValue
+    let type: String = ""
+    let options: [String] = []
+    let username: String
+}
+
+extension CircleCiDeployReporterJob {
+    var slackResponseFields: [Slack.Response.Field] {
+        return [
+            Slack.Response.Field(title: "Project", value: "Reporter", short: true),
+            Slack.Response.Field(title: "User", value: username, short: true),
+            Slack.Response.Field(title: "Branch", value: branch, short: true)
+        ]
+    }
+    
+    static var helpResponse: Slack.Response {
+        let text = "`deploy_reporter`: deploy a build\n" +
+            "Usage:\n`/cci deploy_reporter branch`\n" +
+            "  - *branch*: a branch name to deploy from\n"
+        let attachment = Slack.Response.Attachment(
+            fallback: text, text: text, color: "good", mrkdwnIn: ["text"], fields: [])
+        let response = Slack.Response(responseType: .ephemeral,
+                                      text: "Send commands to <https://circleci.com|CircleCI>",
+                                      attachments: [attachment],
+                                      mrkdwn: true)
+        return response
+    }
+    
+    static func parse(project: CircleCiProject,
+                      parameters: [String],
+                      options: [String],
+                      username: String) throws -> Either<Slack.Response, CircleCiJobTriggerRequest> {
+        if parameters.count == 1 {
+            if parameters[safe: 0] == "help" {
+                return .left(CircleCiDeployReporterJob.helpResponse)
+            } else if let branch = parameters[safe: 0]?.trimmingCharacters(in: .whitespacesAndNewlines), !branch.isEmpty {
+                return .right(CircleCiDeployReporterJob(branch: branch, username: username))
+            }
+        }
+        
+        throw CircleCi.Error.unknownCommand(parameters.joined(separator: " "))
     }
 }
 
