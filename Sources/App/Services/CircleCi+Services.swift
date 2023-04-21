@@ -722,17 +722,20 @@ extension CircleCi {
                 return defaultResponse
             }
         case let .branchPushed(branch) where Github.isMain(branch: branch):
-            do {
-                let options = Github.isMaster(branch: branch) || Github.isRelease(branch: branch)
-                    ? ["restrict_fixme_comments:true"] : []
-                return try CircleCiTestJob.parse(project: project,
-                                                 parameters: [branch.ref],
-                                                 options: options,
-                                                 username: "cci")
-                .either({ _ in return defaultResponse }, { rightIO(context)(JobTriggerRequest(request: $0)) })
-            } catch {
-                return defaultResponse
-            }
+            let response = "branch: " + ref + "isMain: " + (Github.isMain(branch: branch) ? "YES" : "NO")
+            let testResponse: EitherIO<Github.PayloadResponse, JobTriggerRequest> = leftIO(context)(Github.PayloadResponse(value: response))
+
+//            do {
+//                let options = Github.isMaster(branch: branch) || Github.isRelease(branch: branch)
+//                    ? ["restrict_fixme_comments:true"] : []
+//                return try CircleCiTestJob.parse(project: project,
+//                                                 parameters: [branch.ref],
+//                                                 options: options,
+//                                                 username: "cci")
+//                .either({ _ in return defaultResponse }, { rightIO(context)(JobTriggerRequest(request: $0)) })
+//            } catch {
+//                return defaultResponse
+//            }
         default: return defaultResponse
         }
     }
