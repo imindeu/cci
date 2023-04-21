@@ -724,6 +724,7 @@ extension CircleCi {
         case let .branchPushed(branch) where Github.isMain(branch: branch):
             let response = "branch: " + ref + "isMain: " + (Github.isMain(branch: branch) ? "YES" : "NO")
             let testResponse: EitherIO<Github.PayloadResponse, JobTriggerRequest> = leftIO(context)(Github.PayloadResponse(value: response))
+            return testResponse
 
 //            do {
 //                let options = Github.isMaster(branch: branch) || Github.isRelease(branch: branch)
