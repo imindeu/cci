@@ -722,7 +722,7 @@ extension CircleCi {
                 return defaultResponse
             }
         case let .branchPushed(branch) where Github.isMain(branch: branch):
-            let testResponse: EitherIO<Github.PayloadResponse, JobTriggerRequest> = leftIO(context)(Github.PayloadResponse(value: "branch: \(ref) isMain: \(Github.isMain(branch: branch))"))
+            let testResponse: EitherIO<Github.PayloadResponse, JobTriggerRequest> = leftIO(context)(Github.PayloadResponse(value: ref))
             return testResponse
 
 //            do {
