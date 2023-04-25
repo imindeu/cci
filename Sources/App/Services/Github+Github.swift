@@ -151,7 +151,8 @@ extension Github.Payload {
         case let (.some(.create), _, _, _, _, .some(title), .some(.branch), _, _, _):
             return .branchCreated(title: title, platform: platform)
         case let (.some(.push), _, _, _, _, .some(ref), _, _, _, .some(repository)):
-            return .branchPushed(.init(ref: ref, sha: "", repo: repository))
+            let branch = ref.components(separatedBy: "/").last
+            return .branchPushed(.init(ref: branch ?? ref, sha: "", repo: repository))
             
         case let (.some(.pullRequest), .some(.labeled), .some(label), _, .some(pr), _, _, _, _, _):
             return .pullRequestLabeled(label: label, head: pr.head, base: pr.base, platform: platform)
