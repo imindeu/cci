@@ -709,18 +709,6 @@ extension CircleCi {
             } catch {
                 return defaultResponse
             }
-        case let .pullRequestClosed(_, _, base: base, merged: merged, platform: platform) where Github.isMain(branch: base) && merged:
-            do {
-                let options = Github.isMaster(branch: base) || Github.isRelease(branch: base)
-                    ? ["restrict_fixme_comments:true"] : []
-                return try CircleCiTestJob.parse(project: project,
-                                                 parameters: [base.ref],
-                                                 options: options,
-                                                 username: "cci")
-                .either({ _ in return defaultResponse }, { rightIO(context)(JobTriggerRequest(request: $0)) })
-            } catch {
-                return defaultResponse
-            }
         case let .branchPushed(branch) where Github.isMain(branch: branch):
             do {
                 let options = Github.isMaster(branch: branch) || Github.isRelease(branch: branch)
