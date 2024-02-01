@@ -345,7 +345,6 @@ struct CircleCiDeployJob: CircleCiJobTriggerRequest, Equatable {
 extension CircleCiDeployJob {
     private enum App: String, CaseIterable {
         case fourd
-        case mi
         case oc
         case sp
 
@@ -354,7 +353,6 @@ extension CircleCiDeployJob {
             case (_, .alpha): return "dev"
             case (.fourd, .beta): return "fourd"
             case (.fourd, .appStore): return "release"
-            case (.mi, .beta): return "mi"
             case (.oc, .beta): return "oc"
             case (.oc, .appStore): return "release_oc"
             case (.sp, .beta): return "sp"
@@ -366,7 +364,6 @@ extension CircleCiDeployJob {
         func projectName(for project: CircleCiProject) throws -> String {
             switch (project, self) {
             case (.iOS4DM, .fourd): return "FourDMotion"
-            case (.iOS4DM, .mi): return "MotionInsights"
             case (.iOS4DM, .oc): return "OrthoCor"
             case (.iOS4DM, .sp): return "SinglePlane"
             case (.android4DM, .oc): return "orthocor"

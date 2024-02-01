@@ -174,11 +174,11 @@ class CircleCiTests: XCTestCase {
                                              options: options + [
                                                 "test_release:true",
                                                 "branch:\(branch)",
-                                                "project_name:MotionInsights"
+                                                "project_name:FourDMotion"
                                              ],
                                              username: username)
         let fourdResponse = try CircleCiDeployJob.parse(project: .iOS4DM,
-                                                        parameters: ["mi", "beta", branch],
+                                                        parameters: ["fourd", "beta", branch],
                                                         options: options,
                                                         username: username).right as? CircleCiDeployJob
         XCTAssertEqual(fourdResponse, goodFourDJob)
