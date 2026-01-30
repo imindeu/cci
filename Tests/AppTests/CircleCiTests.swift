@@ -73,7 +73,7 @@ class CircleCiTests: XCTestCase {
         XCTAssertEqual(goodJob.name, CircleCiJobKind.test.rawValue)
         XCTAssertEqual(goodJob.urlEncodedBranch, urlEncodedBranch)
         XCTAssertEqual(
-            try goodJob.body.flatMap { try JSONDecoder().decode(CircleCiJobTriggerRequestBody.self, from: $0).parameters },
+            try goodJob.body.flatMap { try Service.decoder.decode(CircleCiJobTriggerRequestBody.self, from: $0).parameters },
            .init(job: CircleCiJobKind.test.rawValue, deploy_type: "", options: options.joined(separator: " "))
         )
         
@@ -116,7 +116,7 @@ class CircleCiTests: XCTestCase {
                                           username: username)
         XCTAssertEqual(goodJob.name, CircleCiJobKind.buildsim.rawValue)
         XCTAssertEqual(goodJob.urlEncodedBranch, urlEncodedBranch)
-        XCTAssertEqual(try goodJob.body.flatMap { try JSONDecoder().decode(CircleCiJobTriggerRequestBody.self, from: $0).parameters },
+        XCTAssertEqual(try goodJob.body.flatMap { try Service.decoder.decode(CircleCiJobTriggerRequestBody.self, from: $0).parameters },
                        .init(job: CircleCiJobKind.buildsim.rawValue,
                              deploy_type: "",
                              options: options.joined(separator: " ")))
@@ -161,7 +161,7 @@ class CircleCiTests: XCTestCase {
                                         username: username)
         XCTAssertEqual(goodJob.name, CircleCiJobKind.deploy.rawValue)
         XCTAssertEqual(goodJob.urlEncodedBranch, urlEncodedBranch)
-        XCTAssertEqual(try goodJob.body.flatMap { try JSONDecoder().decode(CircleCiJobTriggerRequestBody.self, from: $0).parameters },
+        XCTAssertEqual(try goodJob.body.flatMap { try Service.decoder.decode(CircleCiJobTriggerRequestBody.self, from: $0).parameters },
                        .init(job: CircleCiJobKind.deploy.rawValue,
                              deploy_type: type,
                              options: options.joined(separator: " ")))
@@ -356,15 +356,17 @@ class CircleCiTests: XCTestCase {
             ref: branch,
             repo: Github.Repository.template(
                 url: "https://empty.com/repo/company/project"))
-        let devNoStatusPullRequest = Github.PullRequest(url: "",
-                                                        id: 0,
-                                                        title: "test",
-                                                        body: "",
-                                                        head: branchNoStatus,
-                                                        base: Github.Branch.template())
+        let devNoStatusPullRequest = Github.PullRequest.template(
+            id: 0,
+            title: "test",
+            body: "",
+            head: branchNoStatus,
+            base: Github.Branch.template(),
+            url: ""
+        )
         let labeledDevNoStatuRequest = Github.Payload(action: .labeled,
                                                       pullRequest: devNoStatusPullRequest,
-                                                      label: Github.waitingForReviewLabel,
+                                                      label: Github.Label.waitingForReview,
                                                       installation: Github.Installation(id: 1),
                                                       repository: Github.Repository.template(name: project))
         let testDevNoStatusRequest = try await CircleCi.githubRequest(
@@ -382,15 +384,17 @@ class CircleCiTests: XCTestCase {
             ref: branch,
             repo: Github.Repository.template(
                 url: "https://error.com/repo/company/project"))
-        let devErrorStatusPullRequest = Github.PullRequest(url: "",
-                                                           id: 0,
-                                                           title: "test",
-                                                           body: "",
-                                                           head: branchErrorStatus,
-                                                           base: Github.Branch.template())
+        let devErrorStatusPullRequest = Github.PullRequest.template(
+            id: 0,
+            title: "test",
+            body: "",
+            head: branchErrorStatus,
+            base: Github.Branch.template(),
+            url: ""
+        )
         let labeledDevErrorStatuRequest = Github.Payload(action: .labeled,
                                                          pullRequest: devErrorStatusPullRequest,
-                                                         label: Github.waitingForReviewLabel,
+                                                         label: Github.Label.waitingForReview,
                                                          installation: Github.Installation(id: 1),
                                                          repository: Github.Repository.template(name: project))
         let testDevErrorStatusRequest = try await CircleCi.githubRequest(
@@ -408,15 +412,17 @@ class CircleCiTests: XCTestCase {
             ref: branch,
             repo: Github.Repository.template(
                 url: "https://success.com/repo/company/project"))
-        let devSuccessStatusPullRequest = Github.PullRequest(url: "",
-                                                             id: 0,
-                                                             title: "test",
-                                                             body: "",
-                                                             head: branchSuccessStatus,
-                                                             base: Github.Branch.template())
+        let devSuccessStatusPullRequest = Github.PullRequest.template(
+            id: 0,
+            title: "test",
+            body: "",
+            head: branchSuccessStatus,
+            base: Github.Branch.template(),
+            url: ""
+        )
         let labeledDevSuccessStatuRequest = Github.Payload(action: .labeled,
                                                            pullRequest: devSuccessStatusPullRequest,
-                                                           label: Github.waitingForReviewLabel,
+                                                           label: Github.Label.waitingForReview,
                                                            installation: Github.Installation(id: 1),
                                                            repository: Github.Repository.template(name: project))
         
@@ -426,15 +432,17 @@ class CircleCiTests: XCTestCase {
             Service.mockContext).get()
         XCTAssertEqual(testDevSuccessStatusRequest.left, Github.PayloadResponse())
         
-        let masterPullRequest = Github.PullRequest(url: "",
-                                                   id: 0,
-                                                   title: "test",
-                                                   body: "",
-                                                   head: Github.Branch.template(ref: branch),
-                                                   base: Github.Branch.template(ref: "master"))
+        let masterPullRequest = Github.PullRequest.template(
+            id: 0,
+            title: "test",
+            body: "",
+            head: Github.Branch.template(ref: branch),
+            base: Github.Branch.template(ref: "master"),
+            url: ""
+        )
         let labeledMasterRequest = Github.Payload(action: .labeled,
                                                   pullRequest: masterPullRequest,
-                                                  label: Github.waitingForReviewLabel,
+                                                  label: Github.Label.waitingForReview,
                                                   repository: Github.Repository.template(name: project))
         
         let testMasterRequest = try await CircleCi.githubRequest(labeledMasterRequest, pullRequestHeaders, Service.mockContext).get()

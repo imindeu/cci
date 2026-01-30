@@ -15,7 +15,7 @@ public func routes(_ app: Application) throws {
             let data = buffer.readData(length: buffer.readableBytes)
         else { throw Abort(.badRequest) }
         
-        let github = try JSONDecoder().decode(Github.Payload.self, from: data)
+        let github = try Service.decoder.decode(Github.Payload.self, from: data)
         let body = String(data: data, encoding: .utf8)
         return Github.webhook(github, req.eventLoop, body, req.headers)
     }

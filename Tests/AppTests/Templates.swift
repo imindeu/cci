@@ -8,6 +8,7 @@
 import APIConnect
 import APIModels
 
+import Foundation
 import NIO
 
 @testable import App
@@ -58,10 +59,40 @@ extension Github.Branch {
 }
 
 extension Github.Repository {
-    static func template(name: String = "repo",
-                         url: String = "https://test.com/repos/company/project")
-        -> Github.Repository {
-            
-        return Github.Repository(name: name, url: url)
+    static func template(
+        name: String = "repo",
+        url: String = "https://test.com/repos/company/project"
+    ) -> Github.Repository {
+        .init(name: name, url: url)
+    }
+}
+
+extension Github.PullRequest {
+    static func template(
+        id: Int = 0,
+        issueId: Int = 0,
+        state: State = .open,
+        title: String = "title",
+        body: String = "body",
+        updatedAt: Date = .init(),
+        head: Github.Branch,
+        base: Github.Branch,
+        url: String = "https://test.com/repos/company/project"
+    ) -> Github.PullRequest {
+        .init(
+            id: id,
+            issueId: issueId,
+            state: state,
+            title: title,
+            body: body,
+            createdAt: .init(),
+            updatedAt: updatedAt,
+            mergedAt: .init(),
+            draft: false,
+            head: head,
+            base: base,
+            labels: [],
+            url: url
+        )
     }
 }

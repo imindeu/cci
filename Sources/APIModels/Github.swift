@@ -1,9 +1,4 @@
-//
-//  Github.swift
-//  APIConnect
-//
-//  Created by Peter Geszten-Kovacs on 2018. 12. 03..
-//
+import Foundation
 
 import Foundation
 
@@ -25,6 +20,36 @@ public enum Github {
                 return (error as? LocalizedError).map { $0.localizedDescription } ?? "Unknown error (\(error))"
             }
         }
+    }
+    
+    public enum Url {
+        public static let base = URL(string: "https://api.github.com")!
+        public static let organisation = "imindeu"
+        public static let ios = base
+            .appendingPathComponent(Path.repos.rawValue)
+            .appendingPathComponent(organisation)
+            .appendingPathComponent(Repository.ios.rawValue)
+        public static let android = base
+            .appendingPathComponent(Path.repos.rawValue)
+            .appendingPathComponent(organisation)
+            .appendingPathComponent(Repository.android.rawValue)
+        public static let search = base
+            .appendingPathComponent(Path.search.rawValue)
+
+        public enum Repository: String {
+            case ios = "4dmotion-ios"
+            case android = "4dmotion-android"
+        }
+    }
+    
+    public enum Path: String, Sendable {
+        case commits
+        case issues
+        case labels
+        case pulls
+        case repos
+        case search
+        case statuses
     }
     
     public struct Payload: Equatable, Codable, Sendable {
@@ -69,28 +94,68 @@ public enum Github {
     }
     
     public struct PullRequest: Equatable, Codable, Sendable {
-        public let url: String
+        public enum State: String, Codable, Sendable {
+            case open, closed, all
+        }
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case issueId = "number"
+            case state
+            case title
+            case body
+            case createdAt = "created_at"
+            case updatedAt = "updated_at"
+            case mergedAt = "merged_at"
+            case draft
+            case head
+            case base
+            case labels
+            case url
+        }
+        
         public let id: Int
+        public let issueId: Int
+        public let state: State
         public let title: String
         public let body: String?
+        public let createdAt: Date
+        public let updatedAt: Date
+        public let mergedAt: Date
+        public let draft: Bool
         public let head: Branch
         public let base: Branch
-        public let merged: Bool
-
-        public init(url: String,
-                    id: Int,
-                    title: String,
-                    body: String?,
-                    head: Branch,
-                    base: Branch,
-                    merged: Bool = false) {
-            self.url = url
+        public let labels: [Label]
+        public let url: String
+        
+        public init(
+            id: Int,
+            issueId: Int,
+            state: Github.PullRequest.State,
+            title: String,
+            body: String? = nil,
+            createdAt: Date,
+            updatedAt: Date,
+            mergedAt: Date,
+            draft: Bool,
+            head: Github.Branch,
+            base: Github.Branch,
+            labels: [Github.Label],
+            url: String
+        ) {
             self.id = id
+            self.issueId = issueId
+            self.state = state
             self.title = title
             self.body = body
+            self.createdAt = createdAt
+            self.updatedAt = updatedAt
+            self.mergedAt = mergedAt
+            self.draft = draft
             self.head = head
             self.base = base
-            self.merged = merged
+            self.labels = labels
+            self.url = url
         }
     }
     
