@@ -5,8 +5,29 @@
 //  Created by Peter Geszten-Kovacs on 2018. 12. 03..
 //
 
+import Foundation
+
 public enum Github {
-    public struct Payload: Equatable, Codable {
+    public enum Error: LocalizedError {
+        case signature
+        case jwt
+        case accessToken
+        case installation
+        case underlying(Swift.Error)
+        
+        public var errorDescription: String? {
+            switch self {
+            case .signature: return "Bad github webhook signature"
+            case .jwt: return "JWT token problem"
+            case .accessToken: return "Bad github access token"
+            case .installation: return "No installation"
+            case .underlying(let error):
+                return (error as? LocalizedError).map { $0.localizedDescription } ?? "Unknown error (\(error))"
+            }
+        }
+    }
+    
+    public struct Payload: Equatable, Codable, Sendable {
         public let action: Action?
         public let review: Review?
         public let pullRequest: PullRequest?
@@ -47,7 +68,7 @@ public enum Github {
         }
     }
     
-    public struct PullRequest: Equatable, Codable {
+    public struct PullRequest: Equatable, Codable, Sendable {
         public let url: String
         public let id: Int
         public let title: String
@@ -73,7 +94,7 @@ public enum Github {
         }
     }
     
-    public struct Repository: Equatable, Codable {
+    public struct Repository: Equatable, Codable, Sendable {
         public let name: String
         public let url: String
         
@@ -83,7 +104,7 @@ public enum Github {
         }
     }
     
-    public struct User: Equatable, Codable {
+    public struct User: Equatable, Codable, Sendable {
         public let login: String
         
         public init(login: String) {
@@ -91,7 +112,7 @@ public enum Github {
         }
     }
     
-    public struct Branch: Equatable, Codable {
+    public struct Branch: Equatable, Codable, Sendable {
         public let ref: String
         public let sha: String
         public let repo: Repository
@@ -103,7 +124,7 @@ public enum Github {
         }
     }
     
-    public struct Label: Equatable, Codable {
+    public struct Label: Equatable, Codable, Sendable {
         public let name: String
         
         public init(name: String) {
@@ -111,7 +132,7 @@ public enum Github {
         }
     }
     
-    public struct Commit: Equatable, Codable {
+    public struct Commit: Equatable, Codable, Sendable {
         public let sha: String
         
         public init(sha: String) {
@@ -119,7 +140,7 @@ public enum Github {
         }
     }
     
-    public struct IssueComment: Equatable, Codable {
+    public struct IssueComment: Equatable, Codable, Sendable {
         public let body: String
         
         public init(body: String) {
@@ -127,7 +148,7 @@ public enum Github {
         }
     }
     
-    public struct Link: Equatable, Codable {
+    public struct Link: Equatable, Codable, Sendable {
         public let href: String
         
         public init(href: String) {
@@ -135,7 +156,7 @@ public enum Github {
         }
     }
 
-    public struct Links: Equatable, Codable {
+    public struct Links: Equatable, Codable, Sendable {
         public let comments: Link
         
         public init(comments: Link) {
@@ -143,7 +164,7 @@ public enum Github {
         }
     }
     
-    public struct Installation: Equatable, Codable {
+    public struct Installation: Equatable, Codable, Sendable {
         public let id: Int
         
         public init(id: Int) {
@@ -151,14 +172,14 @@ public enum Github {
         }
     }
     
-    public enum ReviewState: String, Equatable, Codable {
+    public enum ReviewState: String, Equatable, Codable, Sendable {
         case commented
         case changesRequested = "changes_requested"
         case approved
         case dismissed
     }
     
-    public struct Review: Equatable, Codable {
+    public struct Review: Equatable, Codable, Sendable {
         public let state: ReviewState
         
         public init(state: ReviewState) {
@@ -166,7 +187,7 @@ public enum Github {
         }
     }
     
-    public struct Status: Equatable, Codable {
+    public struct Status: Equatable, Codable, Sendable {
         public let state: State
         
         public init(state: State) {
@@ -174,7 +195,7 @@ public enum Github {
         }
     }
 
-    public enum Action: String, Equatable, Codable {
+    public enum Action: String, Equatable, Codable, Sendable {
         case opened
         case edited
         case closed
@@ -204,20 +225,20 @@ public enum Github {
         // ...
     }
     
-    public enum State: String, Equatable, Codable {
+    public enum State: String, Equatable, Codable, Sendable {
         case pending
         case error
         case failure
         case success
     }
     
-    public enum RefType: String, Equatable, Codable {
+    public enum RefType: String, Equatable, Codable, Sendable {
         case branch
         case tag
         case repository
     }
     
-    public enum Event: String, Equatable, Codable {
+    public enum Event: String, Equatable, Codable, Sendable {
         case create
         case push
         case pullRequest = "pull_request"

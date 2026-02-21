@@ -5,15 +5,13 @@
 //  Created by Peter Geszten-Kovacs on 2018. 11. 21..
 //
 
-import protocol NIO.EventLoopGroup
-import class NIO.EventLoopFuture
-import class HTTP.Future
+import Vapor
 
 public typealias Context = EventLoopGroup
 public typealias IO = EventLoopFuture
 
 public func pure<A>(_ a: A, _ context: Context) -> IO<A> {
-    return IO.map(on: context, const(a))
+    return context.next().makeSucceededFuture(a)
 }
 
 public typealias EitherIO<L, R> = IO<Either<L, R>>
@@ -27,12 +25,16 @@ public func rightIO<A, B>(_ context: Context) -> (B) -> EitherIO<A, B> {
 }
 
 public extension IO {
-    func mapEither<A, L, R>(_ l2a: @escaping (L) -> A, _ r2a: @escaping (R) -> A) -> IO<A> where T == Either<L, R> {
+    func flatMapThrowingIO<B>(_ transform: @escaping (Value) throws -> EventLoopFuture<B>) -> IO<B> {
+        flatMapThrowing(transform).flatMap { $0 }
+    }
+    
+    func mapEither<A, L, R>(_ l2a: @escaping (L) -> A, _ r2a: @escaping (R) -> A) -> IO<A> where Value == Either<L, R> {
         return map { $0.either(l2a, r2a) }
     }
     
     func bimapEither<A, B, L, R>(_ l2a: @escaping (L) -> A, _ r2b: @escaping (R) -> B)
-        -> EitherIO<A, B> where T == Either<L, R> {
+        -> EitherIO<A, B> where Value == Either<L, R> {
             
         return map { $0.bimap(l2a, r2b) }
     }

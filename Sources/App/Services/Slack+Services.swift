@@ -5,17 +5,12 @@
 //  Created by Peter Geszten-Kovacs on 2018. 05. 16..
 //
 import APIConnect
-import enum APIModels.Slack
+import APIModels
+import APIService
 
-import protocol Foundation.LocalizedError
-import struct Foundation.Data
-import struct Foundation.URL
-import class Foundation.JSONEncoder
+import Foundation
 
-import struct HTTP.HTTPBody
-import struct HTTP.HTTPHeaders
-import struct HTTP.HTTPRequest
-import enum HTTP.HTTPMethod
+import Vapor
 
 extension Slack {
     enum Error: LocalizedError {
@@ -57,21 +52,23 @@ extension Slack {
         guard !errors.isEmpty else { return nil }
         return Response.error(Error.combined(errors))
     }
-    static func api(_ request: Request, _ context: Context) -> (Response) -> IO<Void> {
+    
+    static func api(_ request: Request, _ context: Context) -> (Response) throws -> IO<Void> {
         return { response in
-            guard let url = request.responseURL,
-                let hostname = url.host,
-                let body = try? JSONEncoder().encode(response) else {
-                    
-                return Environment.emptyApi(context).map { _ in () }
-            }
-            let returnAPI = Environment
-                .api(hostname, url.port)
-            let request = HTTPRequest(method: .POST,
-                                      url: url.path,
-                                      headers: HTTPHeaders([("Content-Type", "application/json")]),
-                                      body: HTTPBody(data: body))
-            return returnAPI(context, request).map { _ in () }
+            let body = try JSONEncoder().encode(response)
+            var byteBuffer = ByteBufferAllocator().buffer(capacity: body.count)
+            byteBuffer.writeBytes(body)
+            
+            let request = try HTTPClient.Request(
+                url: request.responseUrlString,
+                method: .POST,
+                headers: HTTPHeaders([("Content-Type", "application/json")]),
+                body: HTTPClient.Body.byteBuffer(byteBuffer)
+            )
+            
+            return Service.shared.api
+                .execute(request: request)
+                .map { _ in () }
         }
     }
     static func instant(_ context: Context) -> (Request) -> IO<Response?> {
