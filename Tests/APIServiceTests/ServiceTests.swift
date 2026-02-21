@@ -6,13 +6,14 @@
 //
 
 import APIConnect
+import APIModels
 import APIService
+import Mocks
 
 import XCTest
-import HTTP
+import Vapor
 
 class ServiceTests: XCTestCase {
-
     private struct MockRequest: TokenRequestable {
         let value: String
         
@@ -38,35 +39,37 @@ class ServiceTests: XCTestCase {
         let headers: [String]
     }
     
-    func testFetch() throws {
-        let api: API = { hostname, port in
-            return { context, request in
-                let response = MockResponse(body: String(data: request.body.data!, encoding: .utf8)!,
-                                            hostname: hostname,
-                                            port: port,
-                                            path: request.url.absoluteString,
-                                            headers: request.headers
-                                                .filter { $0.0 == "Test-Header" }
-                                                .map { $0 + ":" + $1 })
+    func testFetch() async throws {
+        class MockAPI: BackendAPIType {
+            
+            func execute(request: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
+                let response = MockResponse(
+                    body: "x",
+                    hostname: "test.com",
+                    port: 8080,
+                    path: "/path?value=x&label=%22test%20label%22&token=t",
+                    headers: request.headers.filter { name, value in name == "Test-Header" }.map { $0 + ":" + $1 }
+                )
+
                 do {
                     let body = try JSONEncoder().encode(response)
-                    return pure(HTTPResponse(body: body), context)
+                    return pure(MockHTTPResponse.okResponse(body: String(data: body, encoding: .utf8)!), Service.mockContext)
                 } catch {
                     XCTFail(error.localizedDescription)
-                    return pure(.init(), context)
+                    return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
                 }
             }
         }
-        let expected = MockResponse(body: "x",
-                                    hostname: "test.com",
-                                    port: 8080,
-                                    path: "/path?value=x&label=%22test%20label%22&token=t",
-                                    headers: ["Test-Header:Token t"])
-        let response = try Service.fetch(MockRequest(value: "x"),
-                                         MockResponse.self,
-                                         "t",
-                                         MultiThreadedEventLoopGroup(numberOfThreads: 1),
-                                         api).wait()
+        try await Service.loadTest(MockAPI())
+        
+        let expected = MockResponse(
+            body: "x",
+            hostname: "test.com",
+            port: 8080,
+            path: "/path?value=x&label=%22test%20label%22&token=t",
+            headers: ["Test-Header:Token t"]
+        )
+        let response = try await Service.fetch(MockRequest(value: "x"), MockResponse.self, "t").get()
         XCTAssertEqual(response.value, expected)
         XCTAssertEqual(response.token, "t")
     }

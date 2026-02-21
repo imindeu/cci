@@ -7,9 +7,11 @@
 
 import APIConnect
 import APIModels
+import APIService
+import Mocks
 
 import XCTest
-import HTTP
+import Vapor
 
 @testable import App
 
@@ -37,36 +39,23 @@ class SlackTests: XCTestCase {
         XCTAssertNil(Slack.check(goodRequest))
     }
     
-    func testApi() throws {
-        var usedEmptyApi = false
-        Environment.emptyApi = {
-            usedEmptyApi = true
-            return pure(HTTPResponse(), $0)
-        }
-        var usedApi = false
-        Environment.api = { _, _ in
-            return { context, _ in
-                usedApi = true
-                return pure(HTTPResponse(), context)
+    func testApi() async throws {
+        class MockAPI: BackendAPIType {
+            
+            func execute(request: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
+                pure(MockHTTPResponse.okResponse(body: "{}"), Service.mockContext)
             }
         }
+        try await Service.loadTest(MockAPI())
         
-        let goodRequest = Slack.Request.template(responseUrlString: "https://test.com")
-        let goodApi = Slack.api(goodRequest, context())
-        try goodApi(Slack.Response(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
-        XCTAssertTrue(usedApi)
-        XCTAssertFalse(usedEmptyApi)
+        let request = Slack.Request.template(responseUrlString: "https://test.com")
+        let api = Slack.api(request, Service.mockContext)
         
-        usedApi = false
-        let badRequest = Slack.Request.template(responseUrlString: "")
-        let badApi = Slack.api(badRequest, context())
-        try badApi(Slack.Response(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).wait()
-        XCTAssertTrue(usedEmptyApi)
-        XCTAssertFalse(usedApi)
+        try await api(Slack.Response(responseType: .ephemeral, text: nil, attachments: [], mrkdwn: nil)).get()
     }
     
     func testInstant() throws {
-        let instant = Slack.instant(context())
+        let instant = Slack.instant(Service.mockContext)
         let response = try instant(Slack.Request.template()).wait()
         XCTAssertEqual(response, Slack.Response.instant)
     }

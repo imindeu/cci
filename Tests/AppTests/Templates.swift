@@ -16,10 +16,6 @@ extension Dictionary: Headers where Key == String, Value == String {
     public func get(_ name: String) -> String? { return self[name] }
 }
 
-func context() -> Context {
-    return MultiThreadedEventLoopGroup(numberOfThreads: 1)
-}
-
 extension Slack.Request {
     static func template(token: String = "",
                          teamId: String = "",

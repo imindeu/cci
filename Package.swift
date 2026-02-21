@@ -26,6 +26,16 @@ let package = Package(
             ]
         ),
         .testTarget(name: "APIConnectTests", dependencies: ["APIConnect"]),
+        
+        .target(
+            name: "Mocks", 
+            dependencies: [
+                "APIConnect",
+                "APIModels",
+                "APIService",
+                .product(name: "Vapor", package: "vapor")
+            ]
+        ),
 
         .target(
             name: "APIModels", 
@@ -47,6 +57,7 @@ let package = Package(
             dependencies: [
                 "APIService",
                 "APIModels",
+                "Mocks",
                 .product(name: "XCTVapor", package: "vapor")
             ]
         ),
@@ -60,7 +71,7 @@ let package = Package(
                 .product(name: "Vapor", package: "vapor")
             ]
         ),
-        .testTarget(name: "AppTests", dependencies: ["App"]),
+        .testTarget(name: "AppTests", dependencies: ["App", "Mocks"]),
 
         .executableTarget(name: "CCI", dependencies: ["App"])
     ]
