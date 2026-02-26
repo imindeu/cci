@@ -32,7 +32,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
 
                 switch request.host {
                 case "test.com":
-                    return pure(MockHTTPResponse.okResponse(body: "{ \"value\": [] }"), Service.mockContext)
+                    return pure(MockHTTPResponse.okResponse(body: "{ \"value\": \"test 4DM-1000\" }"), Service.mockContext)
                 default:
                     XCTFail("Shouldn't have an api for anything else")
                     return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
@@ -74,8 +74,7 @@ class RouterGithubToYoutrackTests: XCTestCase {
              Github.eventHeaderName: "create"]
         ).get()
         XCTAssertEqual(Environment.env["test.com"], "test.com")
-        // FIXME: Data is not in correct format
-        // XCTAssertEqual(response, Github.PayloadResponse(value: "issue: 4DM-1000: The data couldn’t be read because it isn’t in the correct format."))
+        XCTAssertEqual(response, Github.PayloadResponse(value: "test 4DM-1000"))
     }
     
     func testNoRegexRun() async throws {
