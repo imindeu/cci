@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 RUN apt-get -qq update && apt-get install -y \
-  libicu55 libxml2 libbsd0 libcurl3 libatomic1 \
+  libicu74 libxml2 libbsd0 libcurl4 libatomic1 \
   libssl-dev pkg-config \
   && rm -r /var/lib/apt/lists/*
 
