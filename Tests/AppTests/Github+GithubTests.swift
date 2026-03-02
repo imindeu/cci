@@ -7,10 +7,11 @@
 
 import APIConnect
 import APIModels
+import APIService
+import Mocks
 
 import XCTest
-import Crypto
-import HTTP
+import Vapor
 
 @testable import App
 
@@ -24,9 +25,7 @@ class GithubGithubTests: XCTestCase {
     func testCheck() {
         Environment.env[Github.Payload.Config.githubSecret.rawValue] = "x"
         let headers = [Github.signatureHeaderName: "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"]
-        let response = Github.check(Github.Payload(),
-                                    "y",
-                                    headers)
+        let response = Github.check(Github.Payload(), "y", headers)
         XCTAssertNil(response)
     }
     
@@ -39,17 +38,19 @@ class GithubGithubTests: XCTestCase {
         XCTAssertEqual(response, Github.PayloadResponse(error: Github.Error.signature))
     }
     
-    func testType() {
+    func testRequestType() {
         let title = "test 4DM-2001, 4DM-2002"
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
         let featureBranch = Github.Branch.template(ref: "feature")
-        let pullRequest = Github.PullRequest(url: "",
-                                             id: 0,
-                                             title: title,
-                                             body: "",
-                                             head: featureBranch,
-                                             base: Github.Branch.template())
+        let pullRequest = Github.PullRequest.template(
+            id: 0,
+            title: title,
+            body: "",
+            head: featureBranch,
+            base: Github.Branch.template(),
+            url: ""
+        )
 
         let branchRequest = Github.Payload(ref: title,
                                            refType: Github.RefType.branch)
@@ -72,13 +73,13 @@ class GithubGithubTests: XCTestCase {
         XCTAssertEqual(closedType, .pullRequestClosed(title: title,
                                                       head: featureBranch,
                                                       base: Github.Branch.template(),
-                                                      merged: false, platform: .iOS))
+                                                      platform: .iOS))
         
         let labeledRequest = Github.Payload(action: .labeled,
                                             pullRequest: pullRequest,
-                                            label: Github.waitingForReviewLabel)
+                                            label: Github.Label.waitingForReview)
         let labeledType = labeledRequest.type(headers: pullRequestHeaders)
-        XCTAssertEqual(labeledType, .pullRequestLabeled(label: Github.waitingForReviewLabel,
+        XCTAssertEqual(labeledType, .pullRequestLabeled(label: Github.Label.waitingForReview,
                                                         head: featureBranch,
                                                         base: Github.Branch.template(),
                                                         platform: .iOS))
@@ -96,22 +97,28 @@ class GithubGithubTests: XCTestCase {
         
     }
     
-    func testGithubRequestChangesRequested() throws {
+    func testGithubRequestChangesRequested() async throws {
         let labelPath = "/issues/1/labels/waiting for review"
         let pullRequestHeaders = [Github.eventHeaderName: Github.Event.pullRequestReview.rawValue]
-        let pullRequest = Github.PullRequest(url: "http://test.com/pulls/1",
-                                             id: 1,
-                                             title: "x",
-                                             body: "",
-                                             head: Github.Branch.template(),
-                                             base: Github.Branch.template(ref: "master"))
+        let pullRequest = Github.PullRequest.template(
+            id: 1,
+            title: "x",
+            body: "",
+            head: Github.Branch.template(),
+            base: Github.Branch.template(ref: "master"),
+            url: "http://test.com/pulls/1"
+        )
 
-        let response = try Github.githubRequest(Github.Payload(action: .submitted,
-                                                               review: Github.Review(state: .changesRequested),
-                                                               pullRequest: pullRequest,
-                                                               installation: Github.Installation(id: 1)),
-                                            pullRequestHeaders,
-                                            context()).wait()
+        let response = try await Github.githubRequest(
+            Github.Payload(
+                action: .submitted,
+                review: Github.Review(state: .changesRequested),
+                pullRequest: pullRequest,
+                installation: Github.Installation(id: 1)
+            ),
+            pullRequestHeaders,
+            Service.mockContext
+        ).get()
         
         let url = response.right?.url(token: "x")
         XCTAssertEqual(url?.host, "test.com")
@@ -121,41 +128,51 @@ class GithubGithubTests: XCTestCase {
 
     }
     
-    func testFailedStatus() throws {
+    func testFailedStatus() async throws {
         let headers = [Github.eventHeaderName: Github.Event.status.rawValue]
         
-        let response = try Github.githubRequest(Github.Payload(installation: Github.Installation(id: 1),
-                                                               commit: Github.Commit(sha: "shaxyz"),
-                                                               state: .some(.error)),
-                                                headers,
-                                                context()).wait()
+        let response = try await Github.githubRequest(
+            Github.Payload(
+                installation: Github.Installation(id: 1),
+                commit: Github.Commit(sha: "shaxyz"),
+                state: .some(.error)),
+            headers,
+            Service.mockContext
+        ).get()
         
-        let query = "shaxyz+label:\"\(Github.waitingForReviewLabel.name)\"+state:open"
+        let query = "q=shaxyz+label:\"\(Github.Label.waitingForReview.name)\"+state:open"
         XCTAssertNil(response.left)
         let url = response.right?.url(token: "x")
         XCTAssertEqual(url?.host, "api.github.com")
-        XCTAssertEqual(url?.path, "/search/issues?q=\(query)")
+        XCTAssertEqual(url?.path, "/search/issues")
+        XCTAssertEqual(url?.query(percentEncoded: false), query)
         XCTAssertEqual(response.right?.installationId, 1)
         XCTAssertEqual(response.right?.method, .GET)
     }
     
-    func testPullRequestOpened() throws {
+    func testPullRequestOpened() async throws {
         Environment.env[Youtrack.Request.Config.youtrackURL.rawValue] = "https://test.com"
         let title = "#4DM-2001 test"
         let body = "body"
         let headers = [Github.eventHeaderName: Github.Event.pullRequest.rawValue]
-        let pullRequest = Github.PullRequest(url: "http://test.com/pulls/1",
-                                             id: 1,
-                                             title: title,
-                                             body: "body",
-                                             head: Github.Branch.template(),
-                                             base: Github.Branch.template(ref: "master"))
+        let pullRequest = Github.PullRequest.template(
+            id: 1,
+            title: title,
+            body: "body",
+            head: Github.Branch.template(),
+            base: Github.Branch.template(ref: "master"),
+            url: "http://test.com/pulls/1"
+        )
 
-        let response = try Github.githubRequest(Github.Payload(action: .opened,
-                                                               pullRequest: pullRequest,
-                                                               installation: Github.Installation(id: 1)),
-                                            headers,
-                                            context()).wait()
+        let response = try await Github.githubRequest(
+            Github.Payload(
+                action: .opened,
+                pullRequest: pullRequest,
+                installation: Github.Installation(id: 1)
+            ),
+            headers,
+            Service.mockContext
+        ).get()
         XCTAssertNil(response.left)
         let url = response.right?.url(token: "x")
         XCTAssertEqual(url?.host, "test.com")
@@ -171,85 +188,93 @@ class GithubGithubTests: XCTestCase {
         
         struct Body: Decodable, Equatable { let body: String }
         
-        XCTAssertEqual(try JSONDecoder().decode(Body.self, from: response.right?.body ?? Data()),
+        XCTAssertEqual(try Service.decoder.decode(Body.self, from: response.right?.body ?? Data()),
                        Body(body: new))
     }
 
-    func testApiChangesRequested() throws {
-        let api = Github.apiWithGithub(context())
+    func testApiChangesRequested() async throws {
+        let api = Github.apiWithGithub(Service.mockContext)
 
         Environment.env = [
             Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
-            Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
+            Github.APIRequest.Config.githubPrivateKey.rawValue: Service.privateKeyString
         ]
+        
+        class MockAPI: BackendAPIType {
+            
+            func execute(request: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
+                Environment.env[request.host] = request.host
 
-        Environment.api = { hostname, _ in
-            Environment.env[hostname] = hostname
-            return { context, _ in
-                if hostname == "api.github.com" {
-                    return pure(HTTPResponse(body: "{\"token\": \"x\"}"), context)
-                } else if hostname == "test.com" {
-                    return pure(HTTPResponse(body: "{\"message\": \"y\"}"), context)
-                } else {
+                switch request.host {
+                case "api.github.com":
+                    return pure(MockHTTPResponse.okResponse(body:"{\"token\":\"x\"}"), Service.mockContext)
+                case "test.com":
+                    return pure(MockHTTPResponse.okResponse(body:"{\"message\": \"y\"}"), Service.mockContext)
+                default:
                     XCTFail("Shouldn't be more api calls")
-                    return Environment.emptyApi(context)
+                    return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
                 }
             }
         }
+        try await Service.loadTest(MockAPI())
 
         let request = Github.APIRequest(installationId: 1, type: .changesRequested(url: "http://test.com/pulls/1"))
-        let response = try api(request).wait()
+        let response = try await api(request).get()
         XCTAssertEqual(response.right, Github.APIResponse(message: "y"))
 
-//        let wrongRequest = Github.APIRequest(installationId: 1, type: .changesRequested(url: "/pulls/1"))
-//        let wrongResponse = try api(wrongRequest).wait()
-//        XCTAssertEqual(wrongResponse.left,
-//                       Github.PayloadResponse(error: Github.Error.badUrl("/issues/1/labels/waiting%20for%20review")))
+        let wrongRequest = Github.APIRequest(installationId: 1, type: .changesRequested(url: "/pulls/1"))
+        let wrongResponse = try await api(wrongRequest).get()
+        XCTAssertEqual(wrongResponse.left, Github.PayloadResponse(error: Youtrack.Error.underlying(HTTPClientError.emptyScheme)))
     }
     
-    func testApiFailedStatus() throws {
-        let api = Github.apiWithGithub(context())
+    func testApiFailedStatus() async throws {
+        let api = Github.apiWithGithub(Service.mockContext)
         
         Environment.env = [
             Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
-            Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
+            Github.APIRequest.Config.githubPrivateKey.rawValue: Service.privateKeyString
         ]
         
-        Environment.api = { hostname, _ in
-            return { context, request in
-                Environment.env[hostname] = hostname
-                if hostname == "api.github.com" {
-                    if request.urlString.contains("/app/installations") {
-                        return pure(HTTPResponse(body: "{\"token\": \"x\"}"), context)
-                    } else if request.urlString.contains("/search/issues") {
+        class MockAPI: BackendAPIType {
+            
+            func execute(request: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
+                Environment.env[request.host] = request.host
+
+                switch request.host {
+                case "api.github.com":
+                    if request.url.absoluteString.contains("/app/installations") {
+                        return pure(MockHTTPResponse.okResponse(body:"{\"token\":\"x\"}"), Service.mockContext)
+                    } else if request.url.absoluteString.contains("/search/issues") {
                         let response = Github.SearchResponse(
                             items: [Github.SearchIssue(pullRequest: .init(url: "https://pr.com/1"))])
-                        let data = try? JSONEncoder().encode(response)
-                        return pure(HTTPResponse(body: data ?? Data()), context)
+                        let data = try! Service.encoder.encode(response)
+                        return pure(MockHTTPResponse.okResponse(body:String(data: data, encoding: .utf8)!), Service.mockContext)
                     } else {
                         XCTFail("Shouldn't be more api calls")
-                        return Environment.emptyApi(context)
+                        return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
                     }
-                } else if hostname == "pr.com" {
-                    let data = try? JSONEncoder().encode(Github.PullRequest(url: "https://test.com/pull/1",
-                                                                            id: 1,
-                                                                            title: "title",
-                                                                            body: "",
-                                                                            head: Github.Branch.template(),
-                                                                            base: Github.Branch.template(ref: "master"))
-)
-                    return pure(HTTPResponse(body: data ?? Data()), context)
-                } else if hostname == "test.com" {
-                    return pure(HTTPResponse(body: "{\"message\": \"y\"}"), context)
-                } else {
+                case "pr.com":
+                    let data = try! Service.encoder.encode(Github.PullRequest.template(
+                        issueId: 1,
+                        title: "title",
+                        body: "",
+                        head: Github.Branch.template(),
+                        base: Github.Branch.template(ref: "master"),
+                        url: "https://test.com/pull/1"
+                    ))
+                     return pure(MockHTTPResponse.okResponse(body:String(data: data, encoding: .utf8)!), Service.mockContext)
+                case "test.com":
+                    return pure(MockHTTPResponse.okResponse(body:"{\"message\": \"y\"}"), Service.mockContext)
+                default:
                     XCTFail("Shouldn't be more api calls")
-                    return Environment.emptyApi(context)
+                    return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
                 }
             }
         }
+        try await Service.loadTest(MockAPI())
         
         let request = Github.APIRequest(installationId: 1, type: .failedStatus(sha: "shaxyz"))
-        let response = try api(request).wait()
+        let response = try await api(request).get()
         
         XCTAssertNil(response.left)
         XCTAssertEqual(response.right, Github.APIResponse(message: "y"))
@@ -260,6 +285,61 @@ class GithubGithubTests: XCTestCase {
     
     func testResponseToGithub() {
         XCTAssertEqual(Github.responseToGithub(Github.APIResponse()), Github.PayloadResponse())
+    }
+    
+    func testStalePullRequests() async throws {
+        let api = Github.apiWithGithub(Service.mockContext)
+        
+        Environment.env = [
+            Github.APIRequest.Config.githubAppId.rawValue: Github.APIRequest.Config.githubAppId.rawValue,
+            Github.APIRequest.Config.githubPrivateKey.rawValue: Service.privateKeyString
+        ]
+        
+        class MockAPI: BackendAPIType {
+            
+            func execute(request: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
+                Environment.env[request.host] = request.host
+                
+                switch request.host {
+                case "api.github.com":
+                    if request.url.absoluteString.contains("/app/installations") {
+                        return pure(MockHTTPResponse.okResponse(body:"{\"token\":\"x\"}"), Service.mockContext)
+                    } else if request.url.absoluteString.contains("/pulls") {
+                        let data = try! Service.encoder.encode([Github.PullRequest.template(
+                            issueId: 1,
+                            title: "title",
+                            body: "",
+                            updatedAt: Date().addingTimeInterval(-1814401),
+                            head: Github.Branch.template(),
+                            base: Github.Branch.template(ref: "master"),
+                            url: "https://test.com/pull/1"
+                        )])
+                        return pure(MockHTTPResponse.okResponse(body: String(data: data, encoding: .utf8)!), Service.mockContext)
+                    } else if request.url.absoluteString.contains("/labels") {
+                        let data = try! Service.encoder.encode([Github.Label(name: "y")])
+                        return pure(MockHTTPResponse.okResponse(body: String(data: data, encoding: .utf8)!), Service.mockContext)
+                    } else {
+                        XCTFail("Shouldn't be more api calls")
+                        return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
+                    }
+                case "test.com":
+                    let data = try! Service.encoder.encode([Github.Status(state: .success)])
+                    return pure(MockHTTPResponse.okResponse(body: String(data: data, encoding: .utf8)!), Service.mockContext)
+                default:
+                    XCTFail("Shouldn't be more api calls")
+                    return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
+                }
+            }
+        }
+        try await Service.loadTest(MockAPI())
+        
+        let request = Github.APIRequest(installationId: 1, type: .testStatus(url: "https://test.com/pull/1"))
+        let response = try await api(request).get()
+        
+        XCTAssertNil(response.left)
+        XCTAssertEqual(response.right, Github.APIResponse(message: "success"))
+        XCTAssertEqual(Environment.env["api.github.com"], "api.github.com")
+        XCTAssertEqual(Environment.env["test.com"], "test.com")
     }
     
 }

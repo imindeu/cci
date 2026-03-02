@@ -7,15 +7,11 @@
 
 import APIConnect
 import APIService
+import APIModels
 
-import enum APIModels.Github
-import enum APIModels.Youtrack
+import Foundation
 
-import protocol Foundation.LocalizedError
-import struct Foundation.Data
-import struct Foundation.URL
-
-import enum HTTP.HTTPMethod
+import Vapor
 
 extension Youtrack {
     enum Error: LocalizedError {
@@ -135,8 +131,8 @@ extension Youtrack {
                 }
                 do {
                     return try request.data
-                        .map(fetch(context, token, Environment.api))
-                        .flatten(on: context)
+                        .map(fetch(token))
+                        .flatten(on: context.next())
                         .map { results -> Either<Github.PayloadResponse, [ResponseContainer]> in
                             let initial: Either<Github.PayloadResponse, [ResponseContainer]> = .right([])
                             return results.reduce(initial, flatten)
@@ -167,25 +163,17 @@ private extension Youtrack {
         return "\(base)/commands"
     }
 
-    static func fetch(_ context: Context,
-                      _ token: String,
-                      _ api: @escaping API)
-        -> (Request.RequestData) throws
-        -> EitherIO<Github.PayloadResponse, ResponseContainer> {
-            
-            return { data in
-                try Service.fetch(data, Response.self, token, context, Environment.api, isDebugMode: Environment.isDebugMode())
-                    .map { response in
-                        let youtrackResponse = response.value ?? Response(value: "issue: \(data.issue)")
-                        return .right(ResponseContainer(response: youtrackResponse, data: data))
-                    }
-                    .catchMap {
-                        return .left(
-                            Github.PayloadResponse(
-                                value: "issue: \(data.issue): " +
-                                "\(Error.underlying($0).localizedDescription)"))
-                    }
-            }
+    static func fetch(_ token: String) -> (Request.RequestData) throws -> EitherIO<Github.PayloadResponse, ResponseContainer> {
+        { data in
+            try Service.fetch(data, Response.self, token, isDebugMode: Environment.isDebugMode())
+                .map { response in
+                    let youtrackResponse = response.value ?? Response(value: "issue: \(data.issue)")
+                    return .right(ResponseContainer(response: youtrackResponse, data: data))
+                }
+                .flatMapErrorThrowing {
+                    .left(Github.PayloadResponse(value: "issue: \(data.issue): " + "\(Error.underlying($0).localizedDescription)"))
+                }
+        }
     }
 
     static func flatten(_ lhs: Either<Github.PayloadResponse, [ResponseContainer]>,

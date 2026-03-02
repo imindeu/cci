@@ -6,7 +6,7 @@
 //
 
 public enum Slack {
-    public struct Request: Equatable, Codable {
+    public struct Request: Equatable, Codable, Sendable {
         public let token: String
         public let teamId: String
         public let teamDomain: String
@@ -66,7 +66,7 @@ public enum Slack {
         }
     }
     
-    public struct Response: Equatable, Codable {
+    public struct Response: Equatable, Codable, Sendable {
         public let responseType: ResponseType
         public let text: String?
         public var attachments: [Attachment]
@@ -82,12 +82,12 @@ public enum Slack {
             self.mrkdwn = mrkdwn
         }
         
-        public enum ResponseType: String, Codable {
+        public enum ResponseType: String, Codable, Sendable {
             case inChannel = "in_channel"
             case ephemeral = "ephemeral"
         }
         
-        public struct Attachment: Equatable, Codable {
+        public struct Attachment: Equatable, Codable, Sendable {
             public let fallback: String?
             public let text: String?
             public let color: String?
@@ -115,7 +115,7 @@ public enum Slack {
             }
         }
         
-        public struct Field: Equatable, Codable {
+        public struct Field: Equatable, Codable, Sendable {
             public let title: String?
             public let value: String?
             public let short: Bool?

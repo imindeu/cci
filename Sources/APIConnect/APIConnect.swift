@@ -5,6 +5,8 @@
 //  Created by Peter Geszten-Kovacs on 2018. 11. 21..
 //
 
+import Vapor
+
 public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvironment>
     where From.ResponseModel: Encodable {
 
@@ -19,7 +21,7 @@ public struct APIConnect<From: RequestModel, To: RequestModel, E: APIConnectEnvi
     public let request: (From, Headers?, Context) -> EitherIO<From.ResponseModel, To>
     public let toAPI: (Context) -> (To) -> EitherIO<From.ResponseModel, To.ResponseModel>
     public let response: (To.ResponseModel) -> From.ResponseModel
-    public let fromAPI: ((From, Context) -> (From.ResponseModel) -> IO<Void>)?
+    public let fromAPI: ((From, Context) -> (From.ResponseModel) throws -> IO<Void>)?
     public let instant: ((Context) -> (From) -> IO<From.ResponseModel?>)?
 } 
 
@@ -39,32 +41,32 @@ public extension APIConnect {
         
     }
     
-    func transformFrom<A: RequestModel>(check: @escaping (A, String?, Headers?) -> A.ResponseModel?,
-                                        request: @escaping (A, Headers?, Context)
-        -> EitherIO<A.ResponseModel, To>,
-                                        transform: @escaping (From.ResponseModel) -> A.ResponseModel)
-        -> APIConnect<A, To, E> {
-            
-        return APIConnect<A, To, E>(check: check,
-                                    request: request,
-                                    toAPI: { context -> (To) -> EitherIO<A.ResponseModel, To.ResponseModel> in
-                                        return { self.toAPI(context)($0).bimapEither(transform, id) }
-                                    },
-                                    response: { transform(self.response($0)) })
+    func transformFrom<A: RequestModel>(
+        check: @escaping (A, String?, Headers?) -> A.ResponseModel?,
+        request: @escaping (A, Headers?, Context) -> EitherIO<A.ResponseModel, To>,
+        transform: @escaping (From.ResponseModel) -> A.ResponseModel
+    ) -> APIConnect<A, To, E> {
+        APIConnect<A, To, E>(
+            check: check,
+            request: request,
+            toAPI: { context -> (To) -> EitherIO<A.ResponseModel, To.ResponseModel> in
+                return { self.toAPI(context)($0).bimapEither(transform, id) }
+            },
+            response: { transform(self.response($0)) }
+        )
     }
     
-    func tranformTo<A: RequestModel>(request: @escaping (From, Headers?, Context)
-        -> EitherIO<From.ResponseModel, A>,
-                                     toAPI: @escaping (Context)
-        -> (A)
-        -> EitherIO<From.ResponseModel, A.ResponseModel>,
-                                     response: @escaping (A.ResponseModel) -> From.ResponseModel)
-        -> APIConnect<From, A, E> {
-            
-        return APIConnect<From, A, E>(check: self.check,
-                                      request: request,
-                                      toAPI: toAPI,
-                                      response: response)
+    func tranformTo<A: RequestModel>(
+        request: @escaping (From, Headers?, Context) -> EitherIO<From.ResponseModel, A>,
+        toAPI: @escaping (Context) -> (A) -> EitherIO<From.ResponseModel, A.ResponseModel>,
+        response: @escaping (A.ResponseModel) -> From.ResponseModel
+    ) -> APIConnect<From, A, E> {
+        APIConnect<From, A, E>(
+            check: self.check,
+            request: request,
+            toAPI: toAPI,
+            response: response
+        )
     }
     
 }
@@ -95,14 +97,13 @@ public extension APIConnect {
     func run(_ from: From,
              _ context: Context,
              _ body: String?,
-             _ headers: Headers?) -> IO<From.ResponseModel?> {
+             _ headers: Headers?) -> IO<From.ResponseModel> {
         if let response = check(from, body, headers) {
             return pure(response, context)
         }
         return request(from, headers, context)
             .flatMap(to(context, toAPI))
             .mapEither(id, response)
-            .map(Optional.some)
     }
 
     private func to(_ context: Context,
@@ -121,7 +122,7 @@ public extension APIConnect where From: DelayedRequestModel {
          request: @escaping (From, Headers?, Context) -> EitherIO<From.ResponseModel, To>,
          toAPI: @escaping (Context) -> (To) -> EitherIO<From.ResponseModel, To.ResponseModel>,
          response: @escaping (To.ResponseModel) -> From.ResponseModel,
-         fromAPI: @escaping (From, Context) -> (From.ResponseModel) -> IO<Void>,
+         fromAPI: @escaping (From, Context) -> (From.ResponseModel) throws -> IO<Void>,
          instant: @escaping (Context) -> (From) -> IO<From.ResponseModel?>) {
         
         self.check = check
@@ -147,7 +148,7 @@ public extension APIConnect where From: DelayedRequestModel {
             return run.map(Optional.some)
         }
         defer {
-            _ = run.flatMap(fromAPI(from, context))
+            _ = run.flatMapThrowing(fromAPI(from, context))
         }
         return instant(context)(from)
     }

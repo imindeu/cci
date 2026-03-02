@@ -6,9 +6,9 @@ RUN apt-get -qq update && apt-get install -y \
   && rm -r /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY /bin/Run .
+COPY /bin/cci .
 COPY /lib/* /usr/lib/
 
 EXPOSE 8081
 
-CMD ./Run --hostname 0.0.0.0 --port 8081
+CMD ./cci --hostname 0.0.0.0 --port 8081

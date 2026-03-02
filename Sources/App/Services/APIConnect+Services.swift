@@ -8,6 +8,8 @@
 import APIConnect
 import APIModels
 
+import Vapor
+
 // MARK: - Custom types
 
 typealias SlackToCircleCi = APIConnect<Slack.Request, CircleCi.JobTriggerRequest, Environment>
@@ -78,7 +80,7 @@ extension APIConnect where From == Github.Payload, To == Youtrack.Request {
     static func run(_ from: Github.Payload,
                     _ context: Context,
                     _ body: String?,
-                    _ headers: Headers?) -> IO<Github.PayloadResponse?> {
+                    _ headers: Headers?) -> IO<Github.PayloadResponse> {
         return githubToYoutrack.run(from, context, body, headers)
     }
 }
@@ -88,7 +90,7 @@ extension APIConnect where From == Github.Payload, To == Github.APIRequest {
     static func run(_ from: Github.Payload,
                     _ context: Context,
                     _ body: String?,
-                    _ headers: Headers?) -> IO<Github.PayloadResponse?> {
+                    _ headers: Headers?) -> IO<Github.PayloadResponse> {
         return githubToGithub.run(from, context, body, headers)
     }
 }
@@ -98,21 +100,24 @@ extension APIConnect where From == Github.Payload, To == CircleCi.JobTriggerRequ
     static func run(_ from: Github.Payload,
                     _ context: Context,
                     _ body: String?,
-                    _ headers: Headers?) -> IO<Github.PayloadResponse?> {
+                    _ headers: Headers?) -> IO<Github.PayloadResponse> {
         return githubToCircleCi.run(from, context, body, headers)
     }
 }
 
 extension Github {
-    public static func webhook(_ from: Github.Payload,
-                               _ context: Context,
-                               _ headers: Headers?) -> (String?) -> IO<Github.PayloadResponse?> {
-        return {
-            [GithubToYoutrack.run(from, context, $0, headers),
-             GithubToGithub.run(from, context, $0, headers),
-             GithubToCircleCi.run(from, context, $0, headers)]
-                .flatten(on: context)
-                .map(Github.reduce)
-        }
+    public static func webhook(
+        _ from: Github.Payload,
+        _ context: Context,
+        _ body: String? = nil,
+        _ headers: Headers?
+    ) -> IO<Github.PayloadResponse> {
+        [
+            GithubToYoutrack.run(from, context, body, headers),
+            GithubToGithub.run(from, context, body, headers),
+            GithubToCircleCi.run(from, context, body, headers)
+        ]
+            .flatten(on: context.next())
+            .map(Github.reduce)
     }
 }
