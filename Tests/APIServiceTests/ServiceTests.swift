@@ -52,7 +52,7 @@ class ServiceTests: XCTestCase {
                 )
 
                 do {
-                    let body = try JSONEncoder().encode(response)
+                    let body = try Service.encoder.encode(response)
                     return pure(MockHTTPResponse.okResponse(body: String(data: body, encoding: .utf8)!), Service.mockContext)
                 } catch {
                     XCTFail(error.localizedDescription)

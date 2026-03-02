@@ -178,7 +178,7 @@ extension CircleCiJobTriggerRequest {
     }
     
     var body: Data? {
-        return try? JSONEncoder().encode(
+        return try? Service.encoder.encode(
             CircleCiJobTriggerRequestBody(
                 branch: branch,
                 parameters: .init(
@@ -664,7 +664,7 @@ extension CircleCi {
         }
         
         switch type {
-        case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base, platform: _):
+        case let .pullRequestLabeled(label: Github.Label.waitingForReview, head: head, base: base, platform: _):
             do {
                 if Github.isMaster(branch: base) || Github.isRelease(branch: base) {
                     return try CircleCiTestJob.parse(project: project,

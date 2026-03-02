@@ -72,15 +72,17 @@ class RouterGithubToCircleCiTests: XCTestCase {
     }
 
     func testFullRun() async throws {
-        let pullRequest = Github.PullRequest(url: "",
-                                             id: 1,
-                                             title: "x",
-                                             body: "",
-                                             head: Github.Branch.template(),
-                                             base: Github.Branch.template(ref: "master"))
+        let pullRequest = Github.PullRequest.template(
+            id: 1,
+            title: "x",
+            body: "",
+            head: Github.Branch.template(),
+            base: Github.Branch.template(ref: "master"),
+            url: ""
+        )
         let request = Github.Payload(action: .labeled,
                                      pullRequest: pullRequest,
-                                     label: Github.waitingForReviewLabel,
+                                     label: Github.Label.waitingForReview,
                                      installation: Github.Installation(id: 1),
                                      repository: Github.Repository.template(name: project))
         let response = try await GithubToCircleCi.run(
@@ -98,15 +100,17 @@ class RouterGithubToCircleCiTests: XCTestCase {
     }
 
     func testEmptyRun() async throws {
-        let pullRequest = Github.PullRequest(url: "",
-                                             id: 1,
-                                             title: "x",
-                                             body: "",
-                                             head: Github.Branch.template(),
-                                             base: Github.Branch.template(ref: "master"))
+        let pullRequest = Github.PullRequest.template(
+            id: 1,
+            title: "x",
+            body: "",
+            head: Github.Branch.template(),
+            base: Github.Branch.template(ref: "master"),
+            url: ""
+        )
         let request = Github.Payload(action: .unlabeled,
                                      pullRequest: pullRequest,
-                                     label: Github.waitingForReviewLabel,
+                                     label: Github.Label.waitingForReview,
                                      installation: Github.Installation(id: 1),
                                      repository: Github.Repository.template(name: project))
         let response = try await GithubToYoutrack.run(

@@ -67,19 +67,19 @@ class RouterGithubToGithubTests: XCTestCase {
     }
     
     func testFullRun() async throws {
-        let pullRequest = Github.PullRequest(
-            url: "http://test.com/pull",
+        let pullRequest = Github.PullRequest.template(
             id: 1,
             title: "x",
             body: "",
             head: Github.Branch.template(),
-            base: Github.Branch.template(ref: "master")
+            base: Github.Branch.template(ref: "master"),
+            url: "http://test.com/pull"
         )
         let request = Github.Payload(
             action: .submitted,
             review: Github.Review(state: .changesRequested),
             pullRequest: pullRequest,
-            label: Github.waitingForReviewLabel,
+            label: Github.Label.waitingForReview,
             installation: Github.Installation(id: 1)
         )
         let response = try await GithubToGithub
@@ -97,18 +97,18 @@ class RouterGithubToGithubTests: XCTestCase {
     }
 
     func testEmptyRun() async throws {
-        let pullRequest = Github.PullRequest(
-            url: "http://test.com/pull",
+        let pullRequest = Github.PullRequest.template(
             id: 1,
             title: "x",
             body: "",
             head: Github.Branch.template(),
-            base: Github.Branch.template(ref: "master")
+            base: Github.Branch.template(ref: "master"),
+            url: "http://test.com/pull"
         )
         let request = Github.Payload(
             action: .labeled,
             pullRequest: pullRequest,
-            label: Github.waitingForReviewLabel,
+            label: Github.Label.waitingForReview,
             installation: Github.Installation(id: 1)
         )
         let response = try await GithubToYoutrack

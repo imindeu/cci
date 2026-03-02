@@ -43,12 +43,14 @@ class YoutrackGithubTests: XCTestCase {
         let title = "test \(issues.joined(separator: ", "))"
         let branchHeaders = [Github.eventHeaderName: "create"]
         let pullRequestHeaders = [Github.eventHeaderName: "pull_request"]
-        let pullRequest = Github.PullRequest(url: "",
-                                             id: 0,
-                                             title: title,
-                                             body: "",
-                                             head: Github.Branch.template(ref: "feature"),
-                                             base: Github.Branch.template())
+        let pullRequest = Github.PullRequest.template(
+            id: 0,
+            title: title,
+            body: "",
+            head: Github.Branch.template(ref: "feature"),
+            base: Github.Branch.template(),
+            url: ""
+        )
 
         let branchRequest = Github.Payload(ref: title, refType: Github.RefType.branch)
         let branchResponse = try await Youtrack.githubRequest(branchRequest, branchHeaders, Service.mockContext).get().right

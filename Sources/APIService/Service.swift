@@ -13,6 +13,19 @@ import Vapor
 import JWTKit
 
 public final class Service {
+    
+    public static let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
+    
+    public static let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
+    
     public private(set) static var shared: Service!
     
     public static func load(_ api: BackendAPIType, githubPrivateKey: String) async throws {
@@ -94,7 +107,7 @@ extension IO where Value == HTTPClient.Response {
     func decode<A: Decodable & Sendable>(_ type: A.Type) -> IO<A?> {
         flatMapThrowing { response -> A? in
             guard let byteBuffer = response.body else { return nil }
-            return try JSONDecoder().decode(type, from: byteBuffer)
+            return try Service.decoder.decode(type, from: byteBuffer)
         }
     }
 }
