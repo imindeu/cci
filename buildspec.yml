@@ -6,12 +6,12 @@ phases:
       - mkdir -p /build/lib
       - cp -R /usr/lib/swift/linux/*.so /build/lib
       - swift package update
-      - swift build --product Run --configuration release
-      - mv `swift build --product Run --configuration release --show-bin-path` /build/bin
+      - swift build --product cci --configuration release
+      - mv `swift build --product cci --configuration release --show-bin-path` /build/bin
       - mv Dockerfile /build/Dockerfile
 artifacts:
   files:
-    - 'bin/Run'
+    - 'bin/cci'
     - 'lib/**/*'
     - 'Dockerfile'
   base-directory: '/build/'

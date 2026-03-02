@@ -14,7 +14,7 @@ parameters:
 jobs:
   test:
     docker:
-      - image: swift:6.2.3-jammy
+      - image: swift:6.2.4
     resource_class: large
     steps:
       - checkout
