@@ -11,4 +11,4 @@ COPY /lib/* /usr/lib/
 
 EXPOSE 8081
 
-CMD ./cci --hostname 0.0.0.0 --port 8081
+CMD ./cci serve --hostname 0.0.0.0 --port 8081
