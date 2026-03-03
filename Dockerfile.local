@@ -1,0 +1,16 @@
+# Build stage
+FROM swift:6.2.4-noble AS builder
+
+WORKDIR /app
+COPY . .
+RUN swift package clean && swift build -c release
+
+# Runtime stage
+FROM ubuntu:24.04
+
+WORKDIR /app
+COPY --from=builder /app/.build/release/cci .
+COPY --from=builder /usr/lib/swift /usr/lib/swift
+
+EXPOSE 8081
+CMD ["./cci", "serve", "--hostname", "0.0.0.0", "--port", "8081"]

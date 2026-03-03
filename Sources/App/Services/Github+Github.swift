@@ -285,6 +285,7 @@ extension Github {
     static func check(_ from: Github.Payload,
                       _ body: String?,
                       _ headers: Headers?) -> Github.PayloadResponse? {
+        guard !Environment.isDebugMode() else { return nil }
         
         let secret = Environment.get(Payload.Config.githubSecret)
         let signature = headers?.get(signatureHeaderName)
