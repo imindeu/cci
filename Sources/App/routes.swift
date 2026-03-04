@@ -9,12 +9,10 @@ public func routes(_ app: Application) throws {
         return SlackToCircleCi.run(slack, req.eventLoop)
     }
     
-    app.post("githubWebhook") { req in
-        guard
-            var buffer = req.body.data,
-            let data = buffer.readData(length: buffer.readableBytes)
-        else { throw Abort(.badRequest) }
+    app.on(.POST, "githubWebhook", body: .collect(maxSize: "2mb")) { req in
+        guard let byteBuffer = req.body.data else { throw Abort(.badRequest) }
         
+        let data = Data(buffer: byteBuffer)
         let github = try Service.decoder.decode(Github.Payload.self, from: data)
         let body = String(data: data, encoding: .utf8)
         return Github.webhook(github, req.eventLoop, body, req.headers)
