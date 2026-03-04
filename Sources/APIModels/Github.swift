@@ -120,8 +120,8 @@ public enum Github {
         public let title: String
         public let body: String?
         public let createdAt: Date
-        public let updatedAt: Date
-        public let mergedAt: Date
+        public let updatedAt: Date?
+        public let mergedAt: Date?
         public let draft: Bool
         public let head: Branch
         public let base: Branch
@@ -135,8 +135,8 @@ public enum Github {
             title: String,
             body: String? = nil,
             createdAt: Date,
-            updatedAt: Date,
-            mergedAt: Date,
+            updatedAt: Date? = nil,
+            mergedAt: Date? = nil,
             draft: Bool,
             head: Github.Branch,
             base: Github.Branch,

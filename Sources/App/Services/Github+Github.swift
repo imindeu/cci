@@ -425,7 +425,8 @@ private extension Github {
                     .compactMap { pull -> TokenedIO<[Github.Label]?>? in
                         guard
                             !pull.labels.contains(Github.Label.stale),
-                            now.timeIntervalSince(pull.updatedAt) > Self.staleInterval
+                            let updatedAt = pull.updatedAt,
+                            now.timeIntervalSince(updatedAt) > Self.staleInterval
                         else { return nil }
                         
                         let request = Github.APIRequest(type: .markPullRequestStale(issueId: pull.issueId))
