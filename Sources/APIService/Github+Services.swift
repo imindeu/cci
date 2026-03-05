@@ -13,7 +13,7 @@ import Vapor
 import JWTKit
 
 public extension Github {
-    static var signatureHeaderName: String { return "X-Hub-Signature" }
+    static var signatureHeaderName: String { return "X-Hub-Signature-256" }
     static var eventHeaderName: String { return "X-GitHub-Event" }
 }
 
@@ -35,8 +35,8 @@ public extension Github {
             return false
         }
         
-        let digest = HMAC<Crypto.Insecure.SHA1>.authenticationCode(for: body, using: SymmetricKey(data: secret))
-        return signature == "sha1=\(digest.hexEncodedString())"
+        let digest = HMAC<SHA256>.authenticationCode(for: body, using: SymmetricKey(data: secret))
+        return signature == "sha256=\(digest.hexEncodedString())"
     }
     
     static func jwt(date: Date = Date(), appId: String) async throws -> String {

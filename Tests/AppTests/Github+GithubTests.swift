@@ -24,7 +24,7 @@ class GithubGithubTests: XCTestCase {
     
     func testCheck() {
         Environment.env[Github.Payload.Config.githubSecret.rawValue] = "x"
-        let headers = [Github.signatureHeaderName: "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"]
+        let headers = [Github.signatureHeaderName: "sha256=1b56188fbdc65a885923886c8b7271332149050589d91803364521080cd0792d"]
         let response = Github.check(Github.Payload(), "y", headers)
         XCTAssertNil(response)
     }

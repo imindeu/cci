@@ -262,7 +262,8 @@ extension Github.APIRequest: TokenRequestable {
     public func headers(token: String) -> [(String, String)] {
         return [
             ("Authorization", "token \(token)"),
-            ("Accept", "application/vnd.github.machine-man-preview+json"),
+            ("Accept", "application/vnd.github+json"),
+            ("X-GitHub-Api-Version", "2022-11-28"),
             ("User-Agent", "cci-imind")
         ]
     }
