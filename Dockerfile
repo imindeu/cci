@@ -2,7 +2,8 @@ FROM ubuntu:24.04
 
 RUN apt-get -qq update && apt-get install -y \
   libicu74 libxml2 libbsd0 libcurl4 libatomic1 \
-  libssl-dev pkg-config \
+  libssl-dev pkg-config ca-certificates \
+  && update-ca-certificates \
   && rm -r /var/lib/apt/lists/*
 
 WORKDIR /app

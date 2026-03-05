@@ -35,7 +35,7 @@ then
   -e circleCiProjects="4dmotion-ios@cci@4dmotion-android" \
   -e circleCiCompany="CIRCLECICOMPANY" \
   -e githubSecret="GITHUBSECRET" \
-  -e githubAppId="GITHUBAPPID" \
+  -e githubAppId="22322" \
   -e githubPrivateKey="$GITHUBPRIVATEKEY" \
   -e youtrackURL="YOUTRACKURL" \
   -e youtrackToken="YOUTRACKTOKEN" \

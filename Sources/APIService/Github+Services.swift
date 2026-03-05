@@ -19,9 +19,9 @@ public extension Github {
 
 public extension Github {
     struct JWTPayloadData: JWTPayload {
+        let iss: IssuerClaim
         let iat: Int
         let exp: Int
-        let iss: String
         
         public func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {}
     }
@@ -40,10 +40,11 @@ public extension Github {
     }
     
     static func jwt(date: Date = Date(), appId: String) async throws -> String {
-        let iat = Int(date.timeIntervalSince1970)
-        let exp = Int(date.addingTimeInterval(10 * 60).timeIntervalSince1970)
-        let payload = JWTPayloadData(iat: iat, exp: exp, iss: appId)
-        return try await Service.shared.signers.sign(payload)
+        try await Service.shared.signers.sign(JWTPayloadData(
+            iss: .init(value: appId),
+            iat: Int(date.timeIntervalSince1970),
+            exp: Int(date.addingTimeInterval(10 * 60).timeIntervalSince1970)
+        ))
     }
     
     static func accessToken(jwtToken: String, installationId: Int) throws -> IO<String?> {
@@ -56,7 +57,8 @@ public extension Github {
             method: .POST,
             headers: HTTPHeaders([
                 ("Authorization", "Bearer \(jwtToken)"),
-                ("Accept", "application/vnd.github.machine-man-preview+json"),
+                ("Accept", "application/vnd.github+json"),
+                ("X-GitHub-Api-Version", "2022-11-28"),
                 ("User-Agent", "cci-imind")
             ])
         )

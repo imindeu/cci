@@ -354,7 +354,7 @@ extension Github {
     @Sendable
     static func reduce(_ responses: [PayloadResponse]) -> PayloadResponse {
         return responses
-            .reduce(PayloadResponse()) { next, result in
+            .reduce(PayloadResponse()) { result, next in
                 guard let value = next.value else {
                     return result
                 }
