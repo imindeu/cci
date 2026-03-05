@@ -25,11 +25,11 @@ class GithubServicesTests: XCTestCase {
     func testJwt() async throws {
         try await Service.loadTestWithEmptyAPI()
         
-        let iss = "0101"
+        let iss = IssuerClaim(value: "0101")
         let iat: TimeInterval = 1
         let exp = (10 * 60) + iat
         
-        let token = try await Github.jwt(date: Date(timeIntervalSince1970: iat), appId: iss)
+        let token = try await Github.jwt(date: Date(timeIntervalSince1970: iat), appId: "0101")
         let data = token.data(using: .utf8) ?? Data()
         let jwt = try await Service.shared.signers.defaultJWTParser.parse(data, as: Github.JWTPayloadData.self)
         
