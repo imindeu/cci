@@ -55,15 +55,11 @@ extension Slack {
     
     static func api(_ request: Request, _ context: Context) -> (Response) throws -> IO<Void> {
         return { response in
-            let body = try JSONEncoder().encode(response)
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: body.count)
-            byteBuffer.writeBytes(body)
-            
             let request = try HTTPClient.Request(
                 url: request.responseUrlString,
                 method: .POST,
                 headers: HTTPHeaders([("Content-Type", "application/json")]),
-                body: HTTPClient.Body.byteBuffer(byteBuffer)
+                body: .bytes(try JSONEncoder().encode(response))
             )
             
             return Service.shared.api

@@ -78,7 +78,8 @@ public final class Service {
         let httpRequest = try HTTPClient.Request(
             url: url,
             method: method,
-            headers: HTTPHeaders(request.headers(token: token))
+            headers: HTTPHeaders(request.headers(token: token)),
+            body: request.body.map(HTTPClient.Body.bytes)
         )
         
         if isDebugMode {
