@@ -96,19 +96,7 @@ public extension Github {
             }
         }
         
-        var checkStale: Bool {
-            switch self {
-            case .branchCreated,
-                 .branchPushed,
-                 .pullRequestOpened,
-                 .pullRequestEdited,
-                 .pullRequestClosed,
-                 .testStatus:
-                true
-            default:
-                false
-            }
-        }
+        var checkStale: Bool { false }
     }
 }
 
