@@ -1,32 +1,78 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.10
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
 import PackageDescription
 
-// swiftlint:disable prefixed_toplevel_constant
+// swiftlint:disable:next prefixed_toplevel_constant
 let package = Package(
-    name: "Cci",
+    name: "CCI",
+    defaultLocalization: "en",
+    platforms: [.macOS(.v13)],
     products: [
         .library(name: "APIConnect", targets: ["APIConnect"]),
         .library(name: "APIModels", targets: ["APIModels"]),
         .library(name: "APIService", targets: ["APIService"]),
-        .executable(name: "Run", targets: ["Run"]),
+        .executable(name: "cci", targets: ["CCI"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", from: "1.11.0"),
-        .package(url: "https://github.com/vapor/crypto.git", from: "3.3.0"),
-        .package(url: "https://github.com/vapor/http.git", from: "3.1.6"),
-        .package(url: "https://github.com/vapor/jwt.git", from: "3.0.0"),
-        .package(url: "https://github.com/vapor/vapor.git", from: "3.1.0"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/jwt.git", from: "5.0.0")
     ],
     targets: [
-        .target(name: "APIConnect", dependencies: ["HTTP"]),
+        .target(
+            name: "APIConnect", 
+            dependencies: [
+                .product(name: "Vapor", package: "vapor")
+            ]
+        ),
         .testTarget(name: "APIConnectTests", dependencies: ["APIConnect"]),
-        .target(name: "APIModels", dependencies: []),
-        .target(name: "APIService", dependencies: ["APIConnect", "HTTP", "Crypto", "JWT"]),
-        .testTarget(name: "APIServiceTests", dependencies: ["APIService"]),
-        .target(name: "App", dependencies: ["APIConnect", "APIModels", "APIService", "Vapor"]),
-        .testTarget(name: "AppTests", dependencies: ["App"]),
-        .target(name: "Run", dependencies: ["App"]),
+        
+        .target(
+            name: "Mocks", 
+            dependencies: [
+                "APIConnect",
+                "APIModels",
+                "APIService",
+                .product(name: "Vapor", package: "vapor")
+            ]
+        ),
+
+        .target(
+            name: "APIModels", 
+            dependencies: [
+                .product(name: "Vapor", package: "vapor")
+            ]
+        ),
+        
+        .target(
+            name: "APIService", 
+            dependencies: [
+                "APIConnect", 
+                .product(name: "Vapor", package: "vapor"),
+                .product(name: "JWT", package: "jwt")
+            ]
+        ),
+        .testTarget(
+            name: "APIServiceTests", 
+            dependencies: [
+                "APIService",
+                "APIModels",
+                "Mocks",
+                .product(name: "XCTVapor", package: "vapor")
+            ]
+        ),
+        
+        .target(
+            name: "App", 
+            dependencies: [
+                "APIConnect", 
+                "APIModels", 
+                "APIService", 
+                .product(name: "Vapor", package: "vapor")
+            ]
+        ),
+        .testTarget(name: "AppTests", dependencies: ["App", "Mocks"]),
+
+        .executableTarget(name: "CCI", dependencies: ["App"])
     ]
 )
-
-// swiftlint:enable prefixed_toplevel_constant

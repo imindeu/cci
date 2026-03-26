@@ -14,13 +14,15 @@ parameters:
 jobs:
   test:
     docker:
-      - image: norionomura/swift:swift-4.2-branch
+      - image: swift:6.2.4-noble
+    resource_class: large
     steps:
       - checkout
-      - run: swift test --parallel
+      - run: swift test
   deploy:
     docker:
       - image: docker:latest
+    resource_class: large
     steps:
       - run: 
           name: Install Dependencies

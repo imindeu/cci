@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# usage:
+# Usage:
 #  - with default arguments:
 #      slack.sh
 #  - with custom arguments:
@@ -17,7 +17,7 @@ else
     SALCK_TEXT=$@
 fi
 
-# send request
+# Send request
 #  - method: POST
 #  - port: 8080 - localhost port of docker image
 #  - slackCommand: url path of slack commands

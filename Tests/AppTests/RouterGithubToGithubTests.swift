@@ -6,35 +6,43 @@
 //
 import APIConnect
 import APIModels
+import APIService
+import Mocks
 
 import XCTest
-import HTTP
+import Vapor
 
 @testable import App
 
 class RouterGithubToGithubTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
+    private class MockAPI: BackendAPIType {
+        
+        func execute(request: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
+            Environment.env[request.host] = request.host
+            
+            switch request.host {
+            case "test.com":
+                return pure(MockHTTPResponse.okResponse(body: "{\"value\": \"\(request.url.query() ?? "")\"}"), Service.mockContext)
+            case "api.github.com":
+                return pure(MockHTTPResponse.okResponse(body: "{\"token\":\"x\"}"), Service.mockContext)
+            default:
+                XCTFail("Shouldn't have an api for anything else")
+                return pure(MockHTTPResponse.okResponse(body: ""), Service.mockContext)
+            }
+        }
+    }
+    
+    override func setUp() async throws {
+        try await super.setUp()
+        
         Environment.env = [
             Github.Payload.Config.githubSecret.rawValue: "x",
             Github.APIRequest.Config.githubAppId.rawValue: "0101",
-            Github.APIRequest.Config.githubPrivateKey.rawValue: privateKeyString
+            Github.APIRequest.Config.githubPrivateKey.rawValue: Service.privateKeyString
         ]
-        Environment.api = { hostname, _ in
-            return { context, request in
-                Environment.env[hostname] = hostname
-                if hostname == "test.com" {
-                    let command = request.url.query ?? ""
-                    return pure(HTTPResponse(body: "{\"value\": \"\(command)\"}"), context)
-                } else if hostname == "api.github.com" {
-                    return pure(HTTPResponse(body: "{\"token\":\"x\"}"), context)
-                } else {
-                    XCTFail("Shouldn't have an api for anything else")
-                    return Environment.emptyApi(context)
-                }
-            }
-        }
+        
+        try await Service.loadTest(MockAPI())
     }
     
     func testCheckConfigsFail() {
@@ -43,8 +51,7 @@ class RouterGithubToGithubTests: XCTestCase {
             try GithubToGithub.checkConfigs()
         } catch {
             if case let GithubToGithub.APIConnectError.combined(errors) = error {
-                XCTAssertEqual(errors.count, 2,
-                               "We haven't found all the errors (no conflict)")
+                XCTAssertEqual(errors.count, 2, "We haven't found all the errors (no conflict)")
             } else {
                 XCTFail("Wrong error \(error)")
             }
@@ -59,81 +66,62 @@ class RouterGithubToGithubTests: XCTestCase {
         }
     }
     
-    func testFullRun() throws {
-        let pullRequest = Github.PullRequest(url: "http://test.com/pull",
-                                             id: 1,
-                                             title: "x",
-                                             body: "",
-                                             head: Github.Branch.template(),
-                                             base: Github.Branch.template(ref: "master"))
-        let request = Github.Payload(action: .submitted,
-                                     review: Github.Review(state: .changesRequested),
-                                     pullRequest: pullRequest,
-                                     label: Github.waitingForReviewLabel,
-                                     installation: Github.Installation(id: 1))
-        let response = try GithubToGithub.run(request,
-                                              context(),
-                                              "y",
-                                              [Github.eventHeaderName: Github.Event.pullRequestReview.rawValue,
-                                               Github.signatureHeaderName:
-                                                "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
-            .wait()
+    func testFullRun() async throws {
+        let pullRequest = Github.PullRequest.template(
+            id: 1,
+            title: "x",
+            body: "",
+            head: Github.Branch.template(),
+            base: Github.Branch.template(ref: "master"),
+            url: "http://test.com/pull"
+        )
+        let request = Github.Payload(
+            action: .submitted,
+            review: Github.Review(state: .changesRequested),
+            pullRequest: pullRequest,
+            label: Github.Label.waitingForReview,
+            installation: Github.Installation(id: 1)
+        )
+        let response = try await GithubToGithub
+            .run(
+                request,
+                Service.mockContext,
+                "y",
+                [Github.eventHeaderName: Github.Event.pullRequestReview.rawValue,
+                 Github.signatureHeaderName: "sha256=1b56188fbdc65a885923886c8b7271332149050589d91803364521080cd0792d"]
+            )
+            .get()
         XCTAssertEqual(Environment.env["api.github.com"], "api.github.com")
         XCTAssertEqual(Environment.env["test.com"], "test.com")
         XCTAssertEqual(response, Github.PayloadResponse())
     }
 
-    func testEmptyRun() throws {
-        let pullRequest = Github.PullRequest(url: "http://test.com/pull",
-                                             id: 1,
-                                             title: "x",
-                                             body: "",
-                                             head: Github.Branch.template(),
-                                             base: Github.Branch.template(ref: "master"))
-        let request = Github.Payload(action: .labeled,
-                                     pullRequest: pullRequest,
-                                     label: Github.waitingForReviewLabel,
-                                     installation: Github.Installation(id: 1))
-        let response = try GithubToYoutrack.run(request,
-                                                context(),
-                                                "y",
-                                                [Github.eventHeaderName: Github.Event.pullRequest.rawValue,
-                                                 Github.signatureHeaderName:
-                                                    "sha1=2c1c62e048a5824dfb3ed698ef8ef96f5185a369"])
-            .wait()
+    func testEmptyRun() async throws {
+        let pullRequest = Github.PullRequest.template(
+            id: 1,
+            title: "x",
+            body: "",
+            head: Github.Branch.template(),
+            base: Github.Branch.template(ref: "master"),
+            url: "http://test.com/pull"
+        )
+        let request = Github.Payload(
+            action: .labeled,
+            pullRequest: pullRequest,
+            label: Github.Label.waitingForReview,
+            installation: Github.Installation(id: 1)
+        )
+        let response = try await GithubToYoutrack
+            .run(
+                request,
+                Service.mockContext,
+                "y",
+                [Github.eventHeaderName: Github.Event.pullRequest.rawValue,
+                 Github.signatureHeaderName: "sha256=1b56188fbdc65a885923886c8b7271332149050589d91803364521080cd0792d"]
+            )
+            .get()
         XCTAssertNil(Environment.env["test.com"])
         XCTAssertEqual(response, Github.PayloadResponse())
     }
 
 }
-
-// swiftlint:disable prefixed_toplevel_constant
-let privateKeyString = """
------BEGIN RSA PRIVATE KEY-----
-MIICXAIBAAKBgQC0cOtPjzABybjzm3fCg1aCYwnxPmjXpbCkecAWLj/CcDWEcuTZ
-kYDiSG0zgglbbbhcV0vJQDWSv60tnlA3cjSYutAv7FPo5Cq8FkvrdDzeacwRSxYu
-Iq1LtYnd6I30qNaNthntjvbqyMmBulJ1mzLI+Xg/aX4rbSL49Z3dAQn8vQIDAQAB
-AoGBAJeBFGLJ1EI8ENoiWIzu4A08gRWZFEi06zs+quU00f49XwIlwjdX74KP03jj
-H14wIxMNjSmeixz7aboa6jmT38pQIfE3DmZoZAbKPG89SdP/S1qprQ71LgBGOuNi
-LoYTZ96ZFPcHbLZVCJLPWWWX5yEqy4MS996E9gMAjSt8yNvhAkEA38MufqgrAJ0H
-VSgL7ecpEhWG3PHryBfg6fK13RRpRM3jETo9wAfuPiEodnD6Qcab52H2lzMIysv1
-Ex6nGv2pCQJBAM5v9SMbMG20gBzmeZvjbvxkZV2Tg9x5mWQpHkeGz8GNyoDBclAc
-BFEWGKVGYV6jl+3F4nqQ6YwKBToE5KIU5xUCQEY9Im8norgCkrasZ3I6Sa4fi8H3
-PqgEttk5EtVe/txWNJzHx3JsCuD9z5G+TRAwo+ex3JIBtxTRiRCDYrkaPuECQA2W
-vRI0hfmSuiQs37BtRi8DBNEmFrX6oyg+tKmMrDxXcw8KrNWtInOb+r9WZK5wIl4a
-epAK3fTD7Bgnnk01BwkCQHQwEdGNGN3ntYfuRzPA4KiLrt8bpACaHHr2wn9N3fRI
-bxEd3Ax0uhHVqKRWNioL7UBvd4lxoReY8RmmfghZHEA=
------END RSA PRIVATE KEY-----
-"""
-
-// public key for later testing
-let publicKeyString = """
------BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
-PmjXpbCkecAWLj/CcDWEcuTZkYDiSG0zgglbbbhcV0vJQDWSv60tnlA3cjSYutAv
-7FPo5Cq8FkvrdDzeacwRSxYuIq1LtYnd6I30qNaNthntjvbqyMmBulJ1mzLI+Xg/
-aX4rbSL49Z3dAQn8vQIDAQAB
------END PUBLIC KEY-----
-"""
-
-// swiftlint:enable prefixed_toplevel_constant

@@ -6,7 +6,7 @@
 //
 
 import APIConnect
-import HTTP
+import Vapor
 import XCTest
 
 // MARK: - Mocks
@@ -93,7 +93,7 @@ extension APIConnect where From == FromRequest, To == ToRequest {
     static func run(_ from: FromRequest,
                     _ context: Context,
                     _ payload: String? = nil,
-                    _ headers: Headers? = nil) -> IO<FromResponse?> {
+                    _ headers: Headers? = nil) -> IO<FromResponse> {
         return APIConnect<FromRequest, ToRequest, E>(
             check: FromRequest.check,
             request: FromRequest.request,

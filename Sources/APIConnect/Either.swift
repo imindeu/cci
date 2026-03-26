@@ -5,7 +5,7 @@
 //  Created by Peter Geszten-Kovacs on 2018. 12. 03..
 //
 
-public enum Either<L, R> {
+public enum Either<L: Sendable, R: Sendable>: Sendable {
     case left(L)
     case right(R)
 }

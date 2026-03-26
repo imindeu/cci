@@ -1,14 +1,15 @@
-FROM ubuntu:16.04
+FROM ubuntu:24.04
 
 RUN apt-get -qq update && apt-get install -y \
-  libicu55 libxml2 libbsd0 libcurl3 libatomic1 \
-  libssl-dev pkg-config \
+  libicu74 libxml2 libbsd0 libcurl4 libatomic1 \
+  libssl-dev pkg-config ca-certificates \
+  && update-ca-certificates \
   && rm -r /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY /bin/Run .
+COPY /bin/cci .
 COPY /lib/* /usr/lib/
 
 EXPOSE 8081
 
-CMD ./Run --hostname 0.0.0.0 --port 8081
+CMD ./cci serve --hostname 0.0.0.0 --port 8081

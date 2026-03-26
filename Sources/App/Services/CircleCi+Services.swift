@@ -8,19 +8,11 @@
 import Foundation
 import APIConnect
 import APIService
+import APIModels
 
-import enum APIModels.CircleCi
-import enum APIModels.Github
-import enum APIModels.Slack
+import Foundation
 
-import protocol Foundation.LocalizedError
-import struct Foundation.Data
-import struct Foundation.URL
-import class Foundation.JSONEncoder
-
-import struct HTTP.HTTPHeaders
-import struct HTTP.HTTPRequest
-import enum HTTP.HTTPMethod
+import Vapor
 
 extension CircleCi {
 
@@ -186,7 +178,7 @@ extension CircleCiJobTriggerRequest {
     }
     
     var body: Data? {
-        return try? JSONEncoder().encode(
+        return try? Service.encoder.encode(
             CircleCiJobTriggerRequestBody(
                 branch: branch,
                 parameters: .init(
@@ -357,7 +349,6 @@ extension CircleCiDeployJob {
             case (.oc, .appStore): return "release_oc"
             case (.sp, .beta): return "sp"
             case (.sp, .appStore): return "release_sp"
-            default: throw CircleCi.Error.invalidDeployCombination("\(self.rawValue) - \(deployType)")
             }
         }
         
@@ -538,7 +529,7 @@ extension CircleCi {
         let spacePlaceholderString = "[CCI_SPACE_PLACEHOLDER_STRING]"
 
         let projects: [String] = Environment.getArray(JobTriggerRequest.Config.projects)
-        guard let index = projects.index(where: { from.channelName.hasPrefix($0) }) else {
+        guard let index = projects.firstIndex(where: { from.channelName.hasPrefix($0) }) else {
             return leftIO(context)(Slack.Response.error(Error.noChannel(from.channelName)))
         }
 
@@ -549,7 +540,7 @@ extension CircleCi {
         var rawText = from.text
             .replacingOccurrences(of: "“", with: "\"")
             .replacingOccurrences(of: "”", with: "\"")
-        print("rawText: \(rawText)")
+        
         rawText.matchingStrings(regex: "\"(.*?)\"").forEach { textArray in
             if let part = textArray.first {
                 let partWithoutSpaces = part.replacingOccurrences(of: " ", with: spacePlaceholderString)
@@ -602,22 +593,21 @@ extension CircleCi {
                 do {
                     let projects: [String] = Environment.getArray(JobTriggerRequest.Config.projects)
                     let circleCiTokens = Environment.getArray(JobTriggerRequest.Config.tokens)
-                    guard let index = projects.index(of: jobRequest.request.project.rawValue) else {
+                    guard let index = projects.firstIndex(of: jobRequest.request.project.rawValue) else {
                         throw Error.noProject(jobRequest.request.project.rawValue)
                     }
                     let circleciToken = circleCiTokens[index]
 
-                    return try Service.fetch(jobRequest.request, JobTrigger.Response.self, circleciToken, context, Environment.api, isDebugMode: Environment.isDebugMode())
-                        .map { jobTriggerResponse in
+                    return try Service.fetch(jobRequest.request, JobTrigger.Response.self, circleciToken, isDebugMode: Environment.isDebugMode())
+                        .flatMapThrowing { jobTriggerResponse in
                             guard let jobTriggerResponseObject = jobTriggerResponse.value else {
                                 throw Error.decode
                             }
                             
                             return .right(JobTriggerResponse(responseObject: jobTriggerResponseObject, request: jobRequest.request))
                         }
-                        .catchMap { .left(
-                            Slack.Response.error(Error.underlying($0),
-                                                 helpResponse: helpResponse))
+                        .flatMapErrorThrowing {
+                            .left(Slack.Response.error(Error.underlying($0), helpResponse: helpResponse))
                         }
                 } catch {
                     return leftIO(context)(
@@ -674,7 +664,7 @@ extension CircleCi {
         }
         
         switch type {
-        case let .pullRequestLabeled(label: Github.waitingForReviewLabel, head: head, base: base, platform: platform):
+        case let .pullRequestLabeled(label: Github.Label.waitingForReview, head: head, base: base, platform: _):
             do {
                 if Github.isMaster(branch: base) || Github.isRelease(branch: base) {
                     return try CircleCiTestJob.parse(project: project,
@@ -689,10 +679,10 @@ extension CircleCi {
                     let githubRequest = Github.APIRequest(installationId: installationId,
                                                           type: .getStatus(sha: head.sha, url: head.repo.url))
                     return try Github.fetchAccessToken(installationId, context)
-                        .flatMap {
-                            return try Service.fetch(githubRequest, [Github.Status].self, $0, context, Environment.api, isDebugMode: Environment.isDebugMode())
+                        .flatMapThrowingIO {
+                            return try Service.fetch(githubRequest, [Github.Status].self, $0, isDebugMode: Environment.isDebugMode())
                         }
-                        .flatMap { response in
+                        .flatMapThrowingIO { response in
                             guard let statuses = response.value, statuses.first?.state != .success else {
                                 return defaultResponse
                             }
