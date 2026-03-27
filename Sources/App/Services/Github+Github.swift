@@ -96,7 +96,19 @@ public extension Github {
             }
         }
         
-        var checkStale: Bool { false }
+        var checkStale: Bool {
+            switch self {
+            case .branchCreated,
+                 .branchPushed,
+                 .pullRequestOpened,
+                 .pullRequestEdited,
+                 .pullRequestClosed,
+                 .testStatus:
+                true
+            default:
+                false
+            }
+        }
     }
 }
 
