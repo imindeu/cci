@@ -10,6 +10,6 @@ WORKDIR /app
 COPY /bin/cci .
 COPY /lib/* /usr/lib/
 
-EXPOSE 8081
+EXPOSE 80
 
-CMD ./cci serve --hostname 0.0.0.0 --port 8081
+CMD ./cci serve --hostname 0.0.0.0 --port 80
