@@ -424,9 +424,9 @@ private extension Github {
                 
                 let tasks = try pulls
                     .compactMap { pull -> TokenedIO<[Github.Label]?>? in
+                        let updatedAt = pull.updatedAt ?? pull.createdAt
                         guard
                             !pull.labels.contains(Github.Label.stale),
-                            let updatedAt = pull.updatedAt,
                             now.timeIntervalSince(updatedAt) > Self.staleInterval
                         else { return nil }
                         
