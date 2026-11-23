@@ -352,13 +352,17 @@ extension CircleCiDeployJob {
             }
         }
         
-        func projectName(for project: CircleCiProject) throws -> String {
-            switch (project, self) {
-            case (.iOS4DM, .fourd): return "FourDMotion"
-            case (.iOS4DM, .oc): return "OrthoCor"
-            case (.iOS4DM, .sp): return "SinglePlane"
-            case (.android4DM, .oc): return "orthocor"
-            default: throw CircleCi.Error.invalidDeployCombination("\(self.rawValue) - \(project.rawValue)")
+        func projectName(for project: CircleCiProject, deployType: DeployType) throws -> String {
+            switch (project, self, deployType) {
+            case (.iOS4DM, .fourd, _): return "FourDMotion"
+            case (.iOS4DM, .oc, _): return "OrthoCor"
+            case (.iOS4DM, .sp, _): return "SinglePlane"
+            // Alpha and beta only: the Android FourDMotion app has no production release set up yet.
+            case (.android4DM, .fourd, .alpha), (.android4DM, .fourd, .beta): return "fourdmotion"
+            case (.android4DM, .oc, _): return "orthocor"
+            default:
+                throw CircleCi.Error
+                    .invalidDeployCombination("\(self.rawValue) \(deployType.rawValue) - \(project.rawValue)")
             }
         }
     }
@@ -431,7 +435,7 @@ extension CircleCiDeployJob {
             
             type = deployType.rawValue
             options += ["branch:\(branch)"]
-            options += ["project_name:\(try app.projectName(for: project))"]
+            options += ["project_name:\(try app.projectName(for: project, deployType: deployType))"]
         case .unknown:
             // For other (not 4d projects)
             let types = [
@@ -593,10 +597,13 @@ extension CircleCi {
                 do {
                     let projects: [String] = Environment.getArray(JobTriggerRequest.Config.projects)
                     let circleCiTokens = Environment.getArray(JobTriggerRequest.Config.tokens)
-                    guard let index = projects.firstIndex(of: jobRequest.request.project.rawValue) else {
+                    
+                    guard
+                        let index = projects.firstIndex(of: jobRequest.request.project.rawValue),
+                        let circleciToken = circleCiTokens[safe: index]
+                    else {
                         throw Error.noProject(jobRequest.request.project.rawValue)
                     }
-                    let circleciToken = circleCiTokens[index]
 
                     return try Service.fetch(jobRequest.request, JobTrigger.Response.self, circleciToken, isDebugMode: Environment.isDebugMode())
                         .flatMapThrowing { jobTriggerResponse in

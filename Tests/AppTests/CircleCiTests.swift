@@ -212,6 +212,51 @@ class CircleCiTests: XCTestCase {
 
     }
 
+    func testAndroidDeployJob() throws {
+        func parse(_ project: CircleCiProject, _ parameters: [String]) throws -> CircleCiDeployJob? {
+            return try CircleCiDeployJob.parse(project: project,
+                                               parameters: parameters,
+                                               options: options,
+                                               username: username).right as? CircleCiDeployJob
+        }
+        func job(_ project: CircleCiProject, _ branch: String, _ type: String, _ extraOptions: [String]) -> CircleCiDeployJob {
+            return CircleCiDeployJob(project: project,
+                                     branch: branch,
+                                     type: type,
+                                     options: options + extraOptions,
+                                     username: username)
+        }
+
+        // FourDMotion alpha and beta deploy the `fourdmotion` Gradle subproject
+        XCTAssertEqual(try parse(.android4DM, ["fourd", "alpha", "golf-port"]),
+                       job(.android4DM, "golf-port", "alpha",
+                           ["test_release:true", "branch:golf-port", "project_name:fourdmotion"]))
+        XCTAssertEqual(try parse(.android4DM, ["fourd", "beta"]),
+                       job(.android4DM, "fourd", "beta", ["branch:fourd", "project_name:fourdmotion"]))
+
+        // OrthoCor on Android and FourDMotion on iOS are unchanged, production included
+        XCTAssertEqual(try parse(.android4DM, ["oc", "app_store"]),
+                       job(.android4DM, "release_oc", "app_store", ["branch:release_oc", "project_name:orthocor"]))
+        XCTAssertEqual(try parse(.iOS4DM, ["fourd", "alpha"]),
+                       job(.iOS4DM, "dev", "alpha", ["branch:dev", "project_name:FourDMotion"]))
+        XCTAssertEqual(try parse(.iOS4DM, ["fourd", "app_store"]),
+                       job(.iOS4DM, "release", "app_store", ["branch:release", "project_name:FourDMotion"]))
+
+        // No production release of FourDMotion on Android, and no SinglePlane there at all
+        XCTAssertThrowsError(try parse(.android4DM, ["fourd", "app_store"])) { error in
+            XCTAssertEqual(error.localizedDescription,
+                           "Invalid deploy combination: (fourd app_store - 4dmotion-android)")
+        }
+        for parameters in [["fourd", "app_store", "golf-port"], ["sp", "alpha"]] {
+            XCTAssertThrowsError(try parse(.android4DM, parameters)) { error in
+                guard case .invalidDeployCombination? = error as? CircleCi.Error else {
+                    XCTFail("\(parameters) should be an invalid deploy combination, not \(error)")
+                    return
+                }
+            }
+        }
+    }
+
     func testSlackRequest() async throws {
         // no channel
         let noChannelRequest = Slack.Request.template(channelName: "nochannel")
@@ -266,9 +311,20 @@ class CircleCiTests: XCTestCase {
         let response = try await api(request).get().right
         XCTAssertEqual(response?.request as? CircleCiTestJob, job)
         XCTAssertEqual(response?.responseObject, expected)
-        
+
     }
-    
+
+    func testApiWithSlackProjectWithoutToken() async throws {
+        // Two projects, one token: the second project has no token at its position.
+        Environment.env[CircleCi.JobTriggerRequest.Config.projects.rawValue] = "\(project)@4dmotion-android"
+        let api = CircleCi.apiWithSlack(Service.mockContext)
+        let job = CircleCiTestJob(project: .android4DM, branch: branch, options: [], username: username)
+        let response = try await api(CircleCi.JobTriggerRequest(request: job)).get()
+        XCTAssertEqual(response.left,
+                       Slack.Response.error(CircleCi.Error.underlying(CircleCi.Error.noProject("4dmotion-android")),
+                                            helpResponse: CircleCi.helpResponse))
+    }
+
     func testResponseToSlack() {
         // test
         let testResponse = CircleCi.JobTriggerResponse(
